@@ -7,6 +7,7 @@ export type Recipient = {
   cpf: string;
   bank: string;
   agencyAccount: string;
+  own: boolean;
 };
 
 export const MATHEUS: Recipient = {
@@ -16,6 +17,7 @@ export const MATHEUS: Recipient = {
   cpf: "***.062.708-**",
   bank: "Banco Santander (Brasil) S.A.",
   agencyAccount: "0001 / 12345-6",
+  own: true,
 };
 
 export const BALANCE_CENTS = 1;

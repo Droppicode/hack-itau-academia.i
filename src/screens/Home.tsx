@@ -13,7 +13,7 @@ import {
 } from "../components/Icons";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
-import { IaiHomeCard } from "../components/Iai";
+import { HomeCarousel, PixInvite } from "../components/Iai";
 import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
 import { useTrilha } from "../state/TrilhaContext";
 import { markHome } from "../state/homeHistory";
@@ -130,7 +130,8 @@ export function Home() {
         </div>
 
         <div className="mt-[30px] flex flex-col gap-[29px] px-5">
-          <IaiHomeCard />
+          <PixInvite />
+          <HomeCarousel />
           <div className="-mt-[12px] rounded-[18px] bg-white px-[22px] pb-[12px] pt-[22px]">
             <Squish className="block w-full" scale={0.98}>
               <CardHead icon={<ItauLogo size={16} />} title="Conta corrente" />

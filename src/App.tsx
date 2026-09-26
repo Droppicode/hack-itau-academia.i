@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { Route, Routes, useLocation, useNavigationType } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigationType } from "react-router-dom";
 import { PhoneFrame } from "./components/PhoneFrame";
 import { ToastProvider } from "./components/Toast";
 import { Home } from "./screens/Home";
@@ -14,8 +14,10 @@ import { PreLogin } from "./screens/PreLogin";
 import { TabPlaceholder } from "./screens/TabPlaceholder";
 import { PixProvider } from "./state/PixContext";
 import { TrilhaProvider } from "./state/TrilhaContext";
-import { Diagnostico } from "./screens/academia/Diagnostico";
-import { Hub } from "./screens/academia/Hub";
+import { Aprofundar } from "./screens/academia/Aprofundar";
+import { Intro } from "./screens/academia/Intro";
+import { Missoes } from "./screens/academia/Missoes";
+import { Trilha } from "./screens/academia/Trilha";
 import { Licao } from "./screens/academia/Licao";
 import { Vantagens } from "./screens/Vantagens";
 
@@ -52,9 +54,12 @@ function AnimatedRoutes() {
           <Route path="/extrato" element={<TabPlaceholder path="/extrato" />} />
           <Route path="/pagamentos" element={<TabPlaceholder path="/pagamentos" />} />
           <Route path="/pra-voce" element={<Vantagens />} />
-          <Route path="/academia" element={<Hub />} />
-          <Route path="/academia/diagnostico" element={<Diagnostico />} />
+          <Route path="/academia" element={<Navigate to="/academia/trilha" replace />} />
+          <Route path="/academia/intro" element={<Intro />} />
+          <Route path="/academia/trilha" element={<Trilha />} />
+          <Route path="/academia/missoes" element={<Missoes />} />
           <Route path="/academia/licao/:id" element={<Licao />} />
+          <Route path="/academia/licao/:id/aprofundar" element={<Aprofundar />} />
           <Route path="/menu" element={<TabPlaceholder path="/menu" />} />
           <Route path="/pix" element={<Pix />} />
           <Route path="/pix/destinatario" element={<PixDestinatario />} />

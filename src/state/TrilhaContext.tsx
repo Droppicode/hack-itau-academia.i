@@ -1,135 +1,203 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { LESSONS, LEVELS, MODULES, REWARDS, type FeelingId, type GoalId, type Lesson, type LessonId, type ModuleN } from "../data/trilha";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { CDI_YEAR, LESSONS, LEVELS, MISSIONS, POINTS_PER_RIGHT, QUIZ_PASS, REWARDS, type GoalId, type Lesson, type LessonId, type MissionDef } from "../data/trilha";
+
+export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; history: number[] };
 
 export type Persisted = {
-  diag: { goal?: GoalId; feeling?: FeelingId; start?: ModuleN; done: boolean };
+  introSeen: boolean;
   completed: LessonId[];
-  hookNo: number;
-  goal?: { id: GoalId; name: string; targetCents: number; monthlyCents: number };
-  guardaItau: boolean;
-  activeRewards: string[];
-  nextTrail?: string;
-  streak: number;
+  quizBest: Partial<Record<LessonId, number>>;
+  deepSeen: LessonId[];
   claimed: string[];
-  homeCardMin: boolean;
+  actions: string[];
+  week: number;
+  month: number;
+  weekLessons: number;
+  weekQuizzes: number;
+  streak: number;
+  bestStreak: number;
+  lastActiveWeek: number;
+  bonusPts: number;
+  goal?: Goal;
+  monthSavedCents: number;
+  billsPaid: boolean;
+  cdi105: boolean;
+  hook: { pending: boolean; pushSeen: boolean; off: boolean };
+  activeRewards: string[];
 };
 
 const INITIAL: Persisted = {
-  diag: { done: false },
+  introSeen: false,
   completed: [],
-  hookNo: 0,
-  guardaItau: false,
-  activeRewards: [],
-  streak: 1,
+  quizBest: {},
+  deepSeen: [],
   claimed: [],
-  homeCardMin: false,
+  actions: [],
+  week: 1,
+  month: 1,
+  weekLessons: 0,
+  weekQuizzes: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastActiveWeek: 0,
+  bonusPts: 0,
+  monthSavedCents: 0,
+  billsPaid: false,
+  cdi105: false,
+  hook: { pending: false, pushSeen: false, off: false },
+  activeRewards: [],
 };
 
-const KEY = "academiai-v2";
+const KEY = "academiai-v3";
+export const STREAK_BONUS = 20;
+
+export type MissionStatus = "bloqueada" | "disponível" | "em andamento" | "concluída" | "resgatada";
+export type MissionView = MissionDef & { status: MissionStatus; progress: number; goal: number; key: string };
 
 function load(): Persisted {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...INITIAL, ...(JSON.parse(raw) as Partial<Persisted>) } : INITIAL;
+    if (raw) return { ...INITIAL, ...(JSON.parse(raw) as Partial<Persisted>) };
   } catch {
-    return INITIAL;
+    /* ignore */
   }
+  return INITIAL;
 }
 
-export type Mission = {
-  id: string;
-  title: string;
-  text: string;
-  points: number;
-  progress: number;
-  goal: number;
-  unit: string;
-  met: boolean;
-  claimed: boolean;
-};
+export const quizPoints = (correct: number | undefined) => (correct !== undefined && correct >= QUIZ_PASS ? correct * POINTS_PER_RIGHT : 0);
 
 type Ctx = Persisted & {
-  set: (patch: Partial<Persisted> | ((s: Persisted) => Partial<Persisted>)) => void;
-  reset: () => void;
+  set: (p: Partial<Persisted> | ((s: Persisted) => Partial<Persisted>)) => void;
+  done: (id: LessonId) => boolean;
+  unlocked: (id: LessonId) => boolean;
+  next?: Lesson;
   points: number;
   level: number;
   levelPct: number;
   nextLevelAt?: number;
-  next?: Lesson;
-  isUnlocked: (id: LessonId) => boolean;
-  complete: (id: LessonId) => void;
-  missions: Mission[];
-  claim: (id: string) => void;
-  shouldHook: () => boolean;
+  missions: MissionView[];
+  completeLesson: (id: LessonId) => void;
+  recordQuiz: (id: LessonId, correct: number) => number;
+  claim: (m: MissionView) => void;
+  doAction: (id: string) => void;
+  save: (cents: number) => void;
+  advanceWeek: () => void;
+  advanceMonth: () => void;
+  registerPix: (own: boolean) => void;
   rewardUnlocked: (id: string) => boolean;
-  progressPct: number;
+  reset: () => void;
 };
 
 const TrilhaContext = createContext<Ctx | null>(null);
 
 export function TrilhaProvider({ children }: { children: ReactNode }) {
   const [s, setS] = useState<Persisted>(load);
-
   useEffect(() => {
     localStorage.setItem(KEY, JSON.stringify(s));
   }, [s]);
 
-  const value = useMemo<Ctx>(() => {
-    const set: Ctx["set"] = (patch) => setS((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }));
-    const done = (id: LessonId) => s.completed.includes(id);
-    const isUnlocked = (id: LessonId) => {
-      const l = LESSONS.find((x) => x.id === id);
-      if (!l) return false;
-      const inModule = LESSONS.filter((x) => x.module === l.module);
-      const i = inModule.indexOf(l);
-      return i === 0 || done(inModule[i - 1].id);
-    };
-    const order = s.diag.start ? [...MODULES.filter((m) => m.n >= s.diag.start!), ...MODULES.filter((m) => m.n < s.diag.start!)] : MODULES;
-    const next = order.flatMap((m) => LESSONS.filter((l) => l.module === m.n)).find((l) => !done(l.id) && isUnlocked(l.id));
+  const set = useCallback<Ctx["set"]>((p) => setS((prev) => ({ ...prev, ...(typeof p === "function" ? p(prev) : p) })), []);
 
-    const modulesDone = MODULES.filter((m) => LESSONS.filter((l) => l.module === m.n).every((l) => done(l.id))).length;
-    const raw: Omit<Mission, "claimed">[] = [
-      { id: "m-diag", title: "Primeiro passo", text: "Responder o diagnóstico de 3 toques", points: 50, progress: s.diag.done ? 1 : 0, goal: 1, unit: "", met: s.diag.done },
-      { id: "m-streak", title: "Sequência de 3 dias", text: "Abrir a AcademIA.I 3 dias seguidos", points: 100, progress: Math.min(s.streak, 3), goal: 3, unit: "dias", met: s.streak >= 3 },
-      { id: "m-modulo", title: "Módulo fechado", text: "Terminar todas as lições de um módulo", points: 150, progress: Math.min(modulesDone, 1), goal: 1, unit: "módulo", met: modulesDone >= 1 },
-      {
-        id: "m-guarda",
-        title: "Um pouco fica aqui",
-        text: "Deixar parte do salário guardada no Itaú para o seu objetivo",
-        points: 200,
-        progress: s.guardaItau ? 1 : 0,
-        goal: 1,
-        unit: "",
-        met: s.guardaItau,
-      },
-      { id: "m-trilha", title: "Trilha completa", text: "As 12 lições da AcademIA.I", points: 300, progress: s.completed.length, goal: LESSONS.length, unit: "lições", met: s.completed.length >= LESSONS.length },
-    ];
-    const missions = raw.map((m) => ({ ...m, claimed: s.claimed.includes(m.id) }));
-    const lessonPoints = LESSONS.filter((l) => done(l.id)).reduce((a, l) => a + l.points, 0);
-    const points = lessonPoints + missions.filter((m) => m.claimed).reduce((a, m) => a + m.points, 0);
-    const level = LEVELS.filter((min) => points >= min).length;
-    const cur = LEVELS[level - 1];
+  const value = useMemo<Ctx>(() => {
+    const done = (id: LessonId) => s.completed.includes(id);
+    const idx = (id: LessonId) => LESSONS.findIndex((l) => l.id === id);
+    const unlocked = (id: LessonId) => idx(id) === 0 || done(LESSONS[idx(id) - 1].id);
+    const next = LESSONS.find((l) => !done(l.id));
+
+    const missionPts = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0);
+    const quizPts = LESSONS.reduce((a, l) => a + quizPoints(s.quizBest[l.id]), 0);
+    const points = quizPts + missionPts + s.bonusPts;
+    const level = LEVELS.filter((v) => points >= v).length;
     const nextLevelAt = LEVELS[level];
-    const levelPct = nextLevelAt === undefined ? 100 : Math.round(((points - cur) / (nextLevelAt - cur)) * 100);
+    const levelPct = nextLevelAt ? ((points - LEVELS[level - 1]) / (nextLevelAt - LEVELS[level - 1])) * 100 : 100;
+
+    const missions: MissionView[] = MISSIONS.map((m) => {
+      const key = m.kind === "semanal" ? `${m.id}@w${s.week}` : m.kind === "mensal" ? `${m.id}@m${s.month}` : m.id;
+      let progress = 0;
+      let goal = 1;
+      if (m.id === "w-licoes") [progress, goal] = [Math.min(s.weekLessons, 2), 2];
+      else if (m.id === "w-quiz") [progress, goal] = [Math.min(s.weekQuizzes, 2), 2];
+      else if (m.id === "m-mes") [progress, goal] = [(s.monthSavedCents >= 2000 ? 1 : 0) + (s.billsPaid ? 1 : 0), 2];
+      else if (m.id === "l-objetivo") progress = s.goal ? 1 : 0;
+      else progress = s.actions.includes(m.id) ? 1 : 0;
+      const status: MissionStatus = !done(m.unlock)
+        ? "bloqueada"
+        : s.claimed.includes(key)
+          ? "resgatada"
+          : progress >= goal
+            ? "concluída"
+            : progress > 0
+              ? "em andamento"
+              : "disponível";
+      return { ...m, key, progress, goal, status };
+    });
 
     return {
       ...s,
       set,
-      reset: () => setS(INITIAL),
+      done,
+      unlocked,
+      next,
       points,
       level,
       levelPct,
       nextLevelAt,
-      next,
-      isUnlocked,
-      complete: (id) => setS((prev) => (prev.completed.includes(id) ? prev : { ...prev, completed: [...prev.completed, id] })),
       missions,
-      claim: (id) => setS((prev) => (prev.claimed.includes(id) ? prev : { ...prev, claimed: [...prev.claimed, id] })),
-      shouldHook: () => s.hookNo < 2 && !done("L7"),
-      rewardUnlocked: (id) => (REWARDS.find((r) => r.id === id)?.level ?? 99) <= level,
-      progressPct: Math.round((s.completed.length / LESSONS.length) * 100),
+      completeLesson: (id) =>
+        set((p) => {
+          const streak = p.lastActiveWeek === p.week ? p.streak : p.lastActiveWeek === p.week - 1 ? p.streak + 1 : 1;
+          const kept = p.lastActiveWeek === p.week - 1 && streak >= 2;
+          return {
+            completed: p.completed.includes(id) ? p.completed : [...p.completed, id],
+            weekLessons: p.weekLessons + 1,
+            streak,
+            bestStreak: Math.max(p.bestStreak, streak),
+            lastActiveWeek: p.week,
+            bonusPts: p.bonusPts + (kept ? STREAK_BONUS : 0),
+          };
+        }),
+      recordQuiz: (id, correct) => {
+        const before = quizPoints(s.quizBest[id]);
+        const best = Math.max(correct, s.quizBest[id] ?? 0);
+        set((p) => ({
+          quizBest: { ...p.quizBest, [id]: Math.max(correct, p.quizBest[id] ?? 0) },
+          deepSeen: p.deepSeen.includes(id) ? p.deepSeen : [...p.deepSeen, id],
+          weekQuizzes: p.weekQuizzes + (correct >= QUIZ_PASS ? 1 : 0),
+        }));
+        return quizPoints(best) - before;
+      },
+      claim: (m) => set((p) => ({ claimed: [...p.claimed, m.key] })),
+      doAction: (id) => set((p) => ({ actions: p.actions.includes(id) ? p.actions : [...p.actions, id] })),
+      save: (cents) =>
+        set((p) => ({
+          monthSavedCents: p.monthSavedCents + cents,
+          goal: p.goal ? { ...p.goal, savedCents: p.goal.savedCents + cents } : p.goal,
+        })),
+      advanceWeek: () => set((p) => ({ week: p.week + 1, weekLessons: 0, weekQuizzes: 0 })),
+      advanceMonth: () =>
+        set((p) => {
+          const monthDone = p.claimed.includes(`m-mes@m${p.month}`) || (p.monthSavedCents >= 2000 && p.billsPaid);
+          const rate = (p.cdi105 ? 1.05 : 1) * CDI_YEAR;
+          const goal = p.goal
+            ? (() => {
+                const deposit = Math.max(p.goal.monthlyCents - p.monthSavedCents, 0);
+                const withDeposit = p.goal.savedCents + deposit;
+                const saved = Math.min(Math.round(withDeposit * (1 + rate / 12)), Math.max(p.goal.targetCents, withDeposit));
+                return { ...p.goal, savedCents: saved, history: [...p.goal.history, saved] };
+              })()
+            : p.goal;
+          return { month: p.month + 1, week: p.week + 4, weekLessons: 0, weekQuizzes: 0, monthSavedCents: 0, billsPaid: false, cdi105: monthDone, goal };
+        }),
+      registerPix: (own) => {
+        if (own && !s.hook.off) set((p) => ({ hook: { ...p.hook, pending: true, pushSeen: false } }));
+      },
+      rewardUnlocked: (id) => {
+        const r = REWARDS.find((x) => x.id === id);
+        return !!r && points >= LEVELS[r.level - 1];
+      },
+      reset: () => setS(INITIAL),
     };
-  }, [s]);
+  }, [s, set]);
 
   return <TrilhaContext.Provider value={value}>{children}</TrilhaContext.Provider>;
 }

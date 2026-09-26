@@ -34,7 +34,7 @@ export function Vantagens() {
           <div className="mt-2 text-[13px] text-white/75">
             {t.nextLevelAt ? `Faltam ${t.nextLevelAt - t.points} pts pro Nível ${t.level + 1}. ` : "Nível máximo. "}Pontos não expiram e não viram dinheiro.
           </div>
-          <Squish onClick={() => navigate("/academia")} className="mt-4 flex w-full items-center gap-3 rounded-[14px] bg-white/10 px-3 py-3" scale={0.97}>
+          <Squish onClick={() => navigate(t.introSeen ? "/academia/trilha" : "/academia/intro")} className="mt-4 flex w-full items-center gap-3 rounded-[14px] bg-white/10 px-3 py-3" scale={0.97}>
             <IaiAvatar size={30} />
             <span className="flex-1 text-[15px]">
               Ganhar pontos na <Wordmark />
@@ -59,7 +59,7 @@ export function Vantagens() {
                     key={r.id}
                     onClick={() => {
                       if (!unlocked) {
-                        if (t.next) navigate(`/academia/licao/${t.next.id}`);
+                        navigate(t.introSeen ? "/academia/trilha" : "/academia/intro");
                         return;
                       }
                       t.set((s) => ({ activeRewards: active ? s.activeRewards.filter((x) => x !== r.id) : [...s.activeRewards, r.id] }));
@@ -74,7 +74,7 @@ export function Vantagens() {
                     <div className="min-w-0 flex-1">
                       <div className={`text-[15px] font-semibold ${unlocked ? "text-[#333]" : "text-[#888]"}`}>{r.title}</div>
                       <div className="text-[13px] leading-snug text-[#666]">
-                        {unlocked ? (active ? `Ativo · ${r.detail}` : `${r.detail} · toque pra ativar`) : `Faltam ${missing} pts · ${t.next ? `próxima lição: ${t.next.title}` : "complete missões"}`}
+                        {unlocked ? (active ? `Ativo · ${r.detail}` : `${r.detail} · toque pra ativar`) : `Faltam ${missing} pts · ganhe no quiz das lições e nas missões`}
                       </div>
                     </div>
                     {!unlocked && <ChevronRight size={18} color="#888" />}
