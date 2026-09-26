@@ -1,3 +1,4 @@
+import { OTHER_WALLET } from "../data/lucas";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 
 export type Recipient = {
@@ -7,6 +8,7 @@ export type Recipient = {
   cpf: string;
   bank: string;
   agencyAccount: string;
+  own?: boolean;
 };
 
 export const MATHEUS: Recipient = {
@@ -18,7 +20,19 @@ export const MATHEUS: Recipient = {
   agencyAccount: "0001 / 12345-6",
 };
 
-export const BALANCE_CENTS = 1;
+export const LUCAS_CARTEIRA: Recipient = {
+  name: "Lucas Oliveira Santos",
+  key: "CPF •••.482.918-••",
+  keyFull: "CPF •••.482.918-••",
+  cpf: "•••.482.918-••",
+  bank: OTHER_WALLET,
+  agencyAccount: "0001 / 88231-4",
+  own: true,
+};
+
+export const RECIPIENTS = [LUCAS_CARTEIRA, MATHEUS];
+
+export const DEFAULT_PIX_CENTS = 120000;
 
 type PixState = {
   amountCents: number;
@@ -41,8 +55,8 @@ type PixState = {
 const PixContext = createContext<PixState | null>(null);
 
 export function PixProvider({ children }: { children: ReactNode }) {
-  const [amountCents, setAmountCents] = useState(1);
-  const [recipient, setRecipient] = useState<Recipient>(MATHEUS);
+  const [amountCents, setAmountCents] = useState(DEFAULT_PIX_CENTS);
+  const [recipient, setRecipient] = useState<Recipient>(LUCAS_CARTEIRA);
   const [date, setDate] = useState<"Hoje" | "Agendar">("Hoje");
   const [repeat, setRepeat] = useState(false);
   const [message, setMessage] = useState("");
@@ -66,8 +80,8 @@ export function PixProvider({ children }: { children: ReactNode }) {
       balanceHidden,
       setBalanceHidden,
       reset: () => {
-        setAmountCents(1);
-        setRecipient(MATHEUS);
+        setAmountCents(DEFAULT_PIX_CENTS);
+        setRecipient(LUCAS_CARTEIRA);
         setDate("Hoje");
         setRepeat(false);
         setMessage("");

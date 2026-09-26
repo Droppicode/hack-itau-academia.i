@@ -6,15 +6,42 @@ import { ListRow } from "../components/ListRow";
 import { Screen } from "../components/Screen";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { Squish } from "../components/Squish";
-import { MATHEUS, usePix } from "../state/PixContext";
+import { RECIPIENTS, usePix, type Recipient } from "../state/PixContext";
+
+const initials = (name: string) =>
+  name
+    .split(" ")
+    .filter((_, i, a) => i === 0 || i === a.length - 1)
+    .map((w) => w[0])
+    .join("");
+
+function RecipientRow({ r, onClick }: { r: Recipient; onClick: () => void }) {
+  return (
+    <Squish onClick={onClick} className="flex w-full items-center gap-3 border-b border-[#D6D6D6] py-[14px]" scale={0.98}>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F1F3] text-[14px] font-semibold text-[#444]">{initials(r.name)}</div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[16px] font-semibold text-[#3A3A3A]">
+          {r.name}
+          {r.own && <span className="ml-2 rounded-full bg-[#F0F1F3] px-2 py-[1px] text-[12px] font-medium text-[#555]">você</span>}
+        </div>
+        <div className="truncate text-[14px] text-[#666]">
+          {r.key} · {r.bank}
+        </div>
+      </div>
+      <ChevronRight size={20} strokeWidth={1.6} color="#4A4A4A" />
+    </Squish>
+  );
+}
 
 export function PixDestinatario() {
   const navigate = useNavigate();
   const { setRecipient } = usePix();
   const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const results = RECIPIENTS.filter((r) => `${r.name} ${r.key} ${r.bank}`.toLowerCase().includes(query));
 
-  const go = () => {
-    setRecipient(MATHEUS);
+  const go = (r: Recipient) => {
+    setRecipient(r);
     navigate("/pix/valor");
   };
 
@@ -25,7 +52,7 @@ export function PixDestinatario() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (q.trim()) go();
+            if (query) go(results[0] ?? RECIPIENTS[0]);
           }}
         >
           <input
@@ -38,25 +65,24 @@ export function PixDestinatario() {
           />
         </form>
 
-        {q.trim() ? (
+        {query ? (
           <div className="mt-4">
             <div className="mb-1 text-[14px] text-[#777]">Resultados</div>
-            <Squish onClick={go} className="flex w-full items-center gap-3 border-b border-[#D6D6D6] py-[14px]" scale={0.98}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F1F3] text-[14px] font-semibold text-[#444]">MC</div>
-              <div className="flex-1">
-                <div className="text-[16px] font-semibold text-[#3A3A3A]">{MATHEUS.name}</div>
-                <div className="text-[14px] text-[#666]">
-                  {MATHEUS.key} · Banco Santander
-                </div>
-              </div>
-              <ChevronRight size={20} strokeWidth={1.6} color="#4A4A4A" />
-            </Squish>
+            {(results.length ? results : RECIPIENTS).map((r) => (
+              <RecipientRow key={r.name} r={r} onClick={() => go(r)} />
+            ))}
           </div>
         ) : (
-          <div className="mt-[30px]">
-            <ListRow icon={<Camera size={24} strokeWidth={1.6} color="#444" />} title="Ler QR Code" divider />
-            <ListRow icon={<AccountAgencyIcon size={24} color="#444" />} title="Informar agência e conta" />
-          </div>
+          <>
+            <div className="mt-[30px]">
+              <ListRow icon={<Camera size={24} strokeWidth={1.6} color="#444" />} title="Ler QR Code" divider />
+              <ListRow icon={<AccountAgencyIcon size={24} color="#444" />} title="Informar agência e conta" />
+            </div>
+            <div className="mt-4 text-[15px] font-semibold text-[#555]">Recentes</div>
+            {RECIPIENTS.map((r) => (
+              <RecipientRow key={r.name} r={r} onClick={() => go(r)} />
+            ))}
+          </>
         )}
       </div>
     </Screen>

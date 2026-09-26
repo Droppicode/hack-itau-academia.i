@@ -7,6 +7,7 @@ import { Screen } from "../components/Screen";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { Squish } from "../components/Squish";
 import { formatBRL, usePix } from "../state/PixContext";
+import { useTrilha } from "../state/TrilhaContext";
 
 const O = "#FF6200";
 
@@ -49,6 +50,7 @@ type Sheet = "data" | "repetir" | "mensagem" | null;
 export function PixRevisao() {
   const navigate = useNavigate();
   const { amountCents, recipient, date, setDate, repeat, setRepeat, message, setMessage } = usePix();
+  const { registerPix } = useTrilha();
   const [sheet, setSheet] = useState<Sheet>(null);
   const [draft, setDraft] = useState(message);
 
@@ -60,7 +62,10 @@ export function PixRevisao() {
           <PrimaryButton
             label="Confirmar transferência"
             icon={<ChevronRight size={24} strokeWidth={1.6} />}
-            onClick={() => navigate("/pix/sucesso")}
+            onClick={() => {
+              registerPix({ cents: amountCents, toName: recipient.name, toBank: recipient.bank, own: !!recipient.own });
+              navigate("/pix/sucesso", { replace: true });
+            }}
           />
         </Footer>
       }

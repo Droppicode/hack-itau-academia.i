@@ -5,12 +5,14 @@ import { ListRow } from "../components/ListRow";
 import { Screen } from "../components/Screen";
 import { HeaderIcon, ScreenHeader } from "../components/ScreenHeader";
 import { useToast } from "../components/Toast";
-import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
+import { formatBRL, usePix } from "../state/PixContext";
+import { useTrilha } from "../state/TrilhaContext";
 
 export function PixFormaPagamento() {
   const navigate = useNavigate();
   const toast = useToast();
   const { amountCents, balanceHidden, setBalanceHidden } = usePix();
+  const { balanceCents } = useTrilha();
 
   return (
     <Screen
@@ -38,7 +40,7 @@ export function PixFormaPagamento() {
               </div>
             }
             title="Conta Itaú"
-            subtitle={`Saldo ${balanceHidden ? "••••" : formatBRL(BALANCE_CENTS)}`}
+            subtitle={`Saldo ${balanceHidden ? "••••" : formatBRL(balanceCents)}`}
             bold
             divider
             onClick={() => navigate("/pix/dados")}

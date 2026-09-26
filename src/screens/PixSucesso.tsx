@@ -1,16 +1,20 @@
 import { motion } from "framer-motion";
 import { Share2, UserPlus } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Footer, PrimaryButton } from "../components/PrimaryButton";
 import { Screen } from "../components/Screen";
+import { PixHookCard } from "../components/Iai";
 import { Squish } from "../components/Squish";
+import { useTrilha } from "../state/TrilhaContext";
 import { formatBRL, usePix } from "../state/PixContext";
 import { deltaToHome } from "../state/homeHistory";
 
 export function PixSucesso() {
   const navigate = useNavigate();
   const { amountCents, recipient, message, reset } = usePix();
+  const { shouldHook } = useTrilha();
+  const [hook] = useState(() => shouldHook({ cents: amountCents, own: !!recipient.own }));
   const now = useMemo(() => new Date(), []);
   const txId = useMemo(() => `E60701190${now.getTime().toString(36).toUpperCase()}PIX`, [now]);
   const when = now.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -63,6 +67,16 @@ export function PixSucesso() {
             </div>
           ))}
         </div>
+
+        {hook && (
+          <PixHookCard
+            cents={amountCents}
+            onGo={() => {
+              reset();
+              navigate("/academia/licao/L1", { replace: true, state: { fromPix: true } });
+            }}
+          />
+        )}
 
         <div className="mb-6 mt-5 flex w-full flex-col gap-3">
           <Squish className="flex w-full items-center justify-center gap-2 rounded-[12px] border-[1.5px] border-itau-orange py-[11px] text-[15px] font-semibold text-itau-orange">
