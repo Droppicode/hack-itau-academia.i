@@ -26,7 +26,7 @@ export function StatusBar({ tone = "dark", battery = 50 }: Props) {
             className="flex h-full w-[23px] items-center justify-center overflow-hidden rounded-[4px] text-[10px] font-bold leading-none"
             style={{
               background: `linear-gradient(90deg, ${fg} ${battery}%, ${tone === "light" ? "rgba(255,255,255,.45)" : "rgba(0,0,0,.35)"} ${battery}%)`,
-              color: tone === "light" ? "#EC7000" : "#FFFFFF",
+              color: tone === "light" ? "#FF6200" : "#FFFFFF",
             }}
           >
             {battery}

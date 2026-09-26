@@ -6,7 +6,7 @@ import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { clearHome } from "../state/homeHistory";
 
-const O = "#EC7000";
+const O = "#FF6200";
 
 function Tile({ icon, label, onClick, className = "" }: { icon: ReactNode; label: string; onClick?: () => void; className?: string }) {
   return (
@@ -38,20 +38,20 @@ export function PreLogin() {
 
         <div className="mt-[32px] grid grid-cols-2 gap-[11px]">
           <Tile
-            className="col-span-2 h-[162px]"
+            className="col-span-2 h-[172px]"
             icon={<Lock size={26} color={O} strokeWidth={1.8} />}
             label="Acessar"
             onClick={() => navigate("/home")}
           />
-          <Tile className="h-[156px]" icon={<TransferIcon size={26} color={O} />} label="Pix e transferir" onClick={() => navigate("/pix")} />
-          <Tile className="h-[156px]" icon={<BarcodeIcon size={26} color={O} />} label="Pagar" />
-          <Tile className="h-[156px]" icon={<ExtratoIcon size={26} color={O} />} label="Extrato" />
-          <Tile className="h-[156px]" icon={<VirtualCardIcon size={26} color={O} />} label="Cartão virtual" />
+          <Tile className="h-[164px]" icon={<TransferIcon size={26} color={O} />} label="Pix e transferir" onClick={() => navigate("/pix")} />
+          <Tile className="h-[164px]" icon={<BarcodeIcon size={26} color={O} />} label="Pagar" />
+          <Tile className="h-[164px]" icon={<ExtratoIcon size={26} color={O} />} label="Extrato" />
+          <Tile className="h-[164px]" icon={<VirtualCardIcon size={26} color={O} />} label="Cartão virtual" />
         </div>
         <div className="mt-[11px] grid grid-cols-3 gap-[7px]">
-          <Tile className="h-[104px] !p-[10px]" icon={<PixIcon size={20} color={O} />} label="Área Pix" />
-          <Tile className="h-[104px] !p-[10px]" icon={<ITokenIcon size={20} color={O} />} label="iToken" />
-          <Tile className="h-[104px] !p-[10px]" icon={<CircleHelp size={20} color={O} strokeWidth={1.8} />} label="Ajuda" />
+          <Tile className="h-[112px] !p-[10px]" icon={<PixIcon size={20} color={O} />} label="Área Pix" />
+          <Tile className="h-[112px] !p-[10px]" icon={<ITokenIcon size={20} color={O} />} label="iToken" />
+          <Tile className="h-[112px] !p-[10px]" icon={<CircleHelp size={20} color={O} strokeWidth={1.8} />} label="Ajuda" />
         </div>
 
         <h2 className="mb-3 mt-8 text-[18px] font-bold text-itau-text">Outros serviços</h2>

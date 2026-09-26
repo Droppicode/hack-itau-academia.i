@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         itau: {
-          orange: "#EC7000",
+          orange: "#FF6200",
           navy: "#1F2A63",
           blue: "#003087",
           pending: "#1A3EBF",

@@ -9,7 +9,7 @@ export function PrimaryButton({ label, icon, onClick, disabled }: Props) {
       onClick={onClick}
       disabled={disabled}
       className={`flex h-[44px] w-full items-center justify-between rounded-[12px] px-[22px] text-[17px] font-semibold text-white ${
-        disabled ? "bg-[#EC7000]/40" : "bg-itau-orange"
+        disabled ? "bg-[#FF6200]/40" : "bg-itau-orange"
       }`}
       scale={0.97}
     >

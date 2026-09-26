@@ -8,7 +8,7 @@ import { ScreenHeader } from "../components/ScreenHeader";
 import { Squish } from "../components/Squish";
 import { formatBRL, usePix } from "../state/PixContext";
 
-const O = "#EC7000";
+const O = "#FF6200";
 
 function OptionCard({ icon, label, value, onClick }: { icon: ReactNode; label: string; value?: string; onClick: () => void }) {
   return (
