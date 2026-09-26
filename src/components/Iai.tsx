@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ChevronRight, Flame, Map as MapIcon, Mail, MessageCircle, Sparkles, Target, Trophy, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CATCHPHRASES, CDI_YEAR, GOALS, type GoalId } from "../data/trilha";
+import { CATCHPHRASES, CDI_YEAR, GOALS, PLAYABLE, type GoalId } from "../data/trilha";
 import { brl, monthsTo } from "../data/money";
 import { useTrilha } from "../state/TrilhaContext";
 import { BottomSheet } from "./BottomSheet";
@@ -46,7 +46,7 @@ export function Rotator({ items, className }: { items: string[]; className: stri
 }
 
 export function ProgressBar({ pct, className = "", tone = "orange" }: { pct: number; className?: string; tone?: "orange" | "white" | "green" }) {
-  const fill = tone === "white" ? "bg-[#FF8A3D]" : tone === "green" ? "bg-[#1F9D55]" : "bg-itau-orange";
+  const fill = tone === "white" ? "bg-[#FF8A3D]" : tone === "green" ? "bg-[#00857A]" : "bg-itau-orange";
   return (
     <div className={`h-[6px] overflow-hidden rounded-full ${tone === "white" ? "bg-white/20" : "bg-[#E6E6E6]"} ${className}`}>
       <motion.div className={`h-full rounded-full ${fill}`} initial={{ width: 0 }} animate={{ width: `${Math.min(Math.max(pct, 2), 100)}%` }} transition={{ duration: 0.6, ease: "easeOut" }} />
@@ -192,7 +192,7 @@ export function HomeCarousel() {
             <MapIcon size={20} color="#FF6200" />
             <div className="flex-1">
               <div className="text-[12px] font-semibold uppercase tracking-wide text-itau-orange">
-                {t.introSeen ? `Nível ${t.level} · ${t.points} pts · ${t.completed.length}/12` : "Novo"}
+                {t.introSeen ? `Nível ${t.level} · ${t.points} pts · ${t.completed.length}/${PLAYABLE.length}` : "Novo"}
               </div>
               <div className="text-[16px] font-semibold leading-tight">{!t.introSeen ? "Conhecer a Academia Ia.i" : t.next ? `Continuar: ${t.next.title}` : "Trilha concluída"}</div>
             </div>
@@ -200,7 +200,7 @@ export function HomeCarousel() {
           </Squish>
         </Slide>
 
-        <Slide className="bg-gradient-to-br from-[#0F5F35] to-[#1F9D55]">
+        <Slide className="bg-gradient-to-br from-[#005A52] to-[#00857A]">
           <div className="flex items-center gap-2 text-[13px] text-white/80">
             <Target size={16} /> Meu objetivo
             <span className="ml-auto rounded-full bg-white/15 px-2 py-[2px] text-[11px]">simulado</span>
@@ -225,7 +225,7 @@ export function HomeCarousel() {
                 ))}
               </div>
               <div className="mt-3 flex gap-2">
-                <Squish onClick={() => t.advanceMonth()} className="flex-1 rounded-[12px] bg-white py-[9px] text-center text-[14px] font-semibold text-[#0F5F35]" scale={0.96}>
+                <Squish onClick={() => t.advanceMonth()} className="flex-1 rounded-[12px] bg-white py-[9px] text-center text-[14px] font-semibold text-[#005A52]" scale={0.96}>
                   Simular +1 mês
                 </Squish>
                 <Squish onClick={() => setEdit(true)} className="rounded-[12px] border border-white/40 px-4 py-[9px] text-[14px] font-semibold" scale={0.96}>
@@ -238,7 +238,7 @@ export function HomeCarousel() {
             <>
               <div className="mt-3 text-[18px] font-bold leading-snug">Qual é o seu próximo sonho?</div>
               <div className="mt-1 text-[14px] text-white/85">Coloque valor e quanto guardar por mês. A gente mostra ele sendo completado.</div>
-              <Squish onClick={() => setEdit(true)} className="mt-4 w-full rounded-[12px] bg-white py-[10px] text-center text-[15px] font-semibold text-[#0F5F35]" scale={0.96}>
+              <Squish onClick={() => setEdit(true)} className="mt-4 w-full rounded-[12px] bg-white py-[10px] text-center text-[15px] font-semibold text-[#005A52]" scale={0.96}>
                 Criar objetivo
               </Squish>
             </>
@@ -254,7 +254,7 @@ export function HomeCarousel() {
           {monthMission && (
             <>
               <ProgressBar pct={(monthMission.progress / monthMission.goal) * 100} tone="white" className="mt-3" />
-              <div className="mt-1 text-[13px] text-white/85">{monthMission.status === "bloqueada" ? "Libera na lição 4 (Reserva de emergência)" : `${monthMission.progress}/${monthMission.goal} · ${monthMission.status}`}</div>
+              <div className="mt-1 text-[13px] text-white/85">{monthMission.status === "bloqueada" ? "Libera na lição 10 (Orçamento: fixo x variável)" : `${monthMission.progress}/${monthMission.goal} · ${monthMission.status}`}</div>
             </>
           )}
           <Squish onClick={() => (t.introSeen ? navigate("/academia/missoes") : enter())} className="mt-3 w-full rounded-[12px] bg-white py-[10px] text-center text-[15px] font-semibold text-itau-orange" scale={0.96}>
@@ -275,7 +275,7 @@ export function HomeCarousel() {
 const CHANNELS = [
   { Icon: Bell, name: "Push", tag: "EXISTE", body: "Pix feito ✓ Que tal 5 min pra fazer seu dinheiro render mais? Conheça a Academia Ia.i." },
   { Icon: MessageCircle, name: "WhatsApp", tag: "VERIFICAR opt-in", body: "Oi, Matheus! Aqui é o Itaú. Vimos que você mandou um Pix pra sua outra conta. Criamos a Academia Ia.i: lições de 5 min, quiz que vale pontos e missões que deixam sua caixinha rendendo 105% do CDI. Bora?" },
-  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu dinheiro pode render mais — e você aprende no caminho.\n\nA Academia Ia.i é uma trilha de educação financeira dentro do app: 12 lições curtas, aprofundamento opcional e quizzes que liberam pontos no Minhas Vantagens. Complete a missão do mês e sua caixinha rende 105% do CDI (condição simulada no protótipo)." },
+  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu dinheiro pode render mais — e você aprende no caminho.\n\nA Academia Ia.i é uma trilha de educação financeira dentro do app: lições curtas sobre o dinheiro do dia a dia, aprofundamento opcional e quizzes que liberam pontos no Minhas Vantagens. Complete a missão do mês e sua caixinha rende 105% do CDI (condição simulada no protótipo)." },
 ];
 
 export function PixInvite() {
@@ -398,18 +398,23 @@ export function AcademiaTabs() {
     { path: "/pra-voce", label: "Vantagens", Icon: Sparkles },
   ];
   return (
-    <nav className="flex shrink-0 justify-around border-t border-[#E3E3E3] bg-white pt-2" style={{ paddingBottom: "max(22px, env(safe-area-inset-bottom))" }}>
-      {items.map(({ path, label, Icon }) => {
-        const active = pathname === path;
-        return (
-          <Squish key={path} onClick={() => !active && navigate(path, { replace: true, state: { tab: true } })} className="flex w-[90px] flex-col items-center" scale={0.9}>
-            <div className={`flex h-[34px] w-[52px] items-center justify-center rounded-full ${active ? "bg-[#FFF1E5]" : ""}`}>
-              <Icon size={22} color={active ? "#FF6200" : "#555"} strokeWidth={1.9} />
-            </div>
-            <span className={`mt-[2px] text-[12px] ${active ? "font-semibold text-itau-orange" : "text-[#555]"}`}>{label}</span>
-          </Squish>
-        );
-      })}
-    </nav>
+    <div className="shrink-0 bg-[#FBF6F0] px-5 pt-2" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
+      <nav className="flex items-center justify-between rounded-full bg-[#14215A] p-[6px] shadow-[0_10px_24px_rgba(20,33,90,0.25)]">
+        {items.map(({ path, label, Icon }) => {
+          const active = pathname === path;
+          return (
+            <Squish
+              key={path}
+              onClick={() => !active && navigate(path, { replace: true, state: { tab: true } })}
+              className={`flex h-[44px] items-center justify-center gap-2 rounded-full transition-all ${active ? "flex-[1.4] bg-[#EC7000] text-white" : "flex-1 text-white/70"}`}
+              scale={0.92}
+            >
+              <Icon size={20} strokeWidth={2} />
+              {active && <span className="text-[14px] font-semibold">{label}</span>}
+            </Squish>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

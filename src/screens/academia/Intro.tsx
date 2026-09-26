@@ -8,7 +8,7 @@ import { Squish } from "../../components/Squish";
 import { useTrilha } from "../../state/TrilhaContext";
 
 const PAGES = [
-  { Icon: BookOpen, title: "Educação financeira sem juridiquês", text: "12 lições de 5 minutos sobre salário, orçamento, reserva, cartão, golpes e primeiro investimento." },
+  { Icon: BookOpen, title: "Educação financeira sem juridiquês", text: "Lições de 5 minutos pra dominar o vocabulário do dinheiro: conta, Pix, fatura, holerite, benefícios, cofrinho e mais." },
   { Icon: MapIcon, title: "Uma trilha, um passo por vez", text: "Cada lição libera a próxima. Toque, responda e veja na hora se acertou — tipo jogo." },
   { Icon: Brain, title: "Aprofunde e faça o quiz", text: "Quer entender mais? Abra o aprofundamento e responda 4 perguntas. Acertou 3 ou mais: ganha pontos." },
   { Icon: Trophy, title: "Missões que valem a pena", text: "2 missões por semana e 1 no mês. Guardou e deixou as contas em dia? Sua caixinha rende 105% do CDI no mês seguinte." },

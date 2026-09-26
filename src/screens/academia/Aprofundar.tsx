@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { BookOpen, Brain, RotateCcw, Star } from "lucide-react";
+import { BookOpen, ChevronLeft, RotateCcw, Star } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Screen } from "../../components/Screen";
-import { ScreenHeader } from "../../components/ScreenHeader";
 import { Squish } from "../../components/Squish";
 import { LESSONS, POINTS_PER_RIGHT, QUIZ_PASS } from "../../data/trilha";
 import { quizPoints, useTrilha } from "../../state/TrilhaContext";
-import { CheckFooter, PlayerShell, QuestionBody, useAnswer } from "./Exercise";
+import { CheckFooter, FooterWrap, PillButton, PlayerShell, QuestionBody, useAnswer } from "./Exercise";
+import { Medal } from "./Licao";
 
 export function Aprofundar() {
   const { id } = useParams();
@@ -22,8 +22,13 @@ export function Aprofundar() {
 
   if (!lesson || !t.done(lesson.id)) {
     return (
-      <Screen header={<ScreenHeader />}>
-        <div className="px-6 pt-10 text-center text-[17px]">Conclua a lição na trilha pra liberar o aprofundamento.</div>
+      <Screen bg="bg-[#FBF6F0]">
+        <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
+          <div className="text-[17px] text-[#14215A]">Conclua a lição na trilha pra liberar o aprofundamento.</div>
+          <div className="w-full">
+            <PillButton label="Ir pra trilha" onClick={() => navigate("/academia/trilha", { replace: true })} />
+          </div>
+        </div>
       </Screen>
     );
   }
@@ -33,39 +38,50 @@ export function Aprofundar() {
   if (mode === "read") {
     return (
       <Screen
-        header={<ScreenHeader />}
+        bg="bg-[#FBF6F0]"
+        header={
+          <div className="flex h-[52px] shrink-0 items-center px-3">
+            <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+              <ChevronLeft size={28} strokeWidth={1.6} color="#14215A" />
+            </Squish>
+          </div>
+        }
         footer={
-          <div className="shrink-0 border-t border-[#E6E6E6] px-5 pt-4" style={{ paddingBottom: "max(24px, env(safe-area-inset-bottom))" }}>
-            <Squish
+          <FooterWrap>
+            <PillButton
+              label="Fazer o quiz"
+              tone="orange"
               onClick={() => {
                 setMode("quiz");
                 setN(0);
                 setRight(0);
                 a.reset();
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-[14px] border-b-[4px] border-[#137540] bg-[#1F9D55] py-[13px] text-[16px] font-bold uppercase text-white"
-              scale={0.97}
-            >
-              <Brain size={18} /> Fazer o quiz
-            </Squish>
-            <div className="mt-2 text-center text-[12px] text-[#777]">
+            />
+            <div className="mt-2 text-center text-[12px] text-[#8A7B6C]">
               4 perguntas · {QUIZ_PASS}+ acertos = {POINTS_PER_RIGHT} pts por acerto{best !== undefined ? ` · seu melhor: ${best}/4` : ""}
             </div>
-          </div>
+          </FooterWrap>
         }
       >
         <div className="px-5 pb-8">
-          <div className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-wide text-itau-orange">
-            <BookOpen size={16} /> Aprofundamento · opcional
+          <div className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#EC7000]">
+            <BookOpen size={15} /> Aprofundamento · opcional
           </div>
-          <h1 className="mt-2 text-[26px] font-bold leading-tight text-[#222]">{lesson.title}</h1>
-          {lesson.deep.map((d, i) => (
-            <motion.section key={d.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="mt-5">
-              <h2 className="text-[18px] font-bold text-[#1F2A63]">{d.title}</h2>
-              <p className="mt-1 text-[16px] leading-relaxed text-[#444]">{d.text}</p>
-            </motion.section>
-          ))}
-          <p className="mt-6 text-[12px] text-[#888]">Conteúdo educacional simplificado. Não é recomendação financeira.</p>
+          <h1 className="mt-2 text-[26px] font-bold leading-tight text-[#14215A]">{lesson.title}</h1>
+          <p className="mt-1 text-[15px] text-[#6C6257]">{lesson.learn}</p>
+          <div className="mt-4 flex flex-col gap-3">
+            {lesson.deep.map((d, i) => (
+              <motion.section key={d.title} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="rounded-[20px] bg-white p-4 shadow-[0_4px_16px_rgba(20,33,90,0.06)]">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-[9px] bg-[#FFE9D6] text-[13px] font-bold text-[#EC7000]">{i + 1}</span>
+                  <h2 className="text-[17px] font-bold text-[#14215A]">{d.title}</h2>
+                </div>
+                <p className="mt-2 text-[15px] leading-relaxed text-[#3C3C4C]">{d.text}</p>
+              </motion.section>
+            ))}
+          </div>
+          <p className="mt-6 text-[12px] text-[#8A7B6C]">Conteúdo educacional simplificado. Não é recomendação financeira.</p>
         </div>
       </Screen>
     );
@@ -74,37 +90,35 @@ export function Aprofundar() {
   if (mode === "result") {
     const pass = right >= QUIZ_PASS;
     return (
-      <Screen>
-        <div className="flex min-h-full flex-col items-center px-6 pb-8 pt-12 text-center">
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 220, damping: 12 }} className={`flex h-[110px] w-[110px] items-center justify-center rounded-full ${pass ? "bg-[#1F9D55]" : "bg-[#FFB27F]"}`}>
-            {pass ? <Star size={56} color="white" fill="white" /> : <RotateCcw size={50} color="white" />}
-          </motion.div>
-          <h1 className="mt-6 text-[26px] font-bold text-[#222]">{pass ? "Quiz aprovado!" : "Faltou pouco"}</h1>
-          <p className="mt-1 text-[17px] text-[#555]">
-            Você acertou <b>{right} de 4</b> ({right * 25}%)
-          </p>
-          <div className="mt-6 w-full rounded-[16px] bg-[#EEF1FB] p-4">
+      <Screen bg="bg-[#14215A]" statusTone="light">
+        <div className="flex min-h-full flex-col items-center px-6 pb-8 pt-10 text-center text-white">
+          <Medal tone={pass ? "#EC7000" : "#5A6390"}>{pass ? <Star size={50} color="white" fill="white" /> : <RotateCcw size={44} color="white" />}</Medal>
+          <div className="mt-5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#FFB27A]">{pass ? "Quiz aprovado" : "Quase lá"}</div>
+          <h1 className="mt-1 text-[26px] font-bold">
+            {right} de 4 acertos
+          </h1>
+          <div className="mt-6 w-full rounded-[18px] bg-white p-4 text-[#14215A]">
             {pass ? (
               gained > 0 ? (
-                <div className="text-[20px] font-bold text-[#1F2A63]">+{gained} pts no Minhas Vantagens</div>
+                <div className="text-[22px] font-bold">
+                  +{gained} pts <span className="text-[15px] font-semibold text-[#6C6257]">no Minhas Vantagens</span>
+                </div>
               ) : (
-                <div className="text-[16px] font-semibold text-[#1F2A63]">Você já tinha {quizPoints(best)} pts garantidos nesse quiz. Os pontos contam pelo seu melhor resultado.</div>
+                <div className="text-[15px] font-semibold">Você já tinha {quizPoints(best)} pts garantidos aqui. Vale sempre o seu melhor resultado.</div>
               )
             ) : (
-              <div className="text-[15px] text-[#1F2A63]">Com {QUIZ_PASS} acertos você ganha {QUIZ_PASS * POINTS_PER_RIGHT} pts. Relê o aprofundamento e tenta de novo — você não perde nada.</div>
+              <div className="text-[15px]">Com {QUIZ_PASS} acertos você ganha {QUIZ_PASS * POINTS_PER_RIGHT} pts. Relê o aprofundamento e tenta de novo: você não perde nada.</div>
             )}
           </div>
-          <div className="mt-auto w-full pt-6">
-            {!pass && (
-              <Squish onClick={() => setMode("read")} className="mb-3 w-full rounded-[14px] border-b-[4px] border-[#137540] bg-[#1F9D55] py-[13px] text-center text-[16px] font-bold uppercase text-white" scale={0.97}>
-                Tentar de novo
+          <div className="mt-auto flex w-full flex-col gap-2 pt-6">
+            {!pass && <PillButton label="Tentar de novo" tone="orange" onClick={() => setMode("read")} />}
+            {pass ? <PillButton label="Voltar pra trilha" tone="orange" onClick={() => navigate(-1)} /> : (
+              <Squish onClick={() => navigate(-1)} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
+                Voltar pra trilha
               </Squish>
             )}
-            <Squish onClick={() => navigate(-1)} className={`w-full rounded-[14px] py-[13px] text-center text-[16px] font-bold ${pass ? "border-b-[4px] border-[#137540] bg-[#1F9D55] uppercase text-white" : "text-[#1F2A63]"}`} scale={0.97}>
-              Voltar pra trilha
-            </Squish>
             {pass && (
-              <Squish onClick={() => navigate("/academia/missoes", { replace: true, state: { tab: true } })} className="mt-3 w-full py-2 text-center text-[15px] font-semibold text-[#1F2A63]" scale={0.97}>
+              <Squish onClick={() => navigate("/academia/missoes", { replace: true, state: { tab: true } })} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
                 Ver missões
               </Squish>
             )}
@@ -118,7 +132,9 @@ export function Aprofundar() {
   const ok = a.picked === q.right;
   return (
     <PlayerShell
-      pct={(n / lesson.quiz.length) * 100}
+      total={lesson.quiz.length}
+      pos={n}
+      tag={`Quiz · ${lesson.title}`}
       onClose={() => setMode("read")}
       footer={
         <CheckFooter
@@ -137,12 +153,12 @@ export function Aprofundar() {
               setMode("result");
             } else setN(n + 1);
           }}
-          nextLabel={n + 1 >= lesson.quiz.length ? "Ver resultado" : "Continuar"}
+          nextLabel={n + 1 >= lesson.quiz.length ? "Ver resultado" : "Seguir"}
         />
       }
     >
-      <motion.div key={n} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }}>
-        <QuestionBody {...q} picked={a.picked} checked={a.checked} onPick={a.setPicked} label={`Quiz · pergunta ${n + 1} de ${lesson.quiz.length}`} />
+      <motion.div key={n} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+        <QuestionBody {...q} picked={a.picked} checked={a.checked} onPick={a.setPicked} label={`Pergunta ${n + 1}`} />
       </motion.div>
     </PlayerShell>
   );

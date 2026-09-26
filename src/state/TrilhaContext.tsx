@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CDI_YEAR, LESSONS, LEVELS, MISSIONS, POINTS_PER_RIGHT, QUIZ_PASS, REWARDS, type GoalId, type Lesson, type LessonId, type MissionDef } from "../data/trilha";
+import { CDI_YEAR, LEVELS, MISSIONS, POINTS_PER_RIGHT, QUIZ_PASS, REWARDS, type GoalId, type Lesson, type LessonId, type MissionDef, PLAYABLE } from "../data/trilha";
 
 export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; history: number[] };
 
@@ -48,7 +48,7 @@ const INITIAL: Persisted = {
   activeRewards: [],
 };
 
-const KEY = "academiai-v3";
+const KEY = "academiai-v4";
 export const STREAK_BONUS = 20;
 
 export type MissionStatus = "bloqueada" | "disponível" | "em andamento" | "concluída" | "resgatada";
@@ -100,12 +100,12 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => {
     const done = (id: LessonId) => s.completed.includes(id);
-    const idx = (id: LessonId) => LESSONS.findIndex((l) => l.id === id);
-    const unlocked = (id: LessonId) => idx(id) === 0 || done(LESSONS[idx(id) - 1].id);
-    const next = LESSONS.find((l) => !done(l.id));
+    const idx = (id: LessonId) => PLAYABLE.findIndex((l) => l.id === id);
+    const unlocked = (id: LessonId) => idx(id) === 0 || (idx(id) > 0 && done(PLAYABLE[idx(id) - 1].id));
+    const next = PLAYABLE.find((l) => !done(l.id));
 
     const missionPts = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0);
-    const quizPts = LESSONS.reduce((a, l) => a + quizPoints(s.quizBest[l.id]), 0);
+    const quizPts = PLAYABLE.reduce((a, l) => a + quizPoints(s.quizBest[l.id]), 0);
     const points = quizPts + missionPts + s.bonusPts;
     const level = LEVELS.filter((v) => points >= v).length;
     const nextLevelAt = LEVELS[level];

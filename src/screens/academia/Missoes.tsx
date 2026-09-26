@@ -17,7 +17,7 @@ const BADGE: Record<MissionStatus, string> = {
   disponível: "bg-[#EEF1FB] text-[#1F2A63]",
   "em andamento": "bg-[#FFF1E5] text-[#B54700]",
   concluída: "bg-[#E3F4EA] text-[#1B7F3B]",
-  resgatada: "bg-[#1F9D55] text-white",
+  resgatada: "bg-[#00857A] text-white",
 };
 
 export function Missoes() {
@@ -47,7 +47,7 @@ export function Missoes() {
     return (
       <motion.div layout className={`rounded-[16px] p-4 ${m.status === "bloqueada" ? "bg-white/60" : "bg-white"}`}>
         <div className="flex items-start gap-3">
-          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${m.status === "bloqueada" ? "bg-[#E6E6E6]" : m.status === "resgatada" ? "bg-[#1F9D55]" : "bg-[#FFF1E5]"}`}>
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${m.status === "bloqueada" ? "bg-[#E6E6E6]" : m.status === "resgatada" ? "bg-[#00857A]" : "bg-[#FFF1E5]"}`}>
             {m.status === "bloqueada" ? <Lock size={16} color="#888" /> : m.status === "resgatada" ? <Check size={18} color="white" /> : <Sparkles size={16} color="#FF6200" />}
           </div>
           <div className="min-w-0 flex-1">
@@ -69,7 +69,7 @@ export function Missoes() {
               t.claim(m);
               toast(`+${m.points} pts no Minhas Vantagens`);
             }}
-            className="mt-3 w-full rounded-[12px] bg-[#1F9D55] py-[10px] text-center text-[15px] font-bold text-white"
+            className="mt-3 w-full rounded-[12px] bg-[#00857A] py-[10px] text-center text-[15px] font-bold text-white"
             scale={0.97}
           >
             Resgatar +{m.points} pts
@@ -90,7 +90,7 @@ export function Missoes() {
 
   return (
     <Screen
-      bg="bg-itau-bg"
+      bg="bg-[#FBF6F0]"
       header={
         <div className="flex h-[56px] shrink-0 items-center gap-1 border-b border-[#E6E6E6] bg-white px-3">
           <Squish aria-label="Voltar" onClick={back} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
@@ -141,7 +141,7 @@ export function Missoes() {
                 </Squish>
               </div>
             )}
-            <div className={`mt-2 rounded-[14px] p-3 text-[13px] ${t.cdi105 ? "bg-[#1F9D55] text-white" : "bg-white text-[#555]"}`}>
+            <div className={`mt-2 rounded-[14px] p-3 text-[13px] ${t.cdi105 ? "bg-[#00857A] text-white" : "bg-white text-[#555]"}`}>
               Caixinha agora: <b>{t.cdi105 ? "105%" : "100%"} do CDI</b> (simulado · condição a confirmar com o produto).
               {!t.cdi105 && " Cumpra a missão e vire o mês pra ativar."}
             </div>
