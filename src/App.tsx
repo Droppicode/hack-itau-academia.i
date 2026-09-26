@@ -17,7 +17,6 @@ import { TrilhaProvider } from "./state/TrilhaContext";
 import { Diagnostico } from "./screens/academia/Diagnostico";
 import { Hub } from "./screens/academia/Hub";
 import { Licao } from "./screens/academia/Licao";
-import { Extrato } from "./screens/Extrato";
 import { Vantagens } from "./screens/Vantagens";
 
 type Dir = "push" | "pop" | "fade";
@@ -50,7 +49,7 @@ function AnimatedRoutes() {
         <Routes location={location}>
           <Route path="/" element={<PreLogin />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/extrato" element={<Extrato />} />
+          <Route path="/extrato" element={<TabPlaceholder path="/extrato" />} />
           <Route path="/pagamentos" element={<TabPlaceholder path="/pagamentos" />} />
           <Route path="/pra-voce" element={<Vantagens />} />
           <Route path="/academia" element={<Hub />} />

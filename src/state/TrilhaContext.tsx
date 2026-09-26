@@ -1,30 +1,15 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { itauBalance, pctOfSalary } from "../data/calc";
-import { EXTRATO, LAST_SALARY, LUCAS, TODAY, type Entry } from "../data/lucas";
-import { LESSONS, REWARDS, type GoalId, type Lesson, type LessonId } from "../data/trilha";
-
-export type Pote = { name: string; targetCents: number; savedCents: number };
+import { LESSONS, LEVELS, MODULES, REWARDS, type FeelingId, type GoalId, type Lesson, type LessonId, type ModuleN } from "../data/trilha";
 
 export type Persisted = {
-  diag: { goal?: GoalId; renda?: "parecido" | "muda"; casa?: "fixo" | "quando" | "nao"; done: boolean };
+  diag: { goal?: GoalId; feeling?: FeelingId; start?: ModuleN; done: boolean };
   completed: LessonId[];
-  lessonPoints: number;
-  extra: Entry[];
   hookNo: number;
-  goal?: Pote & { id: GoalId; monthlyCents: number };
-  colchao?: Pote;
-  reserva?: Pote;
-  cdbCents: number;
-  aporte: { on: boolean; cents: number; mode: "fixo" | "percent"; percent: number };
-  walletCard: boolean;
-  alerts: { fatura: boolean; limite: boolean; limiteCents: number };
+  goal?: { id: GoalId; name: string; targetCents: number; monthlyCents: number };
+  guardaItau: boolean;
   activeRewards: string[];
-  fixedMarked: string[];
-  ofConnected: boolean;
-  salaryHere: boolean;
   nextTrail?: string;
-  simDays: number;
-  simTx: number;
+  streak: number;
   claimed: string[];
   homeCardMin: boolean;
 };
@@ -32,24 +17,15 @@ export type Persisted = {
 const INITIAL: Persisted = {
   diag: { done: false },
   completed: [],
-  lessonPoints: 0,
-  extra: [],
   hookNo: 0,
-  cdbCents: 0,
-  aporte: { on: false, cents: 5000, mode: "fixo", percent: 5 },
-  walletCard: false,
-  alerts: { fatura: false, limite: false, limiteCents: 80000 },
+  guardaItau: false,
   activeRewards: [],
-  fixedMarked: [],
-  ofConnected: false,
-  salaryHere: false,
-  simDays: 0,
-  simTx: 0,
+  streak: 1,
   claimed: [],
   homeCardMin: false,
 };
 
-const KEY = "academiai-v1";
+const KEY = "academiai-v2";
 
 function load(): Persisted {
   try {
@@ -75,22 +51,17 @@ export type Mission = {
 type Ctx = Persisted & {
   set: (patch: Partial<Persisted> | ((s: Persisted) => Partial<Persisted>)) => void;
   reset: () => void;
-  entries: Entry[];
-  balanceCents: number;
-  retainedCents: number;
-  retainedPct: number;
   points: number;
   level: number;
-  path: Lesson[];
+  levelPct: number;
+  nextLevelAt?: number;
   next?: Lesson;
   isUnlocked: (id: LessonId) => boolean;
   complete: (id: LessonId) => void;
   missions: Mission[];
   claim: (id: string) => void;
-  registerPix: (p: { cents: number; toName: string; toBank: string; own: boolean }) => void;
-  shouldHook: (p: { cents: number; own: boolean }) => boolean;
+  shouldHook: () => boolean;
   rewardUnlocked: (id: string) => boolean;
-  rewardActive: (id: string) => boolean;
   progressPct: number;
 };
 
@@ -105,139 +76,58 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<Ctx>(() => {
     const set: Ctx["set"] = (patch) => setS((prev) => ({ ...prev, ...(typeof patch === "function" ? patch(prev) : patch) }));
-    const entries = [...EXTRATO, ...s.extra];
-    const potes = (s.goal?.savedCents ?? 0) + (s.colchao?.savedCents ?? 0) + (s.reserva?.savedCents ?? 0);
-    const balanceCents = itauBalance(entries) - s.cdbCents - potes;
-    const retainedCents = balanceCents + s.cdbCents + potes;
-    const retainedPct = pctOfSalary(retainedCents);
-
-    const variableProfile = s.diag.renda === "muda" || s.diag.casa === "quando";
-    const path = LESSONS.filter((l) => !l.conditional || variableProfile || s.completed.includes(l.id));
-    const next = path.find((l) => !s.completed.includes(l.id));
+    const done = (id: LessonId) => s.completed.includes(id);
     const isUnlocked = (id: LessonId) => {
-      if (s.completed.includes(id)) return true;
-      const lesson = path.find((l) => l.id === id);
-      if (!lesson || next?.id !== id) return false;
-      return !lesson.needsAporte || s.aporte.on;
+      const l = LESSONS.find((x) => x.id === id);
+      if (!l) return false;
+      const inModule = LESSONS.filter((x) => x.module === l.module);
+      const i = inModule.indexOf(l);
+      return i === 0 || done(inModule[i - 1].id);
     };
+    const order = s.diag.start ? [...MODULES.filter((m) => m.n >= s.diag.start!), ...MODULES.filter((m) => m.n < s.diag.start!)] : MODULES;
+    const next = order.flatMap((m) => LESSONS.filter((l) => l.module === m.n)).find((l) => !done(l.id) && isUnlocked(l.id));
 
-    const txThisCycle =
-      entries.filter((en) => en.source === "itau" && en.cents < 0 && en.date >= LAST_SALARY).length + s.simTx;
-    const products = [s.goal, s.colchao, s.reserva].filter(Boolean).length + (s.cdbCents > 0 ? 1 : 0) + (s.aporte.on ? 1 : 0);
-    const keeps = retainedPct >= 50;
+    const modulesDone = MODULES.filter((m) => LESSONS.filter((l) => l.module === m.n).every((l) => done(l.id))).length;
     const raw: Omit<Mission, "claimed">[] = [
+      { id: "m-diag", title: "Primeiro passo", text: "Responder o diagnóstico de 3 toques", points: 50, progress: s.diag.done ? 1 : 0, goal: 1, unit: "", met: s.diag.done },
+      { id: "m-streak", title: "Sequência de 3 dias", text: "Abrir a AcademIA.I 3 dias seguidos", points: 100, progress: Math.min(s.streak, 3), goal: 3, unit: "dias", met: s.streak >= 3 },
+      { id: "m-modulo", title: "Módulo fechado", text: "Terminar todas as lições de um módulo", points: 150, progress: Math.min(modulesDone, 1), goal: 1, unit: "módulo", met: modulesDone >= 1 },
       {
-        id: "m-fica",
-        title: "Salário que fica",
-        text: "Manter pelo menos 50% do salário no Itaú por 7 dias",
+        id: "m-guarda",
+        title: "Um pouco fica aqui",
+        text: "Deixar parte do salário guardada no Itaú para o seu objetivo",
         points: 200,
-        progress: keeps ? Math.min(s.simDays, 7) : 0,
-        goal: 7,
-        unit: "dias",
-        met: keeps && s.simDays >= 7,
-      },
-      {
-        id: "m-5tx",
-        title: "5 movimentos no mês",
-        text: "Pix, débito ou pagamento saindo da conta Itaú",
-        points: 100,
-        progress: Math.min(txThisCycle, 5),
-        goal: 5,
-        unit: "movimentos",
-        met: txThisCycle >= 5,
-      },
-      {
-        id: "m-produto",
-        title: "Um além da conta",
-        text: "Ter um pote, uma aplicação ou o aporte ligado",
-        points: 100,
-        progress: Math.min(products, 1),
+        progress: s.guardaItau ? 1 : 0,
         goal: 1,
-        unit: "produto",
-        met: products >= 1,
+        unit: "",
+        met: s.guardaItau,
       },
-      {
-        id: "m-cartao",
-        title: "Primeira compra por aproximação",
-        text: "Usar o cartão Itaú da carteira do celular",
-        points: 50,
-        progress: s.walletCard && s.simTx > 0 ? 1 : 0,
-        goal: 1,
-        unit: "compra",
-        met: s.walletCard && s.simTx > 0,
-      },
-      {
-        id: "m-streak",
-        title: "4 lições no ritmo",
-        text: "Uma lição por salário, sem pular",
-        points: 100,
-        progress: Math.min(s.completed.length, 4),
-        goal: 4,
-        unit: "lições",
-        met: s.completed.length >= 4,
-      },
+      { id: "m-trilha", title: "Trilha completa", text: "As 12 lições da AcademIA.I", points: 300, progress: s.completed.length, goal: LESSONS.length, unit: "lições", met: s.completed.length >= LESSONS.length },
     ];
     const missions = raw.map((m) => ({ ...m, claimed: s.claimed.includes(m.id) }));
-    const missionPoints = missions.filter((m) => m.claimed).reduce((a, m) => a + m.points, 0);
-    const points = s.lessonPoints + missionPoints;
-    const modulesDone = [1, 2, 3, 4].filter((mod) => path.filter((l) => l.module === mod).every((l) => s.completed.includes(l.id))).length;
-    const level = 1 + modulesDone;
-
-    const rewardUnlocked = (id: string) => {
-      const r = REWARDS.find((x) => x.id === id);
-      return !!r && s.completed.includes(r.unlock);
-    };
+    const lessonPoints = LESSONS.filter((l) => done(l.id)).reduce((a, l) => a + l.points, 0);
+    const points = lessonPoints + missions.filter((m) => m.claimed).reduce((a, m) => a + m.points, 0);
+    const level = LEVELS.filter((min) => points >= min).length;
+    const cur = LEVELS[level - 1];
+    const nextLevelAt = LEVELS[level];
+    const levelPct = nextLevelAt === undefined ? 100 : Math.round(((points - cur) / (nextLevelAt - cur)) * 100);
 
     return {
       ...s,
       set,
       reset: () => setS(INITIAL),
-      entries,
-      balanceCents,
-      retainedCents,
-      retainedPct,
       points,
       level,
-      path,
+      levelPct,
+      nextLevelAt,
       next,
       isUnlocked,
-      complete: (id) =>
-        setS((prev) =>
-          prev.completed.includes(id)
-            ? prev
-            : {
-                ...prev,
-                completed: [...prev.completed, id],
-                lessonPoints: prev.lessonPoints + (LESSONS.find((l) => l.id === id)?.points ?? 0),
-              },
-        ),
+      complete: (id) => setS((prev) => (prev.completed.includes(id) ? prev : { ...prev, completed: [...prev.completed, id] })),
       missions,
       claim: (id) => setS((prev) => (prev.claimed.includes(id) ? prev : { ...prev, claimed: [...prev.claimed, id] })),
-      registerPix: ({ cents, toName, toBank, own }) =>
-        setS((prev) => ({
-          ...prev,
-          extra: [
-            ...prev.extra,
-            {
-              id: `pix-${Date.now()}`,
-              date: TODAY,
-              label: `Pix enviado · ${own ? `${LUCAS.first} (${toBank})` : toName}`,
-              cents: -cents,
-              category: own ? "Transferência própria" : "Casa",
-              source: "itau",
-              internal: own,
-              to: own ? toBank : undefined,
-            },
-          ],
-        })),
-      shouldHook: ({ cents, own }) => own && pctOfSalary(cents) >= 50 && s.hookNo < 2 && !s.completed.includes("L1"),
-      rewardUnlocked,
-      rewardActive: (id) => {
-        const r = REWARDS.find((x) => x.id === id);
-        if (!r || !s.activeRewards.includes(id) || !rewardUnlocked(id)) return false;
-        return !r.recurring || s.aporte.on;
-      },
-      progressPct: Math.round((s.completed.filter((id) => path.some((l) => l.id === id)).length / path.length) * 100),
+      shouldHook: () => s.hookNo < 2 && !done("L7"),
+      rewardUnlocked: (id) => (REWARDS.find((r) => r.id === id)?.level ?? 99) <= level,
+      progressPct: Math.round((s.completed.length / LESSONS.length) * 100),
     };
   }, [s]);
 

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Check, ChevronRight, Gift, Lock, Settings2, Target } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,9 +7,8 @@ import { Screen } from "../../components/Screen";
 import { HeaderIcon, ScreenHeader } from "../../components/ScreenHeader";
 import { Squish } from "../../components/Squish";
 import { useToast } from "../../components/Toast";
-import { brl } from "../../data/calc";
-import { LUCAS } from "../../data/lucas";
-import { MODULES, NEXT_TRAILS } from "../../data/trilha";
+import { brl } from "../../data/money";
+import { LESSONS, MODULES, NEXT_TRAILS } from "../../data/trilha";
 import { useTrilha, type Mission } from "../../state/TrilhaContext";
 
 export function MissionRow({ m, onClaim }: { m: Mission; onClaim: () => void }) {
@@ -49,22 +47,7 @@ function DemoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTrilha();
   const toast = useToast();
   const actions = [
-    {
-      label: "Cair o próximo salário",
-      run: () => {
-        const aporte = t.aporte.on ? (t.aporte.mode === "percent" ? Math.round((LUCAS.salaryCents * t.aporte.percent) / 100) : t.aporte.cents) : 0;
-        t.set((s) => ({
-          extra: [
-            ...s.extra,
-            { id: `sal-${Date.now()}`, date: "2026-10-25", label: "Salário · Empresa Aprendiz Ltda", cents: LUCAS.salaryCents, category: "Salário", source: "itau" },
-          ],
-          goal: s.goal && aporte ? { ...s.goal, savedCents: s.goal.savedCents + aporte } : s.goal,
-        }));
-        toast(aporte ? `Salário caiu · ${brl(aporte)} foram pro pote sozinhos` : "Salário caiu");
-      },
-    },
-    { label: "Avançar 7 dias", run: () => (t.set((s) => ({ simDays: s.simDays + 7 })), toast("+7 dias")) },
-    { label: "Simular 3 compras no débito Itaú", run: () => (t.set((s) => ({ simTx: s.simTx + 3 })), toast("3 compras simuladas")) },
+    { label: "Avançar 1 dia (sequência)", run: () => (t.set((s) => ({ streak: s.streak + 1 })), toast("+1 dia de sequência")) },
     {
       label: "Resetar protótipo",
       run: () => {
@@ -76,7 +59,7 @@ function DemoSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   ];
   return (
     <BottomSheet open={open} onClose={onClose} title="Controles do protótipo">
-      <p className="-mt-2 mb-3 text-[14px] text-[#666]">Só pra demo: simula o tempo passando. Dados, Open Finance e Minhas Vantagens são simulados.</p>
+      <p className="-mt-2 mb-3 text-[14px] text-[#666]">Só pra demo: simula o tempo passando. Minhas Vantagens e produtos são simulados.</p>
       <div className="flex flex-col gap-2">
         {actions.map((a) => (
           <Squish key={a.label} onClick={a.run} className="w-full rounded-[12px] bg-itau-chip px-4 py-[13px] text-[16px] font-semibold text-[#333]" scale={0.97}>
@@ -94,12 +77,6 @@ export function Hub() {
   const toast = useToast();
   const [demo, setDemo] = useState(false);
   const done = !t.next;
-  const criteria = [
-    { ok: t.missions.find((m) => m.id === "m-fica")?.met ?? false, label: "≥50% do salário aqui por 7 dias", now: `hoje: ${t.retainedPct}%` },
-    { ok: t.missions.find((m) => m.id === "m-5tx")?.met ?? false, label: "≥5 movimentos no mês", now: `${t.missions.find((m) => m.id === "m-5tx")?.progress ?? 0}/5` },
-    { ok: t.missions.find((m) => m.id === "m-produto")?.met ?? false, label: "≥1 produto além da conta", now: "" },
-  ];
-
   return (
     <Screen
       bg="bg-itau-bg"
@@ -122,14 +99,14 @@ export function Hub() {
           <IaiAvatar size={44} />
           <div>
             <Wordmark className="text-[26px]" />
-            <div className="text-[14px] text-white/75">12 lições de 60 s · 90 dias · com o seu dinheiro</div>
+            <div className="text-[14px] text-white/75">12 lições de 60 s · educação financeira sem juridiquês</div>
           </div>
         </div>
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
           {[
             { v: `Nível ${t.level}`, l: "Minhas Vantagens" },
             { v: `${t.points}`, l: "pontos" },
-            { v: `${t.completed.length}/${t.path.length}`, l: "lições" },
+            { v: `${t.completed.length}/${LESSONS.length}`, l: "lições" },
           ].map((x) => (
             <div key={x.l} className="rounded-[12px] bg-white/10 py-2">
               <div className="text-[18px] font-bold">{x.v}</div>
@@ -137,10 +114,11 @@ export function Hub() {
             </div>
           ))}
         </div>
-        <ProgressBar pct={t.progressPct} tone="white" className="mt-4" />
+        <ProgressBar pct={t.levelPct} tone="white" className="mt-4" />
+        <div className="mt-1 text-right text-[12px] text-white/70">{t.nextLevelAt ? `${t.nextLevelAt - t.points} pts pro Nível ${t.level + 1}` : "Nível máximo"}</div>
         {!done && t.next && (
           <Squish
-            onClick={() => (t.isUnlocked(t.next!.id) ? navigate(`/academia/licao/${t.next!.id}`) : toast("Liga o aporte na L6 antes — a Ia.i segura essa lição até lá"))}
+            onClick={() => navigate(`/academia/licao/${t.next!.id}`)}
             className="mt-4 flex w-full items-center gap-3 rounded-[14px] bg-itau-orange px-4 py-3"
             scale={0.97}
           >
@@ -165,7 +143,7 @@ export function Hub() {
           <div className="rounded-[18px] bg-white p-5">
             <h2 className="text-[18px] font-bold text-black">E agora? Você escolhe.</h2>
             <p className="mt-1 text-[14px] text-[#666]">
-              {t.goal ? `Seu objetivo "${t.goal.name}" tá em ${brl(t.goal.savedCents)} de ${brl(t.goal.targetCents, false)}.` : "Trilha concluída."} Qual é a próxima trilha?
+              {t.goal ? `Seu objetivo "${t.goal.name}" (${brl(t.goal.targetCents, false)}) continua de pé.` : "Trilha concluída."} Qual é a próxima trilha?
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {NEXT_TRAILS.map((n) => (
@@ -184,7 +162,7 @@ export function Hub() {
         )}
 
         {MODULES.map((mod) => {
-          const lessons = t.path.filter((l) => l.module === mod.n);
+          const lessons = LESSONS.filter((l) => l.module === mod.n);
           const doneCount = lessons.filter((l) => t.completed.includes(l.id)).length;
           return (
             <div key={mod.n} className="rounded-[18px] bg-white px-5 pb-2 pt-4">
@@ -197,20 +175,19 @@ export function Hub() {
                 </span>
               </div>
               <div className="text-[13px] text-[#777]">
-                {mod.days} · {mod.tagline}
+                {mod.tagline}
               </div>
               <div className="mt-2">
                 {lessons.map((l) => {
                   const isDone = t.completed.includes(l.id);
                   const open = t.isUnlocked(l.id);
-                  const held = !isDone && t.next?.id === l.id && !open;
                   return (
                     <Squish
                       key={l.id}
                       onClick={() =>
                         open
                           ? navigate(`/academia/licao/${l.id}`)
-                          : toast(held ? "A Ia.i segura essa até o aporte estar ligado" : "Libera depois da lição anterior · no app real, 1 por semana")
+                          : toast("Libera depois da lição anterior do módulo")
                       }
                       className="flex w-full items-center gap-3 border-t border-[#EEE] py-[12px]"
                       scale={0.98}
@@ -225,13 +202,11 @@ export function Hub() {
                       <div className="min-w-0 flex-1">
                         <div className={`text-[15px] font-semibold leading-tight ${open || isDone ? "text-[#333]" : "text-[#999]"}`}>{l.title}</div>
                         <div className="text-[13px] text-[#777]">
-                          {l.action}
-                          {l.conditional ? " · pra quem tem renda que varia" : ""}
+                          {l.hook}
                         </div>
                       </div>
                       <div className="shrink-0 text-right text-[12px]">
                         <div className={`font-semibold ${isDone ? "text-[#1B7F3B]" : "text-itau-orange"}`}>+{l.points}</div>
-                        {l.reward && <Gift size={14} className="ml-auto mt-[2px]" color="#1F2A63" />}
                       </div>
                     </Squish>
                   );
@@ -243,42 +218,23 @@ export function Hub() {
 
         <div className="rounded-[18px] bg-white px-5 pb-2 pt-4">
           <h2 className="text-[17px] font-bold text-black">Missões</h2>
-          <div className="text-[13px] text-[#777]">Hábito conta mais que lição. Missão renova todo mês.</div>
+          <div className="text-[13px] text-[#777]">Hábito conta mais que lição.</div>
           {t.missions.map((m) => (
             <MissionRow key={m.id} m={m} onClaim={() => (t.claim(m.id), toast(`+${m.points} pts`))} />
           ))}
-        </div>
-
-        <div className="rounded-[18px] bg-white p-5">
-          <h2 className="text-[17px] font-bold text-black">Itaú como banco principal</h2>
-          <div className="text-[13px] text-[#777]">O que a gente mede em 90 dias — não é obrigação, é o placar.</div>
-          <div className="mt-3 flex flex-col gap-2">
-            {criteria.map((c) => (
-              <div key={c.label} className="flex items-center gap-3">
-                <motion.div
-                  animate={{ scale: c.ok ? [1, 1.2, 1] : 1 }}
-                  className={`flex h-6 w-6 items-center justify-center rounded-full ${c.ok ? "bg-[#1B7F3B]" : "border-2 border-[#CCC]"}`}
-                >
-                  {c.ok && <Check size={14} color="white" />}
-                </motion.div>
-                <span className="flex-1 text-[15px] text-[#333]">{c.label}</span>
-                <span className="text-[13px] text-[#777]">{c.now}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="flex w-full items-center gap-3 rounded-[18px] bg-white p-5" scale={0.98}>
           <Gift color="#FF6200" />
           <div className="flex-1">
             <div className="text-[16px] font-semibold text-[#333]">Ver recompensas no Minhas Vantagens</div>
-            <div className="text-[13px] text-[#777]">Nunca crédito, limite ou empréstimo. Pontos não expiram.</div>
+            <div className="text-[13px] text-[#777]">Pontos não expiram e não viram dinheiro.</div>
           </div>
           <ChevronRight color="#444" />
         </Squish>
 
         <p className="px-2 pb-4 text-center text-[12px] leading-snug text-[#888]">
-          Protótipo: extrato do Lucas e dados de Open Finance fictícios; textos da Ia.i por template; Minhas Vantagens simulado. Produtos são opção, nunca recomendação.
+          Protótipo: textos da Ia.i por template, valores de exemplo e Minhas Vantagens simulado. Conteúdo educacional, não é recomendação.
         </p>
       </div>
       <DemoSheet open={demo} onClose={() => setDemo(false)} />

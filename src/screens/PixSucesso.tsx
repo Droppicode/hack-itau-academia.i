@@ -14,7 +14,7 @@ export function PixSucesso() {
   const navigate = useNavigate();
   const { amountCents, recipient, message, reset } = usePix();
   const { shouldHook } = useTrilha();
-  const [hook] = useState(() => shouldHook({ cents: amountCents, own: !!recipient.own }));
+  const [hook] = useState(shouldHook);
   const now = useMemo(() => new Date(), []);
   const txId = useMemo(() => `E60701190${now.getTime().toString(36).toUpperCase()}PIX`, [now]);
   const when = now.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -70,10 +70,9 @@ export function PixSucesso() {
 
         {hook && (
           <PixHookCard
-            cents={amountCents}
             onGo={() => {
               reset();
-              navigate("/academia/licao/L1", { replace: true, state: { fromPix: true } });
+              navigate("/academia/licao/L7", { replace: true, state: { fromPix: true } });
             }}
           />
         )}

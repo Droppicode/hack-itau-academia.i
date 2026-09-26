@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronRight, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { pctOfSalary } from "../data/calc";
 import { CATCHPHRASES, GOALS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 import { Squish } from "./Squish";
@@ -116,7 +115,7 @@ export function IaiHomeCard() {
 
       {!started ? (
         <div className="relative mt-3">
-          <div className="text-[14px] text-white/80">Pra começar, 1 toque: se sobrasse uma grana, ia pra quê?</div>
+          <div className="text-[14px] text-white/80">Pra começar, 1 toque: qual é o seu próximo sonho?</div>
           <div className="no-scrollbar -mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-1">
             {GOALS.map((g) => (
               <Squish
@@ -142,9 +141,9 @@ export function IaiHomeCard() {
             <span>
               Nível {t.level} · {t.points} pts
             </span>
-            <span>{t.progressPct}% da trilha</span>
+            <span>{t.completed.length}/12 lições</span>
           </div>
-          <ProgressBar pct={t.progressPct} tone="white" className="mt-[6px]" />
+          <ProgressBar pct={t.levelPct} tone="white" className="mt-[6px]" />
           <Squish
             onClick={() => navigate(t.next ? `/academia/licao/${t.next.id}` : "/academia")}
             className="mt-3 flex w-full items-center gap-3 rounded-[14px] bg-white px-4 py-3 text-[#1A1A1A]"
@@ -164,7 +163,7 @@ export function IaiHomeCard() {
   );
 }
 
-export function PixHookCard({ cents, onGo }: { cents: number; onGo: () => void }) {
+export function PixHookCard({ onGo }: { onGo: () => void }) {
   const t = useTrilha();
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -172,7 +171,6 @@ export function PixHookCard({ cents, onGo }: { cents: number; onGo: () => void }
     const id = window.setTimeout(() => setOpen(true), 1100);
     return () => window.clearTimeout(id);
   }, []);
-  const pct = pctOfSalary(cents);
 
   return (
     <AnimatePresence>
@@ -189,12 +187,12 @@ export function PixHookCard({ cents, onGo }: { cents: number; onGo: () => void }
             <span className="text-[13px] text-white/75">Ia.i · leva 60 s</span>
           </div>
           <p className="mt-3 text-[17px] font-semibold leading-snug">
-            {pct}% do seu salário acabou de ir pra outra conta. Suave — mas bora ver o caminho que ele faz?
+            Pix feito. Mas você sabe quando vale mais usar Pix, débito ou crédito?
           </p>
-          <p className="mt-1 text-[14px] text-white/75">Com o seu extrato, não com exemplo de livro. Vale +50 pts no Minhas Vantagens.</p>
+          <p className="mt-1 text-[14px] text-white/75">3 situações do dia a dia, sem juridiquês. Vale +50 pts no Minhas Vantagens.</p>
           <div className="mt-4 flex gap-2">
             <Squish onClick={onGo} className="flex-1 rounded-[12px] bg-itau-orange py-[11px] text-center text-[15px] font-semibold" scale={0.96}>
-              Ver meu caminho
+              Bora ver
             </Squish>
             <Squish
               onClick={() => {

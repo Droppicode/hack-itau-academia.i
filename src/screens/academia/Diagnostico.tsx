@@ -1,17 +1,16 @@
 import { motion } from "framer-motion";
-import { Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { IaiAvatar } from "../../components/Iai";
 import { Footer, PrimaryButton } from "../../components/PrimaryButton";
 import { Screen } from "../../components/Screen";
 import { ScreenHeader } from "../../components/ScreenHeader";
 import { Squish } from "../../components/Squish";
-import { GOALS } from "../../data/trilha";
+import { FEELINGS, GOALS, LESSONS, MODULES } from "../../data/trilha";
 import { useTrilha, type Persisted } from "../../state/TrilhaContext";
 
 type Diag = Persisted["diag"];
 
-function Question<K extends "goal" | "renda" | "casa">({
+function Question<K extends "goal" | "feeling" | "start">({
   n,
   q,
   field,
@@ -50,8 +49,10 @@ export function Diagnostico() {
   const navigate = useNavigate();
   const t = useTrilha();
   const finish = () => {
-    t.set((s) => ({ diag: { ...s.diag, done: true } }));
-    navigate("/academia/licao/L1", { replace: true });
+    const start = t.diag.start ?? (t.diag.feeling === "vermelho" ? 3 : 1);
+    const first = LESSONS.find((l) => l.module === start && !t.completed.includes(l.id)) ?? LESSONS[0];
+    t.set((s) => ({ diag: { ...s.diag, start, done: true } }));
+    navigate(`/academia/licao/${first.id}`, { replace: true });
   };
 
   return (
@@ -59,7 +60,7 @@ export function Diagnostico() {
       header={<ScreenHeader right={<Squish onClick={finish} className="px-3 text-[15px] font-semibold text-[#555]">Pular</Squish>} />}
       footer={
         <Footer>
-          <PrimaryButton label="Bora pra lição 1 · 60 s" onClick={finish} />
+          <PrimaryButton label="Bora pra primeira lição · 60 s" onClick={finish} />
         </Footer>
       }
     >
@@ -68,40 +69,11 @@ export function Diagnostico() {
           <IaiAvatar size={40} />
           <h1 className="text-[24px] font-bold leading-tight tracking-tight text-black">Três toques e a trilha fica com a sua cara</h1>
         </div>
-        <p className="mt-2 text-[15px] text-[#555]">Tudo opcional. Sem resposta, a Ia.i usa só o seu extrato.</p>
+        <p className="mt-2 text-[15px] text-[#555]">Tudo opcional. As respostas só mudam a ordem das lições e os exemplos.</p>
 
-        <Question
-          n={1}
-          field="goal"
-          q="Se sobrasse uma grana, ela ia pra quê?"
-          options={GOALS.map((g) => ({ id: g.id, label: g.label }))}
-        />
-        <Question
-          n={2}
-          field="renda"
-          q="Seu dinheiro do mês é sempre parecido ou muda muito?"
-          options={[
-            { id: "parecido", label: "Parecido" },
-            { id: "muda", label: "Muda bastante" },
-          ]}
-        />
-        <Question
-          n={3}
-          field="casa"
-          q="Você ajuda nas contas de casa?"
-          options={[
-            { id: "fixo", label: "Sim, valor fixo" },
-            { id: "quando", label: "Sim, quando dá" },
-            { id: "nao", label: "Não" },
-          ]}
-        />
-
-        <div className="mt-8 flex gap-3 rounded-[14px] bg-itau-chip p-4">
-          <Eye size={20} className="mt-[2px] shrink-0" color="#1F2A63" />
-          <p className="text-[14px] leading-snug text-[#444]">
-            A trilha usa comportamento — nunca renda, CEP ou idade — pra decidir a ordem das lições.
-          </p>
-        </div>
+        <Question n={1} field="goal" q="Qual é o seu próximo sonho?" options={GOALS.map((g) => ({ id: g.id, label: g.label }))} />
+        <Question n={2} field="feeling" q="Como você tá com dinheiro hoje?" options={FEELINGS.map((f) => ({ id: f.id, label: f.label }))} />
+        <Question n={3} field="start" q="Quer começar por onde?" options={MODULES.map((m) => ({ id: m.n, label: m.name }))} />
       </div>
     </Screen>
   );

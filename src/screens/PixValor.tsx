@@ -4,16 +4,13 @@ import { Footer, PrimaryButton } from "../components/PrimaryButton";
 import { Screen } from "../components/Screen";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { Squish } from "../components/Squish";
-import { formatBRL, usePix } from "../state/PixContext";
-import { useTrilha } from "../state/TrilhaContext";
+import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
 
-const CHIPS = [2000, 5000, 20000, 120000];
+const CHIPS = [1, 1000, 5000, 10000];
 
 export function PixValor() {
   const navigate = useNavigate();
   const { amountCents, setAmountCents, recipient } = usePix();
-  const { balanceCents } = useTrilha();
-  const over = amountCents > balanceCents;
 
   return (
     <Screen
@@ -23,7 +20,7 @@ export function PixValor() {
           <PrimaryButton
             label="Continuar"
             icon={<ChevronRight size={24} strokeWidth={1.6} />}
-            disabled={amountCents === 0 || over}
+            disabled={amountCents === 0}
             onClick={() => navigate("/pix/forma-pagamento")}
           />
         </Footer>
@@ -47,9 +44,8 @@ export function PixValor() {
             className="w-full bg-transparent text-[40px] font-bold tracking-tight text-black outline-none"
           />
         </label>
-        <div className={`mt-3 text-[15px] ${over ? "text-[#C8102E]" : "text-[#555]"}`}>
-          {over ? "Saldo insuficiente · " : "Saldo disponível "}
-          <span className="font-semibold">R$ {formatBRL(balanceCents)}</span>
+        <div className="mt-3 text-[15px] text-[#555]">
+          Saldo disponível <span className="font-semibold">R$ {formatBRL(BALANCE_CENTS)}</span>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">

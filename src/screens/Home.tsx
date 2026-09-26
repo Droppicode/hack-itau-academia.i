@@ -14,9 +14,7 @@ import {
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { IaiHomeCard } from "../components/Iai";
-import { brl } from "../data/calc";
-import { LUCAS } from "../data/lucas";
-import { formatBRL, usePix } from "../state/PixContext";
+import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
 import { useTrilha } from "../state/TrilhaContext";
 import { markHome } from "../state/homeHistory";
 
@@ -29,7 +27,7 @@ export function OrangeHeader() {
     <div className="flex h-[66px] shrink-0 items-center justify-between bg-itau-orange px-5 pb-2">
       <div className="flex items-center gap-2">
         <Squish className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white text-[14px] text-[#333]" scale={0.9}>
-          {LUCAS.initials}
+          MC
         </Squish>
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="flex items-center gap-[6px] rounded-full bg-white/20 px-[10px] py-[5px] text-[15px] font-semibold text-white" scale={0.94}>
           <span className="relative flex h-[14px] w-[14px] items-center justify-center">
@@ -101,9 +99,6 @@ function CardHead({ icon, title }: { icon: ReactNode; title: string }) {
 export function Home() {
   const navigate = useNavigate();
   const { balanceHidden, setBalanceHidden } = usePix();
-  const t = useTrilha();
-  const recent = [...t.entries].filter((en) => en.source === "itau").sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
-  const potes = [t.goal, t.colchao, t.reserva].filter((p) => p !== undefined);
   useEffect(markHome, []);
   const money = (cents: number) => (balanceHidden ? "R$ ••••" : `R$ ${formatBRL(cents)}`);
 
@@ -140,7 +135,7 @@ export function Home() {
             <Squish className="block w-full" scale={0.98}>
               <CardHead icon={<ItauLogo size={16} />} title="Conta corrente" />
               <div className="mt-[30px] text-[15px] text-[#444]">Saldo</div>
-              <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(t.balanceCents)}</div>
+              <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(BALANCE_CENTS)}</div>
             </Squish>
             <div className="mt-[14px] border-t border-[#CFCFCF]" />
             <Squish className="flex w-full items-center justify-between py-[14px]" scale={0.98}>
@@ -160,25 +155,11 @@ export function Home() {
             </div>
           </Card>
 
-          <Card onClick={() => navigate("/academia")}>
-            <CardHead icon={<TrendingUp size={18} color={K} strokeWidth={1.8} />} title="Investimentos e potes" />
-            <div className="mt-[22px] text-[15px] text-[#444]">Total guardado</div>
-            <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(t.retainedCents - t.balanceCents)}</div>
-            {potes.length || t.cdbCents ? (
-              <div className="mt-2 flex flex-col gap-1 text-[14px] text-[#555]">
-                {t.cdbCents > 0 && <span>CDB liquidez diária · {money(t.cdbCents)}</span>}
-                {potes.map((p) => (
-                  <span key={p.name}>
-                    Pote {p.name} · {money(p.savedCents)} de {brl(p.targetCents, false)}
-                  </span>
-                ))}
-                <span className={t.aporte.on ? "font-semibold text-[#1B7F3B]" : ""}>
-                  Aporte automático {t.aporte.on ? `ligado · ${t.aporte.mode === "percent" ? `${t.aporte.percent}% da entrada` : brl(t.aporte.cents)} no dia do salário` : "desligado"}
-                </span>
-              </div>
-            ) : (
-              <div className="mt-[4px] text-[14px] text-[#666]">Comece com a partir de R$ 20,00</div>
-            )}
+          <Card>
+            <CardHead icon={<TrendingUp size={18} color={K} strokeWidth={1.8} />} title="Investimentos" />
+            <div className="mt-[22px] text-[15px] text-[#444]">Total investido</div>
+            <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(0)}</div>
+            <div className="mt-[4px] text-[14px] text-[#666]">Comece com a partir de R$ 1,00</div>
           </Card>
 
           <Card>
@@ -209,26 +190,18 @@ export function Home() {
           <div className="rounded-[18px] bg-white px-[22px] py-[20px]">
             <div className="flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-black">Minhas últimas transações</h2>
-              <Squish onClick={() => navigate("/extrato", { replace: true, state: { tab: true } })} className="text-[14px] font-semibold text-itau-navy">
-                Ver extrato
-              </Squish>
+              <Squish className="text-[14px] font-semibold text-itau-navy">Ver extrato</Squish>
             </div>
-            {recent.map((en) => (
-              <div key={en.id} className="flex items-center gap-3 border-b border-[#EEE] py-[12px] last:border-0">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F0F1F3] text-[13px] font-semibold text-[#555]">
-                  {en.label[0]}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[15px] text-[#3A3A3A]">{en.label}</div>
-                  <div className="text-[13px] text-[#777]">
-                    {en.date.slice(8, 10)}/{en.date.slice(5, 7)} · {en.category}
-                  </div>
-                </div>
-                <div className={`text-[15px] font-semibold ${en.cents > 0 ? "text-[#1B7F3B]" : "text-[#3A3A3A]"}`}>
-                  {balanceHidden ? "••••" : `${en.cents > 0 ? "+" : "-"} ${brl(Math.abs(en.cents))}`}
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-3 border-b border-[#EEE] py-[14px] last:border-0">
+                <div className="h-9 w-9 rounded-full bg-[#F0F1F3]" />
+                <div className="flex-1">
+                  <div className="h-[10px] w-2/3 rounded bg-[#F0F1F3]" />
+                  <div className="mt-2 h-[8px] w-1/3 rounded bg-[#F4F4F4]" />
                 </div>
               </div>
             ))}
+            <div className="pt-1 text-center text-[14px] text-[#777]">Nenhuma transação recente</div>
           </div>
         </div>
       </div>
