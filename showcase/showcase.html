@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Academia Ia.i — Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --orange:#EC7000; --orange-deep:#C24E00; --navy:#0F1E4A; --navy-2:#1B2F6B;
+    --ink:#0F0F0F; --ink-2:#221A14; --paper:#FFF7F0;
+    --fg:#FFFFFF; --fg-dim:rgba(255,255,255,.72);
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;font-family:Inter,system-ui,sans-serif;color:var(--fg);overflow:hidden}
+
+  /* 16:9 stage, letterboxed */
+  #stage{position:absolute;inset:0;display:grid;place-items:center}
+  #canvas{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;overflow:hidden;
+          transition:background 1.4s var(--ease)}
+  #canvas[data-phase="intro"]{background:radial-gradient(120% 120% at 20% 10%,#2A1B12 0%,var(--ink) 55%,#000 100%)}
+  #canvas[data-phase="learn"]{background:radial-gradient(120% 120% at 80% 0%,var(--navy-2) 0%,var(--navy) 50%,#07102B 100%)}
+  #canvas[data-phase="act"]{background:radial-gradient(120% 120% at 15% 90%,var(--orange) 0%,var(--orange-deep) 45%,#6E2A00 100%)}
+  #canvas[data-phase="close"]{background:radial-gradient(120% 120% at 50% 100%,#2A1B12 0%,var(--ink) 55%,#000 100%)}
+
+  /* soft moving glow to avoid flat bg */
+  .glow{position:absolute;width:60%;aspect-ratio:1;border-radius:50%;filter:blur(120px);opacity:.35;pointer-events:none;
+        background:var(--orange);transition:transform 2s var(--ease),background 1.4s var(--ease),opacity 1.4s}
+  [data-phase="learn"] .glow{background:#3D63FF;transform:translate(70%,-20%)}
+  [data-phase="act"] .glow{background:#FFD08A;transform:translate(-10%,60%);opacity:.45}
+  [data-phase="close"] .glow{background:var(--orange);transform:translate(30%,30%);opacity:.25}
+
+  /* layout: phone left, text right */
+  .grid{position:absolute;inset:0;display:grid;grid-template-columns:44% 56%;align-items:center;padding:0 5%}
+
+  .phone{position:relative;justify-self:center;height:86%;aspect-ratio:720/1558;
+         background:#111;border-radius:6.5% / 3%;padding:1.6%;
+         box-shadow:0 40px 100px rgba(0,0,0,.55),inset 0 0 0 2px #2A2A2A}
+  .phone::after{content:"";position:absolute;top:2.2%;left:50%;width:32%;height:2.6%;transform:translateX(-50%);
+                background:#000;border-radius:999px}
+  .phone video{width:100%;height:100%;object-fit:cover;border-radius:5.5% / 2.5%;background:#000;display:block}
+
+  .copy{padding-left:6%;display:flex;flex-direction:column;gap:1.4vw;min-height:40%}
+  .kicker{font:600 .95vw/1 Inter;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);display:flex;gap:.8em;align-items:center}
+  .kicker::before{content:"";width:2.2em;height:2px;background:var(--orange)}
+  [data-phase="act"] .kicker{color:#FFE2C2}[data-phase="act"] .kicker::before{background:#FFE2C2}
+  .h{font:800 3.6vw/1.08 Manrope;letter-spacing:-.02em;max-width:22ch}
+  .h em{font-style:normal;color:var(--orange)}
+  [data-phase="act"] .h em{color:#FFE2C2}
+  .sub{font:400 1.35vw/1.45 Inter;color:var(--fg-dim);max-width:44ch}
+  .stat{font:800 5.2vw/1 Manrope;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+
+  /* enter/exit animation */
+  .anim{opacity:0;transform:translateY(18px);filter:blur(6px);
+        transition:opacity .45s var(--ease),transform .55s var(--ease),filter .45s var(--ease)}
+  .copy.on .anim{opacity:1;transform:none;filter:none}
+  .copy.on .anim:nth-child(2){transition-delay:.08s}
+  .copy.on .anim:nth-child(3){transition-delay:.16s}
+  .copy.on .anim:nth-child(4){transition-delay:.24s}
+
+  /* chrome: brand, progress, footnote */
+  .brand{position:absolute;top:4%;left:5%;font:800 1.2vw Manrope;letter-spacing:-.01em}
+  .brand span{color:var(--orange)}
+  .note{position:absolute;bottom:4%;left:5%;font:400 .85vw Inter;color:rgba(255,255,255,.45)}
+  .url{position:absolute;bottom:4%;right:5%;font:500 .9vw Inter;color:rgba(255,255,255,.6)}
+  .progress{position:absolute;top:0;left:0;height:4px;background:var(--orange);width:0;transition:width .25s linear}
+  .chapters{position:absolute;top:4%;right:5%;display:flex;gap:.6vw}
+  .chapters i{width:.55vw;height:.55vw;border-radius:50%;background:rgba(255,255,255,.25);transition:background .4s,transform .4s}
+  .chapters i.on{background:var(--orange);transform:scale(1.3)}
+  [data-phase="act"] .chapters i.on{background:#FFE2C2}
+
+  /* controls (hidden while recording: press H) */
+  #ui{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(8px);padding:10px 14px;border-radius:12px;font-size:13px;z-index:9}
+  #ui.hide{display:none}
+  #ui input[type=file]{color:#ccc;max-width:220px}
+  #ui button{background:var(--orange);border:0;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+  #ui label{color:#ccc}
+  #ui input[type=number]{width:64px;background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px}
+  #cue{color:#aaa;min-width:120px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="canvas" data-phase="intro">
+    <div class="glow"></div>
+    <div class="progress" id="progress"></div>
+    <div class="brand">Academ<span>IA.I</span></div>
+    <div class="chapters" id="chapters"></div>
+    <div class="grid">
+      <div class="phone"><video id="video" playsinline muted preload="auto"></video></div>
+      <div class="copy" id="copy"></div>
+    </div>
+    <div class="note">Protótipo · dados, rendimentos, pontos e integrações simulados</div>
+    <div class="url">hack-itau-academia-i.vercel.app</div>
+  </div>
+</div>
+
+<div id="ui">
+  <input type="file" id="file" accept="video/*">
+  <button id="play">▶ Play</button>
+  <label>offset (s) <input type="number" id="offset" step="0.5" value="0"></label>
+  <span id="cue">—</span>
+  <span style="color:#777">Espaço = play · ←/→ = ±2s · H = esconder</span>
+</div>
+
+<script>
+/* ===================== ROTEIRO DE TEXTOS (edite aqui) =====================
+   t: segundo em que o texto entra (base: vídeo academia_iai_apresentacao.mp4, 2min25s)
+   phase: intro | learn | act | close  (cor de fundo — muda só 3x no vídeo inteiro)
+   k: kicker (capítulo) · h: headline (≤ 7 palavras; <em> = destaque laranja)
+   s: subline (≤ 16 palavras) · stat: número grande opcional · count: [de, até] anima o número
+*/
+const CUES = [
+ {t:0,   phase:"intro", k:"Este é o Lucas",        h:"O salário <em>caiu.</em>",                         s:"Mas ele ainda não tem um plano claro para esse dinheiro."},
+ {t:5,   phase:"intro", k:"Como todo mês",          h:"Quase tudo <em>sai.</em>",  stat:"R$ 1.300",      s:"Pix para a própria conta em outro banco."},
+ {t:14,  phase:"intro", k:"Como todo mês",          h:"Para o cliente, é só mais um Pix.",               s:"Para o Itaú, é a chance de entender o <b>objetivo</b> por trás dessa saída."},
+ {t:20,  phase:"intro", k:"Comprovante",            h:"Pix enviado. <em>Nada muda.</em>",                s:"A transferência termina normalmente, sem interromper a jornada."},
+ {t:24,  phase:"intro", k:"Depois do comprovante",  h:"Um convite <em>contextual.</em>",                 s:"Cinco minutos para começar um objetivo. Dá para ignorar ou desligar."},
+
+ {t:28,  phase:"learn", k:"Academia Ia.i",          h:"Finanças <em>sem juridiquês.</em>",               s:"Uma trilha por vez · missões ligadas ao objetivo · sequência que multiplica a recompensa."},
+ {t:37,  phase:"learn", k:"Objetivo",               h:"Lucas escolhe: <em>sair de casa.</em>",           s:"Diz o que já sabe e conta, com as próprias palavras, o que quer."},
+ {t:46,  phase:"learn", k:"Meta calculada",         h:"R$ 6.000 · <em>R$ 300/mês</em> · ~20 meses",      s:"Os números vêm do sistema, não da IA."},
+ {t:49,  phase:"learn", k:"Onde entra a IA",        h:"A IA.I <em>redige.</em> O sistema <em>calcula.</em>", s:"O contexto do Lucas escolhe a linguagem e monta uma trilha personalizada."},
+ {t:53,  phase:"learn", k:"Trilha",                 h:"Quatro unidades, <em>um passo por vez.</em>",     s:"Vocabulário do dinheiro → organizar o mês → reserva de emergência → grandes objetivos."},
+ {t:62,  phase:"learn", k:"Lição",                  h:"Cabe em <em>poucos minutos.</em>",                s:"Um conceito, um exemplo do dia a dia e uma pergunta."},
+ {t:75,  phase:"learn", k:"Quiz",                   h:"Corrige <em>na hora.</em>",                       s:"Explica a resposta e faz o erro voltar na revisão."},
+ {t:88,  phase:"learn", k:"Lição concluída",        h:"Precisão, tempo e <em>missões desbloqueadas.</em>", s:"Cada lição termina numa ação real no app."},
+
+ {t:91,  phase:"learn", k:"Painel de teste",        h:"Avançar o <em>tempo.</em>",                       s:"Simula meses e eventos financeiros para ver a experiência evoluir."},
+ {t:96,  phase:"learn", k:"+1 mês",                 h:"O salário <em>cai de novo.</em>",                 s:"O app atualiza toda a jornada."},
+
+ {t:98,  phase:"act",   k:"Cofrinho “Sair de casa”", h:"R$ 300 <em>guardados.</em>",                     s:"Objetivo, progresso e prazo ficam visíveis. Criado junto com a trilha."},
+ {t:107, phase:"act",   k:"Simular +1 mês",         h:"O tempo <em>trabalha a favor.</em>", stat:"R$ 310,16", count:[300,310.16], s:"Sem novos depósitos, após 4 meses simulados."},
+ {t:119, phase:"act",   k:"Missões",                h:"O hábito vira <em>missão.</em>",                  s:"Guardar, cumprir lições, completar desafios. Tudo opcional, ligado à vida real."},
+ {t:126, phase:"act",   k:"Minhas Vantagens",       h:"Pontos Itaú, <em>onde já existem.</em>",          s:"Desconto na fatura, Itaú Shop e outros benefícios simulados."},
+ {t:131, phase:"act",   k:"Assistente IA.I",        h:"“Quanto posso guardar <em>esse mês?</em>”",       s:"Lê meta, saldo e histórico. Orienta — <b>não movimenta dinheiro.</b>"},
+
+ {t:142, phase:"close", k:"De volta à home",        h:"Educação que <em>vira ação.</em>",                s:"Objetivo, progresso, sequência e saldo atualizados — dentro do próprio Itaú."},
+];
+/* ========================================================================= */
+
+const video=document.getElementById('video'), copy=document.getElementById('copy'), canvas=document.getElementById('canvas');
+const progress=document.getElementById('progress'), cueEl=document.getElementById('cue'), offsetEl=document.getElementById('offset');
+const chapters=document.getElementById('chapters');
+const PHASES=["intro","learn","act","close"];
+PHASES.forEach(()=>chapters.appendChild(document.createElement('i')));
+
+const params=new URLSearchParams(location.search);
+video.src=params.get('src')||'academia_iai_apresentacao.mp4';
+if(params.get('offset')) offsetEl.value=params.get('offset');
+document.getElementById('file').onchange=e=>{const f=e.target.files[0]; if(f){video.src=URL.createObjectURL(f);}};
+document.getElementById('play').onclick=()=>video.paused?video.play():video.pause();
+addEventListener('keydown',e=>{
+  if(e.code==='Space'){e.preventDefault();video.paused?video.play():video.pause();}
+  if(e.key==='ArrowRight')video.currentTime+=2; if(e.key==='ArrowLeft')video.currentTime-=2;
+  if(e.key.toLowerCase()==='h')document.getElementById('ui').classList.toggle('hide');
+});
+
+let current=-1, raf;
+function fmtBRL(v){return 'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+function render(i){
+  const c=CUES[i];
+  copy.classList.remove('on');
+  setTimeout(()=>{
+    copy.innerHTML=`<div class="kicker anim">${c.k||''}</div>
+      ${c.stat?`<div class="stat anim" id="stat">${c.count?fmtBRL(c.count[0]):c.stat}</div>`:''}
+      <div class="h anim">${c.h}</div>
+      <div class="sub anim">${c.s||''}</div>`;
+    requestAnimationFrame(()=>copy.classList.add('on'));
+    if(c.count){const el=document.getElementById('stat'),[a,b]=c.count,t0=performance.now(),D=1800;
+      (function step(now){const p=Math.min(1,(now-t0)/D),e=1-Math.pow(1-p,3);el.textContent=fmtBRL(a+(b-a)*e);if(p<1)requestAnimationFrame(step);})(t0);}
+  },current<0?0:260);
+  current=i;
+  canvas.dataset.phase=c.phase;
+  [...chapters.children].forEach((d,k)=>d.classList.toggle('on',k===PHASES.indexOf(c.phase)));
+}
+function tick(){
+  const t=video.currentTime+parseFloat(offsetEl.value||0);
+  let i=0; for(let k=0;k<CUES.length;k++) if(t>=CUES[k].t) i=k;
+  if(i!==current) render(i);
+  if(video.duration) progress.style.width=(video.currentTime/video.duration*100)+'%';
+  cueEl.textContent=`${t.toFixed(1)}s · cue ${i+1}/${CUES.length}`;
+  raf=requestAnimationFrame(tick);
+}
+tick();
+</script>
+</body>
+</html>
