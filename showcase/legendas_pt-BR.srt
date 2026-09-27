@@ -1,0 +1,170 @@
+1
+00:00:00,200 --> 00:00:02,600
+Este é o Lucas. O salário
+acabou de cair no Itaú,
+
+2
+00:00:02,600 --> 00:00:05,300
+mas ele ainda não tem um plano
+claro para esse dinheiro.
+
+3
+00:00:05,400 --> 00:00:08,600
+Como todo mês, ele transfere quase tudo
+para a própria conta em outro banco.
+
+4
+00:00:08,900 --> 00:00:10,500
+Para o cliente, é só mais um Pix.
+
+5
+00:00:10,700 --> 00:00:13,700
+Para o Itaú, é a chance de entender
+o objetivo por trás dessa saída.
+
+6
+00:00:13,800 --> 00:00:15,600
+Depois do comprovante,
+aparece um convite contextual:
+
+7
+00:00:15,600 --> 00:00:17,600
+cinco minutos para começar um objetivo.
+
+8
+00:00:18,000 --> 00:00:20,600
+A Academia Ia.i ensina finanças
+sem juridiquês, em passos curtos.
+
+9
+00:00:20,600 --> 00:00:23,200
+Uma trilha por vez,
+
+10
+00:00:23,300 --> 00:00:26,900
+missões ligadas ao objetivo e uma
+sequência que multiplica a recompensa.
+
+11
+00:00:27,400 --> 00:00:30,000
+Lucas escolhe sair de casa,
+diz o que já sabe
+
+12
+00:00:30,000 --> 00:00:33,500
+e conta, com as próprias palavras,
+que quer dividir um apartamento com amigos.
+
+13
+00:00:33,900 --> 00:00:37,700
+O sistema calcula uma meta possível:
+R$ 6.000, R$ 300 por mês, cerca de 20 meses.
+
+14
+00:00:38,500 --> 00:00:41,900
+A IA.I usa esse contexto para escolher
+a linguagem e montar uma trilha personalizada.
+
+15
+00:00:42,200 --> 00:00:45,700
+A jornada começa pelo vocabulário do
+dinheiro, passa pela organização do mês
+
+16
+00:00:45,700 --> 00:00:49,200
+e pela reserva de emergência, até chegar
+aos grandes objetivos. O conteúdo é liberado passo a passo.
+
+17
+00:00:49,900 --> 00:00:53,700
+Cada lição cabe em poucos minutos: um conceito,
+um exemplo do dia a dia e uma pergunta.
+
+18
+00:00:54,000 --> 00:00:57,400
+O quiz corrige na hora, explica a resposta
+e faz o erro voltar na revisão.
+
+19
+00:00:57,900 --> 00:01:02,800
+Ao concluir, Lucas vê sua precisão, o tempo gasto
+e as missões que acabou de desbloquear.
+
+20
+00:01:02,900 --> 00:01:07,600
+Ao avançar um mês, o salário simulado cai na conta
+e o aplicativo atualiza toda a jornada.
+
+21
+00:01:08,500 --> 00:01:12,100
+Lucas guarda os R$ 300 planejados no cofrinho
+criado junto com a trilha.
+
+22
+00:01:12,700 --> 00:01:15,400
+O objetivo, o progresso
+e o prazo ficam visíveis.
+
+23
+00:01:15,400 --> 00:01:18,100
+O botão "Simular +1 mês" mostra
+o rendimento ao longo do tempo.
+
+24
+00:01:18,100 --> 00:01:23,100
+Sem novos depósitos, os R$ 300 passam
+para R$ 310,16 após quatro simulações.
+
+25
+00:01:23,400 --> 00:01:26,900
+Assim, o usuário entende visualmente
+o efeito de manter o dinheiro guardado.
+
+26
+00:01:27,300 --> 00:01:31,200
+O hábito vira missão: guardar e deixar no cofrinho,
+cumprir lições e completar desafios.
+
+27
+00:01:31,400 --> 00:01:33,700
+Tudo é opcional e conectado
+à vida financeira real.
+
+28
+00:01:33,900 --> 00:01:36,000
+Os Pontos Itaú aparecem junto
+às vantagens já conhecidas do banco,
+
+29
+00:01:36,000 --> 00:01:40,900
+podendo ser usados em benefícios como desconto
+na fatura, Itaú Shop e outras opções simuladas.
+
+30
+00:01:41,600 --> 00:01:44,200
+No assistente, Lucas pode perguntar
+quanto consegue guardar.
+
+31
+00:01:44,200 --> 00:01:48,000
+A IA.I consulta sua meta, seu saldo
+e o histórico simulado,
+
+32
+00:01:48,000 --> 00:01:50,500
+responde com contexto
+e oferece abrir o cofrinho.
+
+33
+00:01:50,500 --> 00:01:52,400
+Ela orienta — não movimenta dinheiro sozinha.
+
+34
+00:01:52,800 --> 00:01:56,000
+De volta à home, objetivo, progresso,
+sequência e saldo estão atualizados.
+
+35
+00:01:56,100 --> 00:01:58,600
+A Academia Ia.i transforma educação
+em ação dentro do próprio Itaú.
