@@ -10,7 +10,8 @@ import { brl } from "../../data/money";
 import { useTrilha } from "../../state/TrilhaContext";
 import { DeepCards } from "./Aprofundar";
 import { CheckFooter, FooterWrap, PillButton, PlayerShell, QuestionBody, useAnswer } from "./Exercise";
-import { Medal } from "./Licao";
+import { CelebrationShell, Medal, PointsBurst, Slide } from "./Licao";
+import { AiBackdrop, DrawCheck, haptic } from "../../components/fx";
 
 export function Desafio() {
   const { unit } = useParams();
@@ -91,39 +92,48 @@ export function Desafio() {
 
   if (mode === "result") {
     const pass = right >= need;
-    return (
-      <Screen bg="bg-[#14215A]" statusTone="light">
-        <div className="flex min-h-full flex-col items-center px-6 pb-8 pt-10 text-center text-white">
-          <Medal tone={pass ? "#EC7000" : "#5A6390"}>{pass ? <Star size={50} color="white" fill="white" /> : <RotateCcw size={44} color="white" />}</Medal>
-          <div className="mt-5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#FFB27A]">{pass ? "Desafio aprovado" : "Quase lá"}</div>
-          <h1 className="mt-1 text-[26px] font-bold">
-            {right} de {qs.length} acertos
-          </h1>
-          <div className="mt-6 w-full rounded-[18px] bg-white p-4 text-[#14215A]">
-            {pass ? (
-              gained > 0 ? (
-                <>
-                  <div className="text-[22px] font-bold">+{gained} Pontos Itaú</div>
-                  <div className="text-[13px] text-[#6C6257]">≈ {brl(Math.round(gained * POINT_BRL * 100))} em desconto na fatura (referência) · simulado</div>
-                </>
-              ) : (
-                <div className="text-[15px] font-semibold">Você já tinha {unitQuizPoints(u, best)} pts garantidos aqui. Vale sempre o seu melhor resultado.</div>
-              )
-            ) : (
-              <div className="text-[15px]">
-                Com {need} acertos você ganha {need * UNIT_POINTS_PER_RIGHT} Pontos Itaú (× {fmtMult(t.multiplier)}). Relê o resumo e tenta de novo: você não perde nada.
-              </div>
-            )}
-          </div>
-          <div className="mt-auto flex w-full flex-col gap-2 pt-6">
-            {!pass && <PillButton label="Tentar de novo" tone="orange" onClick={() => setMode("read")} />}
-            {pass && <PillButton label="Ver meus Pontos Itaú" tone="orange" onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} />}
-            <Squish onClick={() => navigate("/academia/trilha", { replace: true })} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
-              Voltar pra trilha
-            </Squish>
-          </div>
+    const body = (
+      <div className="flex min-h-full flex-col items-center px-6 pb-8 pt-10 text-center text-white">
+        {pass ? <DrawCheck size={104} /> : <Medal tone="#5A6390"><RotateCcw size={44} color="white" /></Medal>}
+        <div className="mt-5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#FFB27A]">{pass ? "Desafio aprovado" : "Quase lá"}</div>
+        <h1 className="mt-1 flex items-center gap-2 text-[26px] font-bold">
+          {Array.from({ length: qs.length }, (_, i) => (
+            <motion.span key={i} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.3 + i * 0.07, type: "spring", stiffness: 400, damping: 14 }}>
+              <Star size={18} fill={i < right ? "#FFB23D" : "transparent"} color={i < right ? "#FFB23D" : "rgba(255,255,255,0.35)"} />
+            </motion.span>
+          ))}
+        </h1>
+        <div className="mt-1 text-[15px] text-white/80">
+          {right} de {qs.length} acertos
         </div>
-      </Screen>
+        <div className="w-full">
+          {pass ? (
+            gained > 0 ? (
+              <PointsBurst pts={gained} base={Math.round(gained / t.multiplier)} mult={t.multiplier} note={`≈ ${brl(Math.round(gained * POINT_BRL * 100))} na fatura (simulado)`} />
+            ) : (
+              <div className="mt-5 rounded-[18px] bg-white/10 p-4 text-[15px]">Você já tinha {unitQuizPoints(u, best)} pts garantidos aqui. Vale sempre o seu melhor resultado.</div>
+            )
+          ) : (
+            <div className="mt-5 rounded-[18px] bg-white/10 p-4 text-[15px]">
+              Com {need} acertos você ganha {need * UNIT_POINTS_PER_RIGHT} Pontos Itaú (× {fmtMult(t.multiplier)}). Relê o resumo e tenta de novo: você não perde nada.
+            </div>
+          )}
+        </div>
+        <div className="mt-auto flex w-full flex-col gap-2 pt-6">
+          {!pass && <PillButton label="Tentar de novo" tone="orange" onClick={() => setMode("read")} />}
+          {pass && <PillButton label="Ver meus Pontos Itaú" tone="orange" onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} />}
+          <Squish onClick={() => navigate("/academia/trilha", { replace: true })} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
+            Voltar pra trilha
+          </Squish>
+        </div>
+      </div>
+    );
+    return pass ? (
+      <CelebrationShell>{body}</CelebrationShell>
+    ) : (
+      <AiBackdrop className="absolute inset-0">
+        <div className="no-scrollbar h-full overflow-y-auto">{body}</div>
+      </AiBackdrop>
     );
   }
 
@@ -134,6 +144,7 @@ export function Desafio() {
       total={qs.length}
       pos={n}
       tag={`Desafio · Unidade ${u}`}
+      stars={right}
       onClose={() => setMode("read")}
       footer={
         <CheckFooter
@@ -144,21 +155,23 @@ export function Desafio() {
           onCheck={() => {
             a.setChecked(true);
             if (ok) setRight((r) => r + 1);
+            haptic(ok ? 15 : [30, 40, 30]);
           }}
           onNext={() => {
             a.reset();
             if (n + 1 >= qs.length) {
               setGained(t.recordUnitQuiz(u, right));
               setMode("result");
+              if (right >= need) haptic([20, 40, 60]);
             } else setN(n + 1);
           }}
           nextLabel={n + 1 >= qs.length ? "Ver resultado" : "Seguir"}
         />
       }
     >
-      <motion.div key={n} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+      <Slide k={n}>
         <QuestionBody {...q} picked={a.picked} checked={a.checked} onPick={a.setPicked} label={`Pergunta ${n + 1} de ${qs.length}`} />
-      </motion.div>
+      </Slide>
     </PlayerShell>
   );
 }

@@ -41,7 +41,8 @@ const variants: Variants = {
 function AnimatedRoutes() {
   const location = useLocation();
   const navType = useNavigationType();
-  const isTab = (location.state as { tab?: boolean } | null)?.tab === true;
+  const st = location.state as { tab?: boolean; hero?: boolean } | null;
+  const isTab = st?.tab === true || st?.hero === true;
   const dir: Dir = isTab && navType !== "POP" ? "fade" : navType === "POP" ? "pop" : "push";
 
   return (
@@ -53,7 +54,7 @@ function AnimatedRoutes() {
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={dir === "fade" ? { duration: 0.15 } : { type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.38 }}
+        transition={dir === "fade" ? { duration: st?.hero ? 0.3 : 0.15 } : { type: "tween", ease: [0.32, 0.72, 0, 1], duration: 0.38 }}
         className="absolute inset-0 bg-white shadow-[-8px_0_24px_rgba(0,0,0,0.08)]"
       >
         <Routes location={location}>

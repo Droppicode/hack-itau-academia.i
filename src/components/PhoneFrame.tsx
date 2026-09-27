@@ -10,7 +10,7 @@ const TIPS = [
 export function PhoneFrame({ children }: { children: ReactNode }) {
   return (
     <div className="relative flex h-[100dvh] w-full items-center justify-center md:py-6">
-      <div className="relative h-full w-full overflow-hidden bg-white md:h-[844px] md:max-h-[calc(100dvh-48px)] md:w-[390px] md:shrink-0 md:rounded-[48px] md:shadow-[0_0_0_10px_#111,0_20px_60px_rgba(0,0,0,.35)]">
+      <div id="phone-root" className="relative h-full w-full overflow-hidden bg-white md:h-[844px] md:max-h-[calc(100dvh-48px)] md:w-[390px] md:shrink-0 md:rounded-[48px] md:shadow-[0_0_0_10px_#111,0_20px_60px_rgba(0,0,0,.35)]">
         {children}
       </div>
       <aside className="absolute left-[calc(50%+243px)] top-1/2 hidden w-[240px] -translate-y-1/2 flex-col gap-3 lg:flex" aria-label="Dicas do protótipo">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
 import { GoalSheet } from "../../components/GoalSheet";
-import { AcademiaTabs, GOAL_ICON, Wordmark, goalDef } from "../../components/Iai";
+import { AcademiaTabs, GOAL_ICON, HeroBg, Wordmark, goalDef } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { IaFab } from "../../components/IaFab";
 import { Squish } from "../../components/Squish";
@@ -14,6 +14,7 @@ import { brl } from "../../data/money";
 import { deltaToHome, deltaToIa } from "../../state/homeHistory";
 import { useTrilha } from "../../state/TrilhaContext";
 import { PillButton } from "./Exercise";
+import { Noise, Odometer } from "../../components/fx";
 
 const ROW = 104;
 const TILE = 62;
@@ -114,9 +115,17 @@ export function Trilha() {
     <Screen
       bg="bg-[#FBF6F0]"
       statusTone="light"
-      statusBg="bg-[#14215A]"
+      statusBg="bg-[#0E1846]"
       header={
-        <div className="shrink-0 rounded-b-[28px] bg-[#14215A] px-4 pb-4 text-white">
+        <div className="relative shrink-0 overflow-hidden rounded-b-[28px] px-4 pb-4 text-white">
+          <HeroBg radius="0 0 28px 28px" />
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <motion.span className="absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#3B5BFF]/30 blur-3xl" animate={{ x: [0, 30, 0], y: [0, 20, 0] }} transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }} />
+            <motion.span className="absolute -right-12 top-6 h-44 w-44 rounded-full bg-[#9B4DFF]/30 blur-3xl" animate={{ x: [0, -25, 0], y: [0, 25, 0] }} transition={{ duration: 17, repeat: Infinity, ease: "easeInOut" }} />
+            <motion.span className="absolute -bottom-16 left-1/3 h-36 w-36 rounded-full bg-[#FF6200]/25 blur-3xl" animate={{ x: [0, 20, 0] }} transition={{ duration: 19, repeat: Infinity, ease: "easeInOut" }} />
+            <Noise />
+          </div>
+          <div className="relative">
           <div className="flex h-[48px] items-center gap-2">
             <Squish aria-label="Voltar" onClick={back} className="-ml-1 flex h-10 w-10 items-center justify-center" scale={0.88}>
               <ChevronLeft size={28} strokeWidth={1.6} />
@@ -147,7 +156,7 @@ export function Trilha() {
           </div>
           <div className="mt-3 flex gap-2 text-[13px] font-semibold">
             <span className="flex items-center gap-1 rounded-full bg-[#EC7000] px-3 py-[5px]">
-              <Star size={14} fill="white" /> {t.points} Pontos Itaú
+              <Star size={14} fill="white" /> <Odometer value={t.points} /> Pontos Itaú
             </span>
             <StreakChip />
             <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-[5px]">
@@ -155,6 +164,7 @@ export function Trilha() {
             </span>
           </div>
           <ExpiryNote className="mt-2 !bg-white/10 !text-white" />
+          </div>
         </div>
       }
       footer={<AcademiaTabs />}

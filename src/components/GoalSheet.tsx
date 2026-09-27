@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { BottomSheet } from "./BottomSheet";
 import { GOAL_ICON, goalDef } from "./Iai";
 import { Squish } from "./Squish";
+import { Forecast } from "./GoalFx";
 import { useToast } from "./Toast";
-import { brl, monthsTo, parseCents } from "../data/money";
+import { brl, parseCents } from "../data/money";
 import { GOALS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
@@ -45,7 +46,6 @@ export function GoalSheet({ open, onClose }: { open: boolean; onClose: () => voi
   const target = parseCents(targetRaw);
   const monthly = parseCents(monthlyRaw);
   const ok = target > 0 && monthly > 0;
-  const months = monthsTo(target, monthly);
 
   const confirm = () => {
     if (!ok) return;
@@ -84,8 +84,11 @@ export function GoalSheet({ open, onClose }: { open: boolean; onClose: () => voi
         <MoneyField label="Quanto custa" value={targetRaw} onChange={setTargetRaw} className="border-2 border-[#EEE] focus-within:border-itau-orange" />
         <MoneyField label="Guardar por mês" value={monthlyRaw} onChange={setMonthlyRaw} className="border-2 border-[#EEE] focus-within:border-itau-orange" />
       </div>
+      <div className="mt-3">
+        <Forecast savedCents={t.goal?.savedCents ?? 0} targetCents={target} monthlyCents={monthly} month={t.month} />
+      </div>
       <p className="mt-2 text-[13px] text-[#666]">
-        {ok ? `Chega lá em ~${months} ${months === 1 ? "mês" : "meses"}. ` : "Digite valores maiores que zero. "}
+        {ok ? "" : "Digite valores maiores que zero. "}
         {t.goal ? `Os ${brl(t.goal.savedCents)} já guardados continuam no cofrinho.` : ""}
       </p>
       <Squish onClick={confirm} disabled={!ok} className="mt-4 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white disabled:opacity-40" scale={0.97}>

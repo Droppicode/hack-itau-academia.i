@@ -5,10 +5,32 @@ import { ChevronRight, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Squish } from "../components/Squish";
+import { Shimmer } from "../components/fx";
 import { brl } from "../data/money";
 import { findLesson, unitDef } from "../data/trilha";
 import { useIaContext } from "../state/iaContext";
 import { useTrilha } from "../state/TrilhaContext";
+
+const rich = (text: string) => text.split(/\*\*(.+?)\*\*/g).map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part));
+
+function WordReveal({ text }: { text: string }) {
+  let n = 0;
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, j) =>
+        part.split(/(\s+)/).map((w, k) => {
+          if (!w.trim()) return w;
+          const el = (
+            <motion.span key={`${j}-${k}`} initial={{ opacity: 0, filter: "blur(4px)" }} animate={{ opacity: 1, filter: "blur(0px)" }} transition={{ duration: 0.25, delay: Math.min(n++ * 0.035, 2.5) }} className={j % 2 ? "font-bold" : undefined}>
+              {w}
+            </motion.span>
+          );
+          return el;
+        }),
+      )}
+    </>
+  );
+}
 
 type Msg = { role: "user" | "ia"; text: string; offline?: boolean; note?: string; go?: { to: string; label: string } };
 
@@ -67,6 +89,7 @@ export function IaChat() {
   const [msgs, setMsgs] = useState<Msg[]>(loadMsgs);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fresh, setFresh] = useState(-1);
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(markIa, []);
@@ -133,7 +156,10 @@ export function IaChat() {
     } catch {
       reply = { role: "ia", ...offline(clean), offline: true };
     }
-    setMsgs((m) => [...m, reply]);
+    setMsgs((m) => {
+      setFresh(m.length);
+      return [...m, reply];
+    });
     setBusy(false);
     if (reply.go && OPEN_WORDS.test(clean)) {
       const go = reply.go;
@@ -170,7 +196,7 @@ export function IaChat() {
             {msgs.map((m, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={m.role === "user" ? "self-end" : "self-start"}>
                 <div className={`max-w-[290px] whitespace-pre-wrap rounded-[18px] px-4 py-3 text-[15px] leading-snug ${m.role === "user" ? "rounded-br-[6px] bg-[#14215A] text-white" : "rounded-bl-[6px] bg-white text-[#333] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"}`}>
-                  {m.text.split(/\*\*(.+?)\*\*/g).map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part))}
+                  {i === fresh && m.role === "ia" ? <WordReveal text={m.text} /> : rich(m.text)}
                 </div>
                 {m.go && (
                   <Squish onClick={() => navigate(m.go!.to, { state: { fromAcademia: true } })} className="mt-2 inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[6px] text-[13px] font-semibold text-white" scale={0.95}>
@@ -182,11 +208,16 @@ export function IaChat() {
             ))}
           </AnimatePresence>
           {busy && (
-            <div className="flex gap-1 self-start rounded-[18px] bg-white px-4 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.06)]" aria-label="IA.I digitando">
-              {[0, 1, 2].map((d) => (
-                <motion.span key={d} className="h-2 w-2 rounded-full bg-[#FF6200]" animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: d * 0.2 }} />
-              ))}
-            </div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="w-[240px] self-start rounded-[18px] rounded-bl-[6px] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(0,0,0,0.06)]" aria-label="IA.I digitando">
+              <div className="flex gap-1">
+                {[0, 1, 2].map((d) => (
+                  <motion.span key={d} className="h-2 w-2 rounded-full bg-[#FF6200]" animate={{ y: [0, -4, 0], opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.9, repeat: Infinity, delay: d * 0.15 }} />
+                ))}
+              </div>
+              <Shimmer className="mt-3 h-[10px] w-full" />
+              <Shimmer className="mt-2 h-[10px] w-4/5" />
+              <Shimmer className="mt-2 h-[10px] w-3/5" />
+            </motion.div>
           )}
           <div ref={end} />
         </div>

@@ -8,6 +8,8 @@ import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { brl } from "../data/money";
 import { ExpiryNote, StreakChip } from "../components/Streak";
+import { motion } from "framer-motion";
+import { Odometer } from "../components/fx";
 import { fmtDay, fmtMult, POINT_BRL, UNIT_POINTS_PER_RIGHT } from "../data/trilha";
 import { markHome } from "../state/homeHistory";
 import { useTrilha } from "../state/TrilhaContext";
@@ -49,11 +51,22 @@ export function Vantagens() {
         <div className="mt-3 rounded-[16px] bg-white p-4">
           <div className="flex items-baseline justify-between">
             <span className="text-[16px] font-semibold text-[#222]">Pontos Itaú</span>
-            <span className="text-[18px] font-bold text-[#222]">{t.points} pts</span>
+            <span className="text-[20px] font-bold text-[#222]">
+              <Odometer value={t.points} /> pts
+            </span>
           </div>
           <div className="mt-1 flex justify-between text-[13px] text-[#666]">
             <span>Valem na fatura</span>
             <span>{brl(Math.round(t.points * POINT_BRL * 100))}</span>
+          </div>
+          <div className="mt-3">
+            <div className="h-[8px] overflow-hidden rounded-full bg-[#F1ECE5]">
+              <motion.div className="h-full rounded-full bg-gradient-to-r from-[#EC7000] to-[#FFB23D]" initial={{ width: 0 }} animate={{ width: `${((t.points % 1000) / 1000) * 100}%` }} transition={{ duration: 0.9, ease: "easeOut" }} />
+            </div>
+            <div className="mt-1 flex justify-between text-[12px] text-[#777]">
+              <span>{(t.points % 1000).toLocaleString("pt-BR")} / 1.000 pts</span>
+              <span className="font-semibold text-[#B54700]">faltam {(1000 - (t.points % 1000)).toLocaleString("pt-BR")} pra +R$ 20</span>
+            </div>
           </div>
           <div className="mt-3 flex items-center gap-2">
             <StreakChip tone="light" />

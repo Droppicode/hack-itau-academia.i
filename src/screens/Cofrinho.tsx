@@ -1,15 +1,17 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { goBack } from "../state/goBack";
-import { ArrowDownToLine, ArrowUpFromLine, CalendarClock, ChevronLeft, CircleHelp, Info, Lock, PiggyBank, Plus, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { ArrowDownToLine, ArrowUpFromLine, ChevronLeft, CircleHelp, Info, Lock, PiggyBank, Plus, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
+import { useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomSheet } from "../components/BottomSheet";
 import { GoalSheet } from "../components/GoalSheet";
-import { GOAL_ICON, goalDef } from "../components/Iai";
+import { Coins, Forecast, GoalArt, Milestones } from "../components/GoalFx";
+import { CountUp, haptic } from "../components/fx";
+import { goalDef } from "../components/Iai";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { useToast } from "../components/Toast";
-import { brl, monthsTo, parseCents } from "../data/money";
+import { brl, parseCents } from "../data/money";
 import { MONTHLY_PTS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
@@ -24,6 +26,9 @@ export function Cofrinho() {
   const g = t.goal;
   const [raw, setRaw] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
+  const [coins, setCoins] = useState<{ dir: "in" | "out"; k: number } | null>(null);
+  const firstSaved = useRef((g?.savedCents ?? 0) / 100);
+  const money = (v: number) => brl(Math.round(v * 100));
   const amount = parseCents(raw);
   const limit = sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents;
   const error = !raw.trim()
@@ -37,11 +42,8 @@ export function Cofrinho() {
         : undefined;
   const valid = !!raw.trim() && !error;
   const def = goalDef(g?.id);
-  const Icon = GOAL_ICON[def.id] ?? Target;
   const warn = fromAcademia && !t.cofrinhoWarned && !!g;
   const pct = t.goalPct;
-  const left = g ? Math.max(g.targetCents - g.savedCents, 0) : 0;
-  const months = g ? monthsTo(left, g.monthlyCents) : 0;
 
   const open = (k: "guardar" | "resgatar") => {
     setRaw("");
@@ -51,9 +53,13 @@ export function Cofrinho() {
     if (!sheet || !valid) return;
     if (sheet === "guardar") {
       t.save(amount);
+      setCoins({ dir: "in", k: Date.now() });
+      haptic([10, 30, 10, 30, 10]);
       toast(`${brl(amount)} guardados no cofrinho (simulado)`);
     } else {
       t.withdraw(amount);
+      setCoins({ dir: "out", k: Date.now() });
+      haptic(12);
       toast(`${brl(amount)} de volta na conta (simulado)`);
     }
     setSheet(null);
@@ -75,9 +81,12 @@ export function Cofrinho() {
       }
     >
       <div className="px-5 pb-10 pt-5">
-        <div className="rounded-[18px] bg-white p-5">
+        <div className="relative overflow-hidden rounded-[18px] bg-white p-5">
+          {coins && <Coins key={coins.k} dir={coins.dir} k={coins.k} />}
           <div className="text-[14px] text-[#555]">Total guardado nos cofrinhos</div>
-          <div className="mt-1 text-[28px] font-bold text-[#222]">{brl(g?.savedCents ?? 0)}</div>
+          <div className="mt-1 text-[28px] font-bold text-[#222]">
+            <CountUp from={firstSaved.current} to={(g?.savedCents ?? 0) / 100} duration={0.9} format={money} />
+          </div>
           <div className="mt-1 flex items-center gap-1 text-[14px] text-[#00857A]">
             <TrendingUp size={15} /> rendeu {brl(g?.yieldCents ?? 0)} até agora (simulado)
           </div>
@@ -87,15 +96,13 @@ export function Cofrinho() {
         {g ? (
           <div className="mt-3 overflow-hidden rounded-[18px] bg-white">
             <div className="relative px-5 pb-5 pt-4 text-white" style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}>
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/20">
-                  <Icon size={24} />
-                </span>
+              <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="text-[18px] font-bold">{g.name}</div>
                   <div className="text-[13px] text-white/80">Objetivo da AcademIA.I</div>
+                  <span className="mt-2 inline-block rounded-full bg-white/20 px-2 py-[3px] text-[12px] font-semibold">100% do CDI</span>
                 </div>
-                <span className="rounded-full bg-white/20 px-2 py-[3px] text-[12px] font-semibold">100% do CDI</span>
+                <GoalArt goalId={g.id} pct={pct} />
               </div>
               <div className="mt-4 flex items-end justify-between">
                 <div>
@@ -110,7 +117,7 @@ export function Cofrinho() {
               <div className="mt-2 h-[8px] overflow-hidden rounded-full bg-white/25">
                 <motion.div className="h-full rounded-full bg-white" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7 }} />
               </div>
-              {pct >= 100 && <div className="mt-2 text-[14px] font-semibold">Objetivo alcançado!</div>}
+              {pct >= 100 ? <div className="mt-2 text-[14px] font-semibold">Objetivo alcançado!</div> : <Milestones pct={pct} />}
             </div>
             <div className="grid grid-cols-2 gap-2 p-4">
               <Squish onClick={() => open("guardar")} className="flex items-center justify-center gap-2 rounded-[12px] bg-itau-orange py-3 text-[15px] font-semibold text-white" scale={0.96}>
@@ -121,9 +128,7 @@ export function Cofrinho() {
               </Squish>
             </div>
             <div className="border-t border-[#EEE] px-4 py-3 text-[14px] text-[#555]">
-              <div className="flex items-center gap-2">
-                <CalendarClock size={16} color="#FF6200" /> Guardando {brl(g.monthlyCents, false)}/mês, faltam ~{months} {months === 1 ? "mês" : "meses"}
-              </div>
+              <Forecast savedCents={g.savedCents} targetCents={g.targetCents} monthlyCents={g.monthlyCents} month={t.month} />
               <Squish onClick={() => setGoalOpen(true)} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
                 Trocar objetivo
               </Squish>
@@ -202,6 +207,11 @@ export function Cofrinho() {
         <p className="mt-3 text-[13px] text-[#666]">
           {sheet === "guardar" ? `Sai da sua conta corrente. Saldo em conta: ${brl(t.balanceCents)}.` : "O valor volta na hora pra sua conta corrente."} (simulado)
         </p>
+        {sheet === "guardar" && g && valid && (
+          <div className="mt-3">
+            <Forecast savedCents={g.savedCents + amount} targetCents={g.targetCents} monthlyCents={g.monthlyCents} month={t.month} />
+          </div>
+        )}
         {sheet === "resgatar" && (
           <Squish onClick={() => setRaw(((g?.savedCents ?? 0) / 100).toFixed(2).replace(".", ","))} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
             Resgatar tudo ({brl(g?.savedCents ?? 0)})

@@ -90,7 +90,13 @@ export function ProgressBar({ pct, className = "", tone = "orange" }: { pct: num
 export function useAcademiaEntry() {
   const navigate = useNavigate();
   const { introSeen, goal } = useTrilha();
-  return () => navigate(introSeen && goal ? "/academia/trilha" : "/academia/intro");
+  return () => navigate(introSeen && goal ? "/academia/trilha" : "/academia/intro", { state: { hero: true } });
+}
+
+export const HERO_GRADIENT = "linear-gradient(150deg,#0E1846 0%,#1B2470 50%,#3A1F7A 100%)";
+
+export function HeroBg({ radius }: { radius: string }) {
+  return <motion.div aria-hidden layoutId="academia-hero" className="pointer-events-none absolute inset-0" style={{ background: HERO_GRADIENT, borderRadius: radius }} transition={{ type: "spring", stiffness: 260, damping: 30 }} />;
 }
 
 export function AcademiaCard() {
@@ -101,9 +107,10 @@ export function AcademiaCard() {
     <Squish
       onClick={enter}
       aria-label="Abrir AcademIA.I"
-      className="relative block w-full overflow-hidden rounded-[18px] bg-gradient-to-br from-[#1F2A63] via-[#22307A] to-[#003087] px-4 py-3 text-white"
+      className="relative block w-full overflow-hidden rounded-[18px] px-4 py-3 text-white"
       scale={0.98}
     >
+      <HeroBg radius="18px" />
       <motion.span aria-hidden className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[#FF6200]/30 blur-2xl" animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 4, repeat: Infinity }} />
       <div className="relative flex items-center gap-[10px]">
         <IaiAvatar size={30} />

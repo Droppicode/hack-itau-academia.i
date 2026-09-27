@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 type Props = { open: boolean; onClose: () => void; title: string; children: ReactNode };
 
 export function BottomSheet({ open, onClose, title, children }: Props) {
-  return (
+  const root = typeof document !== "undefined" ? document.getElementById("phone-root") : null;
+  const sheet = (
     <AnimatePresence>
       {open && (
         <>
@@ -37,4 +39,5 @@ export function BottomSheet({ open, onClose, title, children }: Props) {
       )}
     </AnimatePresence>
   );
+  return root ? createPortal(sheet, root) : sheet;
 }

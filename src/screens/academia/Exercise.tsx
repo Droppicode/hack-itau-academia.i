@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, RotateCcw, X } from "lucide-react";
+import { ArrowRight, RotateCcw, Star, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { IaiAvatar } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
+import { RollNumber } from "../../components/fx";
 
 export const A = {
   bg: "#FBF6F0",
@@ -16,7 +17,7 @@ export const A = {
   badBg: "#FCE6E9",
 };
 
-export function PlayerShell({ total, pos, onClose, children, footer, tag }: { total: number; pos: number; onClose: () => void; children: ReactNode; footer: ReactNode; tag?: string }) {
+export function PlayerShell({ total, pos, onClose, children, footer, tag, stars }: { total: number; pos: number; onClose: () => void; children: ReactNode; footer: ReactNode; tag?: string; stars?: number }) {
   return (
     <Screen
       bg="bg-[#FBF6F0]"
@@ -28,6 +29,14 @@ export function PlayerShell({ total, pos, onClose, children, footer, tag }: { to
               <span className="text-[13px] font-semibold text-[#14215A]">{tag}</span>
             </div>
             <div className="flex items-center gap-3">
+              {stars !== undefined && (
+                <span className="flex items-center gap-1 rounded-full bg-[#FFF1E5] px-2 py-[3px] text-[13px] font-bold text-[#B54700]" aria-label={`${stars} acertos`}>
+                  <motion.span key={stars} initial={{ scale: stars ? 1.9 : 1, rotate: stars ? -40 : 0 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 400, damping: 12 }} className="flex">
+                    <Star size={14} fill="#EC7000" color="#EC7000" />
+                  </motion.span>
+                  <RollNumber value={stars} />
+                </span>
+              )}
               <span className="text-[13px] font-semibold tabular-nums text-[#8A7B6C]">
                 {Math.min(pos + 1, total)}/{total}
               </span>
@@ -84,9 +93,10 @@ export function QuestionBody({ q, options, picked, checked, right, onPick, label
           const fg = state === "right" ? A.ok : state === "wrong" ? A.bad : state === "picked" ? "#FFFFFF" : A.navy;
           const badgeBg = state === "picked" ? A.orange : state === "right" ? A.ok : state === "wrong" ? A.bad : A.bg;
           const badgeFg = state === "idle" ? A.navy : "#FFFFFF";
+          const fx = state === "right" ? { y: [0, -12, 0, -4, 0], scale: [1, 1.04, 1] } : state === "wrong" ? { x: [0, -10, 10, -7, 7, -3, 0] } : { x: 0, y: 0, scale: 1 };
           return (
+            <motion.div key={o} animate={fx} transition={{ duration: state === "idle" || state === "picked" ? 0.2 : 0.5 }}>
             <Squish
-              key={o}
               disabled={checked}
               onClick={() => onPick(i)}
               className="flex w-full items-center gap-3 rounded-[16px] px-3 py-3 text-[16px] font-semibold shadow-[0_2px_8px_rgba(20,33,90,0.06)] transition-colors"
@@ -98,6 +108,7 @@ export function QuestionBody({ q, options, picked, checked, right, onPick, label
               </span>
               <span className="flex-1">{o}</span>
             </Squish>
+            </motion.div>
           );
         })}
       </div>
