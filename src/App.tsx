@@ -20,6 +20,10 @@ import { Missoes } from "./screens/academia/Missoes";
 import { Trilha } from "./screens/academia/Trilha";
 import { Licao } from "./screens/academia/Licao";
 import { Vantagens } from "./screens/Vantagens";
+import { Cofrinho } from "./screens/Cofrinho";
+import { MinhasVantagens } from "./screens/MinhasVantagens";
+import { ItauShop } from "./screens/ItauShop";
+import { Desafio } from "./screens/academia/Desafio";
 
 type Dir = "push" | "pop" | "fade";
 
@@ -60,6 +64,10 @@ function AnimatedRoutes() {
           <Route path="/academia/missoes" element={<Missoes />} />
           <Route path="/academia/licao/:id" element={<Licao />} />
           <Route path="/academia/licao/:id/aprofundar" element={<Aprofundar />} />
+          <Route path="/academia/desafio/:unit" element={<Desafio />} />
+          <Route path="/cofrinhos" element={<Cofrinho />} />
+          <Route path="/minhas-vantagens" element={<MinhasVantagens />} />
+          <Route path="/itau-shop" element={<ItauShop />} />
           <Route path="/menu" element={<TabPlaceholder path="/menu" />} />
           <Route path="/pix" element={<Pix />} />
           <Route path="/pix/destinatario" element={<PixDestinatario />} />

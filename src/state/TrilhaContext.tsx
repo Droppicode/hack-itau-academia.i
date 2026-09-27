@@ -1,58 +1,71 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { CDI_YEAR, LEVELS, MISSIONS, POINTS_PER_RIGHT, QUIZ_PASS, REWARDS, type GoalId, type Lesson, type LessonId, type MissionDef, PLAYABLE } from "../data/trilha";
+import {
+  CDI_YEAR,
+  LESSONS,
+  MISSIONS,
+  MV_LEVELS,
+  PASSO_CATS,
+  UNIT_QUIZ_PASS,
+  unitQuizPoints,
+  type GoalId,
+  type Lesson,
+  type LessonId,
+  type MissionDef,
+  type PassoCat,
+  PLAYABLE,
+  type UnitN,
+} from "../data/trilha";
 
-export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; history: number[] };
+export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; yieldCents: number; history: number[] };
 
 export type Persisted = {
   introSeen: boolean;
   completed: LessonId[];
-  quizBest: Partial<Record<LessonId, number>>;
   deepSeen: LessonId[];
+  unitBest: Partial<Record<UnitN, number>>;
+  unitDeepSeen: UnitN[];
   claimed: string[];
-  actions: string[];
   week: number;
   month: number;
   weekLessons: number;
-  weekQuizzes: number;
+  weekSavedCents: number;
   streak: number;
-  bestStreak: number;
   lastActiveWeek: number;
-  bonusPts: number;
   goal?: Goal;
   monthSavedCents: number;
   billsPaid: boolean;
   cdi105: boolean;
+  cofrinhoWarned: boolean;
+  pixDone: boolean;
   hook: { pending: boolean; pushSeen: boolean; off: boolean };
-  activeRewards: string[];
 };
 
 const INITIAL: Persisted = {
   introSeen: false,
   completed: [],
-  quizBest: {},
   deepSeen: [],
+  unitBest: {},
+  unitDeepSeen: [],
   claimed: [],
-  actions: [],
   week: 1,
   month: 1,
   weekLessons: 0,
-  weekQuizzes: 0,
+  weekSavedCents: 0,
   streak: 0,
-  bestStreak: 0,
   lastActiveWeek: 0,
-  bonusPts: 0,
   monthSavedCents: 0,
   billsPaid: false,
   cdi105: false,
+  cofrinhoWarned: false,
+  pixDone: false,
   hook: { pending: false, pushSeen: false, off: false },
-  activeRewards: [],
 };
 
-const KEY = "academiai-v4";
-export const STREAK_BONUS = 20;
+const KEY = "academiai-v5";
 
 export type MissionStatus = "bloqueada" | "disponível" | "em andamento" | "concluída" | "resgatada";
 export type MissionView = MissionDef & { status: MissionStatus; progress: number; goal: number; key: string };
+export type Passo = { id: string; cat: PassoCat; title: string; done: boolean; academia?: boolean };
 
 function load(): Persisted {
   try {
@@ -64,27 +77,51 @@ function load(): Persisted {
   return INITIAL;
 }
 
-export const quizPoints = (correct: number | undefined) => (correct !== undefined && correct >= QUIZ_PASS ? correct * POINTS_PER_RIGHT : 0);
+const BASE_PASSOS: Omit<Passo, "done">[] = [
+  { id: "p-chave", cat: "pagar", title: "Cadastrar uma chave Pix" },
+  { id: "p-pix", cat: "pagar", title: "Fazer um Pix pelo app" },
+  { id: "p-receber", cat: "pagar", title: "Receber um Pix no mês" },
+  { id: "p-conta", cat: "pagar", title: "Pagar uma conta pelo app" },
+  { id: "c-debito", cat: "cartao", title: "Pagar uma compra no débito" },
+  { id: "c-virtual", cat: "cartao", title: "Gerar cartão virtual" },
+  { id: "g-cofrinho", cat: "guardar", title: "Guardar dinheiro no Cofrinho" },
+  { id: "g-100", cat: "guardar", title: "Manter R$ 100 guardados" },
+  { id: "g-invest", cat: "guardar", title: "Fazer um investimento" },
+  { id: "s-itoken", cat: "proteger", title: "Ativar o iToken no app" },
+  { id: "s-seguro", cat: "proteger", title: "Proteger o celular" },
+  { id: "e-shop", cat: "economizar", title: "Comprar no Itaú Shop" },
+  { id: "a-u1", cat: "aprender", title: "Concluir a Unidade 1 da academIA.I", academia: true },
+  { id: "a-desafio", cat: "aprender", title: "Passar no desafio da Unidade 1", academia: true },
+  { id: "a-missao", cat: "aprender", title: "Cumprir a missão do mês", academia: true },
+];
 
 type Ctx = Persisted & {
   set: (p: Partial<Persisted> | ((s: Persisted) => Partial<Persisted>)) => void;
   done: (id: LessonId) => boolean;
   unlocked: (id: LessonId) => boolean;
+  unitDone: (u: UnitN) => boolean;
+  unitPassed: (u: UnitN) => boolean;
   next?: Lesson;
   points: number;
-  level: number;
-  levelPct: number;
-  nextLevelAt?: number;
+  missionPoints: number;
+  quizPoints: number;
+  passos: Passo[];
+  passosDone: number;
+  mvLevel: number;
+  mvNextAt?: number;
+  goalPct: number;
+  rate: number;
   missions: MissionView[];
   completeLesson: (id: LessonId) => void;
-  recordQuiz: (id: LessonId, correct: number) => number;
+  markDeep: (id: LessonId) => void;
+  recordUnitQuiz: (u: UnitN, correct: number) => number;
   claim: (m: MissionView) => void;
-  doAction: (id: string) => void;
+  setGoal: (g: Pick<Goal, "id" | "name" | "targetCents" | "monthlyCents">) => void;
   save: (cents: number) => void;
+  withdraw: (cents: number) => void;
   advanceWeek: () => void;
   advanceMonth: () => void;
   registerPix: (own: boolean) => void;
-  rewardUnlocked: (id: string) => boolean;
   reset: () => void;
 };
 
@@ -103,23 +140,40 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
     const idx = (id: LessonId) => PLAYABLE.findIndex((l) => l.id === id);
     const unlocked = (id: LessonId) => idx(id) === 0 || (idx(id) > 0 && done(PLAYABLE[idx(id) - 1].id));
     const next = PLAYABLE.find((l) => !done(l.id));
+    const unitDone = (u: UnitN) => {
+      const ls = LESSONS.filter((l) => l.unit === u);
+      return ls.length > 0 && ls.every((l) => !l.soon && done(l.id));
+    };
+    const unitPassed = (u: UnitN) => (s.unitBest[u] ?? 0) >= UNIT_QUIZ_PASS;
 
-    const missionPts = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0);
-    const quizPts = PLAYABLE.reduce((a, l) => a + quizPoints(s.quizBest[l.id]), 0);
-    const points = quizPts + missionPts + s.bonusPts;
-    const level = LEVELS.filter((v) => points >= v).length;
-    const nextLevelAt = LEVELS[level];
-    const levelPct = nextLevelAt ? ((points - LEVELS[level - 1]) / (nextLevelAt - LEVELS[level - 1])) * 100 : 100;
+    const missionPoints = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0);
+    const quizPoints = ([1, 2, 3, 4] as UnitN[]).reduce((a, u) => a + unitQuizPoints(u, s.unitBest[u]), 0);
+    const points = missionPoints + quizPoints;
+
+    const saved = s.goal?.savedCents ?? 0;
+    const flags: Record<string, boolean> = {
+      "p-chave": true,
+      "p-pix": s.pixDone,
+      "g-cofrinho": saved > 0,
+      "g-100": saved >= 10000,
+      "a-u1": unitDone(1),
+      "a-desafio": unitPassed(1),
+      "a-missao": s.claimed.some((k) => k.startsWith("m-mes@")) || s.cdi105,
+    };
+    const passos: Passo[] = BASE_PASSOS.map((p) => ({ ...p, done: !!flags[p.id] }));
+    const passosDone = passos.filter((p) => p.done).length;
+    const mvLevel = MV_LEVELS.filter((v) => passosDone >= v).length;
+    const mvNextAt = MV_LEVELS[mvLevel];
+    const goalPct = s.goal ? Math.min((s.goal.savedCents / s.goal.targetCents) * 100, 100) : 0;
+    const rate = (s.cdi105 ? 1.05 : 1) * CDI_YEAR;
 
     const missions: MissionView[] = MISSIONS.map((m) => {
-      const key = m.kind === "semanal" ? `${m.id}@w${s.week}` : m.kind === "mensal" ? `${m.id}@m${s.month}` : m.id;
+      const key = m.kind === "semanal" ? `${m.id}@w${s.week}` : `${m.id}@m${s.month}`;
       let progress = 0;
       let goal = 1;
       if (m.id === "w-licoes") [progress, goal] = [Math.min(s.weekLessons, 2), 2];
-      else if (m.id === "w-quiz") [progress, goal] = [Math.min(s.weekQuizzes, 2), 2];
+      else if (m.id === "w-guardar") progress = s.weekSavedCents > 0 ? 1 : 0;
       else if (m.id === "m-mes") [progress, goal] = [(s.monthSavedCents >= 2000 ? 1 : 0) + (s.billsPaid ? 1 : 0), 2];
-      else if (m.id === "l-objetivo") progress = s.goal ? 1 : 0;
-      else progress = s.actions.includes(m.id) ? 1 : 0;
       const status: MissionStatus = !done(m.unlock)
         ? "bloqueada"
         : s.claimed.includes(key)
@@ -132,69 +186,74 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
       return { ...m, key, progress, goal, status };
     });
 
+    const addSaved = (p: Persisted, cents: number): Partial<Persisted> => ({
+      monthSavedCents: Math.max(p.monthSavedCents + cents, 0),
+      weekSavedCents: Math.max(p.weekSavedCents + cents, 0),
+      goal: p.goal ? { ...p.goal, savedCents: Math.max(p.goal.savedCents + cents, 0), history: [...p.goal.history, Math.max(p.goal.savedCents + cents, 0)] } : p.goal,
+    });
+
     return {
       ...s,
       set,
       done,
       unlocked,
+      unitDone,
+      unitPassed,
       next,
       points,
-      level,
-      levelPct,
-      nextLevelAt,
+      missionPoints,
+      quizPoints,
+      passos,
+      passosDone,
+      mvLevel,
+      mvNextAt,
+      goalPct,
+      rate,
       missions,
       completeLesson: (id) =>
         set((p) => {
           const streak = p.lastActiveWeek === p.week ? p.streak : p.lastActiveWeek === p.week - 1 ? p.streak + 1 : 1;
-          const kept = p.lastActiveWeek === p.week - 1 && streak >= 2;
           return {
             completed: p.completed.includes(id) ? p.completed : [...p.completed, id],
             weekLessons: p.weekLessons + 1,
             streak,
-            bestStreak: Math.max(p.bestStreak, streak),
             lastActiveWeek: p.week,
-            bonusPts: p.bonusPts + (kept ? STREAK_BONUS : 0),
           };
         }),
-      recordQuiz: (id, correct) => {
-        const before = quizPoints(s.quizBest[id]);
-        const best = Math.max(correct, s.quizBest[id] ?? 0);
+      markDeep: (id) => set((p) => ({ deepSeen: p.deepSeen.includes(id) ? p.deepSeen : [...p.deepSeen, id] })),
+      recordUnitQuiz: (u, correct) => {
+        const before = unitQuizPoints(u, s.unitBest[u]);
+        const best = Math.max(correct, s.unitBest[u] ?? 0);
         set((p) => ({
-          quizBest: { ...p.quizBest, [id]: Math.max(correct, p.quizBest[id] ?? 0) },
-          deepSeen: p.deepSeen.includes(id) ? p.deepSeen : [...p.deepSeen, id],
-          weekQuizzes: p.weekQuizzes + (correct >= QUIZ_PASS ? 1 : 0),
+          unitBest: { ...p.unitBest, [u]: Math.max(correct, p.unitBest[u] ?? 0) },
+          unitDeepSeen: p.unitDeepSeen.includes(u) ? p.unitDeepSeen : [...p.unitDeepSeen, u],
         }));
-        return quizPoints(best) - before;
+        return unitQuizPoints(u, best) - before;
       },
       claim: (m) => set((p) => ({ claimed: [...p.claimed, m.key] })),
-      doAction: (id) => set((p) => ({ actions: p.actions.includes(id) ? p.actions : [...p.actions, id] })),
-      save: (cents) =>
+      setGoal: (g) =>
         set((p) => ({
-          monthSavedCents: p.monthSavedCents + cents,
-          goal: p.goal ? { ...p.goal, savedCents: p.goal.savedCents + cents } : p.goal,
+          goal: p.goal ? { ...p.goal, ...g } : { ...g, savedCents: 0, yieldCents: 0, history: [0] },
         })),
-      advanceWeek: () => set((p) => ({ week: p.week + 1, weekLessons: 0, weekQuizzes: 0 })),
+      save: (cents) => set((p) => addSaved(p, cents)),
+      withdraw: (cents) => set((p) => addSaved(p, -Math.min(cents, p.goal?.savedCents ?? 0))),
+      advanceWeek: () => set((p) => ({ week: p.week + 1, weekLessons: 0, weekSavedCents: 0 })),
       advanceMonth: () =>
         set((p) => {
           const monthDone = p.claimed.includes(`m-mes@m${p.month}`) || (p.monthSavedCents >= 2000 && p.billsPaid);
-          const rate = (p.cdi105 ? 1.05 : 1) * CDI_YEAR;
+          const r = (p.cdi105 ? 1.05 : 1) * CDI_YEAR;
           const goal = p.goal
             ? (() => {
                 const deposit = Math.max(p.goal.monthlyCents - p.monthSavedCents, 0);
-                const withDeposit = p.goal.savedCents + deposit;
-                const saved = Math.min(Math.round(withDeposit * (1 + rate / 12)), Math.max(p.goal.targetCents, withDeposit));
-                return { ...p.goal, savedCents: saved, history: [...p.goal.history, saved] };
+                const base = p.goal.savedCents + deposit;
+                const y = Math.round(base * (Math.pow(1 + r, 1 / 12) - 1));
+                return { ...p.goal, savedCents: base + y, yieldCents: p.goal.yieldCents + y, history: [...p.goal.history, base + y] };
               })()
             : p.goal;
-          return { month: p.month + 1, week: p.week + 4, weekLessons: 0, weekQuizzes: 0, monthSavedCents: 0, billsPaid: false, cdi105: monthDone, goal };
+          return { month: p.month + 1, week: p.week + 4, weekLessons: 0, weekSavedCents: 0, monthSavedCents: 0, billsPaid: false, cdi105: monthDone, goal };
         }),
-      registerPix: (own) => {
-        if (own && !s.hook.off) set((p) => ({ hook: { ...p.hook, pending: true, pushSeen: false } }));
-      },
-      rewardUnlocked: (id) => {
-        const r = REWARDS.find((x) => x.id === id);
-        return !!r && points >= LEVELS[r.level - 1];
-      },
+      registerPix: (own) =>
+        set((p) => ({ pixDone: true, hook: own && !p.hook.off ? { ...p.hook, pending: true, pushSeen: false } : p.hook })),
       reset: () => setS(INITIAL),
     };
   }, [s, set]);
@@ -207,3 +266,5 @@ export function useTrilha() {
   if (!ctx) throw new Error("useTrilha must be used inside TrilhaProvider");
   return ctx;
 }
+
+export const PASSO_TITLES = PASSO_CATS;

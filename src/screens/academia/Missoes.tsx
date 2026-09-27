@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
-import { CalendarDays, Check, ChevronLeft, Gift, Lock, Settings2, Sparkles } from "lucide-react";
+import { CalendarDays, Check, ChevronLeft, Gift, Lock, PiggyBank, Settings2, Sparkles, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
-import { AcademiaTabs, GoalEditor, ProgressBar } from "../../components/Iai";
+import { AcademiaTabs, ProgressBar } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
 import { useToast } from "../../components/Toast";
 import { brl } from "../../data/money";
-import { LESSONS } from "../../data/trilha";
+import { LESSONS, POINT_BRL, UNIT_POINTS_PER_RIGHT, UNITS, unitQuiz, unitQuizPoints } from "../../data/trilha";
 import { deltaToHome } from "../../state/homeHistory";
 import { useTrilha, type MissionStatus, type MissionView } from "../../state/TrilhaContext";
 
@@ -24,7 +24,6 @@ export function Missoes() {
   const navigate = useNavigate();
   const t = useTrilha();
   const toast = useToast();
-  const [goalOpen, setGoalOpen] = useState(false);
   const [demo, setDemo] = useState(false);
 
   const back = () => {
@@ -34,10 +33,8 @@ export function Missoes() {
   };
 
   const actionFor = (m: MissionView) => {
-    if (m.id === "w-licoes" || m.id === "w-quiz") return { label: "Ir pra trilha", run: () => navigate("/academia/trilha", { replace: true, state: { tab: true } }) };
-    if (m.id === "l-objetivo") return { label: "Criar objetivo", run: () => setGoalOpen(true) };
-    if (m.id === "l-alerta") return { label: "Ativar alerta", run: () => (t.doAction(m.id), toast("Alerta de fatura ativado (simulado)")) };
-    if (m.id === "l-pixnoturno") return { label: "Reduzir limite", run: () => (t.doAction(m.id), toast("Limite noturno: R$ 200 (simulado)")) };
+    if (m.id === "w-licoes") return { label: "Ir pra trilha", run: () => navigate("/academia/trilha", { replace: true, state: { tab: true } }) };
+    if (m.id === "w-guardar" || m.id === "m-mes") return { label: "Abrir cofrinho", run: () => navigate("/cofrinhos", { state: { fromAcademia: true } }) };
     return undefined;
   };
 
@@ -57,7 +54,7 @@ export function Missoes() {
             <div className="text-[13px] leading-snug text-[#666]">{m.status === "bloqueada" ? `Libera ao concluir a lição ${m.unlock.slice(1)}: ${lesson?.title}` : m.text}</div>
             <div className="mt-2 flex items-center gap-2">
               <span className={`rounded-full px-2 py-[2px] text-[11px] font-semibold ${BADGE[m.status]}`}>{m.status}</span>
-              <span className="text-[12px] font-semibold text-[#1F2A63]">+{m.points} pts</span>
+              {m.points > 0 && <span className="text-[12px] font-semibold text-[#1F2A63]">+{m.points} Pontos Itaú</span>}
             </div>
             {m.reward && <div className="mt-1 text-[12px] font-semibold text-[#1B7F3B]">+ {m.reward} (simulado)</div>}
           </div>
@@ -67,12 +64,12 @@ export function Missoes() {
           <Squish
             onClick={() => {
               t.claim(m);
-              toast(`+${m.points} pts no Minhas Vantagens`);
+              toast(m.points ? `+${m.points} Pontos Itaú (simulado)` : "Cofrinho do objetivo vai render 105% do CDI no próximo mês (simulado)");
             }}
             className="mt-3 w-full rounded-[12px] bg-[#00857A] py-[10px] text-center text-[15px] font-bold text-white"
             scale={0.97}
           >
-            Resgatar +{m.points} pts
+            {m.points ? `Resgatar +${m.points} Pontos Itaú` : "Ativar 105% do CDI"}
           </Squish>
         )}
         {(m.status === "disponível" || m.status === "em andamento") && action && (
@@ -86,7 +83,6 @@ export function Missoes() {
 
   const month = t.missions.find((m) => m.id === "m-mes");
   const weekly = t.missions.filter((m) => m.kind === "semanal");
-  const lessonM = t.missions.filter((m) => m.kind === "lição");
 
   return (
     <Screen
@@ -106,7 +102,7 @@ export function Missoes() {
     >
       <div className="px-4 pb-10 pt-4">
         <div className="flex items-center gap-2 text-[13px] text-[#666]">
-          <CalendarDays size={15} /> Semana {t.week} · Mês {t.month} · {t.points} pts
+          <CalendarDays size={15} /> Semana {t.week} · Mês {t.month} · {t.points} Pontos Itaú
         </div>
 
         {month && (
@@ -118,7 +114,7 @@ export function Missoes() {
                 <Squish
                   onClick={() => {
                     t.save(2000);
-                    toast("R$ 20 na caixinha (simulado)");
+                    toast("R$ 20 no cofrinho do objetivo (simulado)");
                   }}
                   className={`rounded-[14px] p-3 text-left ${t.monthSavedCents >= 2000 ? "bg-[#E3F4EA]" : "bg-white"}`}
                   scale={0.97}
@@ -142,8 +138,8 @@ export function Missoes() {
               </div>
             )}
             <div className={`mt-2 rounded-[14px] p-3 text-[13px] ${t.cdi105 ? "bg-[#00857A] text-white" : "bg-white text-[#555]"}`}>
-              Caixinha agora: <b>{t.cdi105 ? "105%" : "100%"} do CDI</b> (simulado · condição a confirmar com o produto).
-              {!t.cdi105 && " Cumpra a missão e vire o mês pra ativar."}
+              Cofrinho do objetivo agora: <b>{t.cdi105 ? "105%" : "100%"} do CDI</b> (simulado · condição a confirmar com o produto).
+              {!t.cdi105 && " Cumpra a missão e vire o mês pra ativar. A missão do mês não dá pontos: o prêmio é o rendimento."}
             </div>
           </section>
         )}
@@ -155,31 +151,58 @@ export function Missoes() {
               <Card key={m.id} m={m} />
             ))}
           </div>
-          <p className="mt-2 text-[12px] text-[#777]">Bônus, não obrigação: a trilha anda com 1 lição por semana. Missão perdida não tira pontos.</p>
+          <p className="mt-2 text-[12px] text-[#777]">Bônus, não obrigação. Missão perdida não tira pontos. Até 60 Pontos Itaú por semana.</p>
         </section>
 
         <section className="mt-6">
-          <h2 className="mb-2 text-[16px] font-bold text-black">Liberadas pelas lições</h2>
+          <h2 className="mb-2 text-[16px] font-bold text-black">Desafios de fim de unidade</h2>
           <div className="flex flex-col gap-2">
-            {lessonM.map((m) => (
-              <Card key={m.id} m={m} />
-            ))}
+            {UNITS.map((u) => {
+              const total = unitQuiz(u.n).length;
+              const best = t.unitBest[u.n];
+              const ready = t.unitDone(u.n);
+              return (
+                <Squish
+                  key={u.n}
+                  onClick={() => (ready ? navigate(`/academia/desafio/${u.n}`) : navigate("/academia/trilha", { replace: true, state: { tab: true } }))}
+                  className={`flex w-full items-center gap-3 rounded-[16px] p-4 text-left ${u.soon ? "bg-white/60" : "bg-white"}`}
+                  scale={0.98}
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.unitPassed(u.n) ? "bg-[#00857A]" : ready ? "bg-[#FFF1E5]" : "bg-[#E6E6E6]"}`}>
+                    {t.unitPassed(u.n) ? <Check size={18} color="white" /> : ready ? <Trophy size={16} color="#FF6200" /> : <Lock size={16} color="#888" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className={`text-[15px] font-semibold ${ready ? "text-[#222]" : "text-[#888]"}`}>Unidade {u.n} · {u.name}</div>
+                    <div className="text-[13px] text-[#666]">
+                      {u.soon ? "Em breve" : ready ? (best !== undefined ? `Seu melhor: ${best}/${total} · ${unitQuizPoints(u.n, best)} pts` : "Liberado · opcional") : "Conclua todas as lições da unidade"}
+                    </div>
+                  </div>
+                  {!u.soon && <span className="text-[12px] font-semibold text-[#1F2A63]">até {total * UNIT_POINTS_PER_RIGHT} pts</span>}
+                </Squish>
+              );
+            })}
           </div>
         </section>
 
+        <div className="mt-6 rounded-[16px] bg-white p-4 text-[13px] leading-snug text-[#555]">
+          <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-[#222]">
+            <PiggyBank size={16} color="#FF6200" /> Quanto vale o que você ganhou
+          </div>
+          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o máximo é ~R$ 5 por mês por pessoa, dentro do custo de um programa de relacionamento.
+        </div>
+
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="mt-6 flex w-full items-center gap-3 rounded-[16px] bg-itau-navy p-4 text-white" scale={0.98}>
           <Gift size={20} color="#FF8A3D" />
-          <span className="flex-1 text-[15px] font-semibold">Ver recompensas no Minhas Vantagens</span>
+          <span className="flex-1 text-[15px] font-semibold">Usar Pontos Itaú no Itaú Shop</span>
         </Squish>
       </div>
 
-      <GoalEditor open={goalOpen} onClose={() => setGoalOpen(false)} />
       <BottomSheet open={demo} onClose={() => setDemo(false)} title="Controles do protótipo">
         <div className="flex flex-col gap-2">
           {[
             { l: "Avançar 1 semana", run: () => t.advanceWeek() },
             { l: "Avançar 1 mês", run: () => t.advanceMonth() },
-            { l: "Resetar Academia Ia.i", run: () => t.reset() },
+            { l: "Resetar academIA.I", run: () => t.reset() },
           ].map((b) => (
             <Squish
               key={b.l}

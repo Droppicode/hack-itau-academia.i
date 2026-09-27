@@ -25,10 +25,10 @@ export function PreLogin() {
       <div className="px-5 pb-10">
         <div className="mt-[30px] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#3A3A3A] text-[14px] text-white">MC</div>
+            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#3A3A3A] text-[14px] text-white">LR</div>
             <div className="leading-tight">
-              <div className="text-[18px] font-semibold text-[#3F3F3F]">Olá, Matheus</div>
-              <div className="text-[12px] text-[#555]">CPF •••.062.708-••</div>
+              <div className="text-[18px] font-semibold text-[#3F3F3F]">Olá, Lucas</div>
+              <div className="text-[12px] text-[#555]">CPF •••.000.000-••</div>
             </div>
           </div>
           <Squish className="rounded-[10px] border-[1.5px] border-itau-navy px-[14px] py-[8px] text-[15px] font-semibold text-itau-navy">

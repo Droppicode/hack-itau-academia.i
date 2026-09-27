@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { Brain, Clock, Flame, Lock, MessageSquareQuote, Target, Unlock } from "lucide-react";
+import { BookOpen, Clock, Flame, Lock, MessageSquareQuote, Target, Trophy, Unlock } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IaiAvatar } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
 import { LESSONS, MISSIONS, type Step } from "../../data/trilha";
-import { STREAK_BONUS, useTrilha } from "../../state/TrilhaContext";
+import { useTrilha } from "../../state/TrilhaContext";
 import { CheckFooter, FooterWrap, PillButton, PlayerShell, QuestionBody, useAnswer } from "./Exercise";
 
 const asQuestion = (s: Exclude<Step, { kind: "info" }>) =>
@@ -57,6 +57,7 @@ export function Licao() {
     const qs = lesson.steps.filter((s) => s.kind !== "info").length;
     const acc = Math.round((qs / (qs + misses)) * 100);
     const kept = t.streak > streakBefore && t.streak >= 2;
+    const unitComplete = LESSONS.filter((l) => l.unit === lesson.unit).every((l) => t.done(l.id));
     return (
       <Screen bg="bg-[#14215A]" statusTone="light">
         <div className="flex min-h-full flex-col px-6 pb-8 pt-8 text-white">
@@ -80,7 +81,7 @@ export function Licao() {
               </div>
             ))}
           </div>
-          {kept && <div className="mt-3 text-center text-[14px] font-semibold text-[#FFB27A]">Sequência mantida · +{STREAK_BONUS} pts</div>}
+          {kept && <div className="mt-3 text-center text-[14px] font-semibold text-[#FFB27A]">Sequência mantida: {t.streak} semanas seguidas</div>}
 
           {unlocks.length > 0 && (
             <div className="mt-5 rounded-[18px] bg-white p-4 text-[#14215A]">
@@ -90,19 +91,28 @@ export function Licao() {
               {unlocks.map((m) => (
                 <div key={m.id} className="mt-1 flex justify-between text-[15px] font-semibold">
                   <span>{m.title}</span>
-                  <span className="text-[#EC7000]">+{m.points}</span>
+                  <span className="text-[#EC7000]">{m.points ? `+${m.points} pts` : "105% CDI"}</span>
                 </div>
               ))}
             </div>
           )}
           <div className="mt-3 flex items-start gap-3 rounded-[18px] bg-white/10 p-4">
-            <Brain size={20} color="#FFB27A" className="mt-[2px] shrink-0" />
+            {unitComplete ? <Trophy size={20} color="#FFB27A" className="mt-[2px] shrink-0" /> : <BookOpen size={20} color="#FFB27A" className="mt-[2px] shrink-0" />}
             <div className="text-[14px] leading-snug text-white/90">
-              <b className="text-white">Quer pontos?</b> Leia o aprofundamento e faça o quiz. 3 de 4 ou mais = 25 pts por acerto no Minhas Vantagens.
+              {unitComplete ? (
+                <>
+                  <b className="text-white">Unidade {lesson.unit} concluída!</b> O desafio final é opcional: aprofundamento + quiz que vale Pontos Itaú.
+                </>
+              ) : (
+                <>
+                  <b className="text-white">Quer entender melhor?</b> O aprofundamento é só leitura e não vale pontos. Os Pontos Itaú ficam no desafio do fim da unidade.
+                </>
+              )}
             </div>
           </div>
           <div className="mt-auto flex flex-col gap-2 pt-6">
-            <PillButton label="Aprofundar e fazer o quiz" tone="orange" onClick={() => navigate(`/academia/licao/${lesson.id}/aprofundar`, { replace: true })} />
+            {unitComplete && <PillButton label="Ir pro desafio da unidade" tone="orange" onClick={() => navigate(`/academia/desafio/${lesson.unit}`, { replace: true })} />}
+            <PillButton label="Ler aprofundamento" tone={unitComplete ? "navy" : "orange"} onClick={() => navigate(`/academia/licao/${lesson.id}/aprofundar`, { replace: true })} />
             <Squish onClick={() => navigate(-1)} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
               Voltar pra trilha
             </Squish>

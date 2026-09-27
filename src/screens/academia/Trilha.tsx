@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
-import { Check, ChevronLeft, Clock, Flame, Info, Lock, Sparkles, Star } from "lucide-react";
+import { BookOpen, Check, ChevronLeft, Clock, Flame, Info, Lock, Sparkles, Star, Target, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
-import { AcademiaTabs, IaiAvatar, Wordmark } from "../../components/Iai";
+import { AcademiaTabs, GOAL_ICON, Wordmark, goalDef } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
-import { LESSONS, QUIZ_PASS, UNITS, type Lesson } from "../../data/trilha";
+import { LESSONS, UNIT_POINTS_PER_RIGHT, UNIT_QUIZ_PASS, UNITS, unitQuiz, type Lesson, type UnitN } from "../../data/trilha";
+import { brl } from "../../data/money";
 import { deltaToHome } from "../../state/homeHistory";
 import { useTrilha } from "../../state/TrilhaContext";
 import { PillButton } from "./Exercise";
@@ -70,13 +71,19 @@ function Tile({ num, state, onClick }: { num: number; state: NodeState; onClick:
   );
 }
 
-function QuizDots({ best }: { best?: number }) {
+function ChallengeTile({ state, onClick }: { state: NodeState; onClick: () => void }) {
+  const cls: Record<NodeState, string> = {
+    done: "bg-[#14215A] text-[#FFB27A]",
+    current: "bg-gradient-to-br from-[#FFB000] to-[#EC7000] text-white shadow-[0_8px_20px_rgba(236,112,0,0.45)]",
+    locked: "border-2 border-dashed border-[#D9CBBB] bg-white text-[#B8A898]",
+    soon: "bg-[#EFE7DE] text-[#C4B6A7]",
+  };
   return (
-    <span className="flex gap-[3px]">
-      {[0, 1, 2, 3].map((i) => (
-        <span key={i} className="h-[6px] w-[6px] rounded-full" style={{ background: best !== undefined && i < best ? (best >= QUIZ_PASS ? "#EC7000" : "#B8A898") : "#E8DCCD" }} />
-      ))}
-    </span>
+    <Squish onClick={onClick} className="relative" scale={0.9} aria-label="Desafio da unidade">
+      <div className={`flex items-center justify-center rounded-full ${cls[state]}`} style={{ width: TILE + 8, height: TILE + 8 }}>
+        <Trophy size={28} />
+      </div>
+    </Squish>
   );
 }
 
@@ -84,6 +91,10 @@ export function Trilha() {
   const navigate = useNavigate();
   const t = useTrilha();
   const [open, setOpen] = useState<Lesson | null>(null);
+  const [challenge, setChallenge] = useState<UnitN | null>(null);
+  const def = goalDef(t.goal?.id);
+  const GoalIcon = GOAL_ICON[def.id] ?? Target;
+  const challengeState = (u: UnitN, soon?: boolean): NodeState => (soon ? "soon" : t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
 
   const back = () => {
     const d = deltaToHome();
@@ -106,25 +117,27 @@ export function Trilha() {
               <ChevronLeft size={28} strokeWidth={1.6} />
             </Squish>
             <Wordmark className="flex-1 text-[19px]" />
-            <Squish aria-label="Sobre a Academia Ia.i" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
+            <Squish aria-label="Sobre a academIA.I" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
               <Info size={19} />
             </Squish>
           </div>
-          <div className="mt-1 flex items-center gap-3 rounded-[18px] bg-white/10 p-3">
-            <IaiAvatar size={40} />
+          <Squish onClick={() => navigate("/cofrinhos", { state: { fromAcademia: true } })} className="mt-1 flex w-full items-center gap-3 rounded-[18px] bg-white/10 p-3 text-left" scale={0.98}>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]" style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}>
+              <GoalIcon size={20} color="white" />
+            </span>
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between">
-                <span className="text-[15px] font-semibold">Nível {t.level}</span>
-                <span className="text-[12px] text-white/70">{t.nextLevelAt ? `${t.nextLevelAt - t.points} pts pro próximo` : "nível máximo"}</span>
+                <span className="truncate text-[15px] font-semibold">{t.goal?.name ?? "Seu objetivo"}</span>
+                <span className="text-[12px] text-white/70">{t.goal ? `${brl(t.goal.savedCents, false)} de ${brl(t.goal.targetCents, false)}` : ""}</span>
               </div>
               <div className="mt-[6px] h-[6px] overflow-hidden rounded-full bg-white/15">
-                <motion.div className="h-full rounded-full bg-[#EC7000]" initial={{ width: 0 }} animate={{ width: `${Math.max(t.levelPct, 3)}%` }} />
+                <motion.div className="h-full rounded-full bg-[#EC7000]" initial={{ width: 0 }} animate={{ width: `${Math.max(t.goalPct, 3)}%` }} />
               </div>
             </div>
-          </div>
+          </Squish>
           <div className="mt-3 flex gap-2 text-[13px] font-semibold">
             <span className="flex items-center gap-1 rounded-full bg-[#EC7000] px-3 py-[5px]">
-              <Star size={14} fill="white" /> {t.points} pts
+              <Star size={14} fill="white" /> {t.points} Pontos Itaú
             </span>
             <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-[5px]">
               <Flame size={14} /> {t.streak} {t.streak === 1 ? "semana" : "semanas"}
@@ -143,7 +156,9 @@ export function Trilha() {
           const lessons = LESSONS.filter((l) => l.unit === u.n);
           const doneN = lessons.filter((l) => t.done(l.id)).length;
           const cur = lessons.findIndex((l) => stateOf(l) === "current");
-          const progress = u.soon || doneN === 0 ? 0 : (cur === -1 ? lessons.length - 1 : cur) / Math.max(lessons.length - 1, 1);
+          const nodes = lessons.length + 1;
+          const progress = u.soon || doneN === 0 ? 0 : (cur === -1 ? lessons.length : cur) / Math.max(nodes - 1, 1);
+          const cState = challengeState(u.n, u.soon);
           return (
             <section key={u.n} className={`mb-6 ${u.soon ? "opacity-70" : ""}`}>
               <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-[0_4px_16px_rgba(20,33,90,0.06)]">
@@ -170,8 +185,8 @@ export function Trilha() {
                 </div>
               </div>
 
-              <div className="relative mt-2" style={{ height: lessons.length * ROW }}>
-                <Snake n={lessons.length} progress={progress} />
+              <div className="relative mt-2" style={{ height: nodes * ROW }}>
+                <Snake n={nodes} progress={progress} />
                 {lessons.map((l, i) => {
                   const x = xAt(i);
                   const st = stateOf(l);
@@ -186,15 +201,32 @@ export function Trilha() {
                       >
                         {st === "current" && <div className="text-[11px] font-bold uppercase tracking-wider text-[#EC7000]">Você está aqui</div>}
                         <div className={`text-[14px] font-semibold leading-tight ${st === "soon" || st === "locked" ? "text-[#A89A8B]" : "text-[#14215A]"}`}>{l.title}</div>
-                        {st === "done" && (
-                          <div className={`mt-1 flex ${labelRight ? "" : "justify-end"}`}>
-                            <QuizDots best={t.quizBest[l.id]} />
+                        {st === "done" && t.deepSeen.includes(l.id) && (
+                          <div className={`mt-1 flex items-center gap-1 text-[11px] text-[#8A7B6C] ${labelRight ? "" : "justify-end"}`}>
+                            <BookOpen size={11} /> aprofundado
                           </div>
                         )}
                       </Squish>
                     </div>
                   );
                 })}
+                {(() => {
+                  const x = xAt(lessons.length);
+                  const labelRight = x < 55;
+                  const size = TILE + 8;
+                  return (
+                    <div className="absolute" style={{ top: lessons.length * ROW + ROW / 2 - size / 2, left: `calc(${x}% - ${size / 2}px)`, zIndex: 1 }}>
+                      <ChallengeTile state={cState} onClick={() => setChallenge(u.n)} />
+                      <Squish onClick={() => setChallenge(u.n)} className={`absolute top-1/2 w-[140px] -translate-y-1/2 text-left ${labelRight ? "left-[82px]" : "right-[82px] text-right"}`} scale={0.97}>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-[#EC7000]">Fim da unidade · opcional</div>
+                        <div className={`text-[14px] font-semibold leading-tight ${cState === "locked" || cState === "soon" ? "text-[#A89A8B]" : "text-[#14215A]"}`}>
+                          Desafio: vale Pontos Itaú
+                        </div>
+                        {t.unitBest[u.n] !== undefined && <div className="text-[11px] text-[#8A7B6C]">melhor: {t.unitBest[u.n]}/{unitQuiz(u.n).length}</div>}
+                      </Squish>
+                    </div>
+                  );
+                })()}
               </div>
             </section>
           );
@@ -219,20 +251,39 @@ export function Trilha() {
                     <Clock size={13} /> ~3 min
                   </span>
                   <span className="rounded-full bg-[#EEF0F8] px-3 py-1">{open.steps.length} cards</span>
-                  {openState === "done" && (
-                    <span className="rounded-full bg-[#FFE9D6] px-3 py-1 text-[#EC7000]">
-                      Quiz: {t.quizBest[open.id] !== undefined ? `${t.quizBest[open.id]}/4` : "não feito"}
-                    </span>
-                  )}
+                  {openState === "done" && <span className="rounded-full bg-[#FFE9D6] px-3 py-1 text-[#EC7000]">Concluída</span>}
                 </div>
                 <div className="mt-5 flex flex-col gap-2">
-                  {openState === "done" && <PillButton label="Aprofundar e fazer o quiz" tone="orange" onClick={() => navigate(`/academia/licao/${open.id}/aprofundar`)} />}
+                  {openState === "done" && <PillButton label="Ler aprofundamento (sem pontos)" tone="orange" onClick={() => navigate(`/academia/licao/${open.id}/aprofundar`)} />}
                   <PillButton label={openState === "done" ? "Refazer a lição" : "Começar lição"} tone={openState === "done" ? "navy" : "orange"} onClick={() => navigate(`/academia/licao/${open.id}`)} />
                 </div>
               </>
             )}
           </div>
         )}
+      </BottomSheet>
+
+      <BottomSheet open={challenge !== null} onClose={() => setChallenge(null)} title={challenge ? `Desafio da Unidade ${challenge}` : ""}>
+        {challenge !== null && (() => {
+          const cs = challengeState(challenge, UNITS.find((x) => x.n === challenge)?.soon);
+          const total = unitQuiz(challenge).length;
+          return (
+            <div>
+              <p className="-mt-2 text-[15px] leading-snug text-[#4A4A4A]">
+                Opcional. Um resumo pra aprofundar e um quiz de {total || 10} perguntas. Com {UNIT_QUIZ_PASS}+ acertos você ganha {UNIT_POINTS_PER_RIGHT} Pontos Itaú por acerto.
+              </p>
+              {cs === "soon" ? (
+                <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Essa unidade ainda está sendo preparada.</div>
+              ) : cs === "locked" ? (
+                <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Conclua todas as lições da unidade pra liberar o desafio.</div>
+              ) : (
+                <div className="mt-5">
+                  <PillButton label={cs === "done" ? "Refazer o desafio" : "Abrir desafio"} tone="orange" onClick={() => navigate(`/academia/desafio/${challenge}`)} />
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </BottomSheet>
     </Screen>
   );

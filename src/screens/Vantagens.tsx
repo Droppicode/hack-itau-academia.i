@@ -1,94 +1,152 @@
-import { Check, ChevronRight, Gift, Lock } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowLeftRight, BadgePercent, ChevronRight, CircleHelp, CreditCard, Gift, HandHeart, Plane, ShoppingBag, Smartphone, Sparkles, Store, Tag, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BottomSheet } from "../components/BottomSheet";
 import { BottomTabBar } from "../components/BottomTabBar";
-import { IaiAvatar, ProgressBar, Wordmark } from "../components/Iai";
+import { IaiAvatar, Wordmark, useAcademiaEntry } from "../components/Iai";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { useToast } from "../components/Toast";
-import { LEVELS, REWARDS } from "../data/trilha";
+import { brl } from "../data/money";
+import { POINT_BRL, UNIT_POINTS_PER_RIGHT, unitQuiz } from "../data/trilha";
 import { markHome } from "../state/homeHistory";
 import { useTrilha } from "../state/TrilhaContext";
 import { OrangeHeader } from "./Home";
+import { Hex } from "./MinhasVantagens";
+
+function Tile({ Icon, label, onClick }: { Icon: typeof Gift; label: string; onClick: () => void }) {
+  return (
+    <Squish onClick={onClick} className="flex h-[84px] flex-col justify-between rounded-[14px] bg-white p-3 text-left" scale={0.95}>
+      <Icon size={20} color="#EC7000" />
+      <span className="text-[13px] leading-tight text-[#333]">{label}</span>
+    </Squish>
+  );
+}
 
 export function Vantagens() {
   useEffect(markHome, []);
   const navigate = useNavigate();
   const toast = useToast();
   const t = useTrilha();
+  const enter = useAcademiaEntry();
+  const [extrato, setExtrato] = useState(false);
+  const [how, setHow] = useState(false);
+  const soon = () => toast("Protótipo: disponível só no app real");
+  const quizMax = unitQuiz(1).length * UNIT_POINTS_PER_RIGHT;
+
+  const history = [
+    ...t.claimed.map((k) => ({ k, label: k.startsWith("w-licoes") ? "Missão: 2 lições na semana" : k.startsWith("w-guardar") ? "Missão: guardar no cofrinho" : "Missão do mês (105% CDI)", pts: k.startsWith("m-") ? 0 : 30 })),
+    ...(t.quizPoints > 0 ? [{ k: "quiz", label: "Desafio da Unidade 1", pts: t.quizPoints }] : []),
+  ];
 
   return (
     <Screen bg="bg-itau-bg" statusTone="light" statusBg="bg-itau-orange" header={<OrangeHeader />} footer={<BottomTabBar />}>
-      <div className="px-5 pb-8 pt-[28px]">
-        <h1 className="text-[18px] font-bold text-black">Minhas Vantagens</h1>
+      <div className="px-5 pb-8 pt-[24px]">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[18px] font-bold text-black">Pontos e Benefícios Itaú</h1>
+          <Squish aria-label="Ajuda" onClick={() => setHow(true)} scale={0.9}>
+            <CircleHelp size={22} color="#444" />
+          </Squish>
+        </div>
+        <p className="mt-1 text-[14px] text-[#555]">Tudo em um só lugar: encontre aqui todos os benefícios disponíveis pra você aproveitar.</p>
 
-        <div className="mt-4 rounded-[18px] bg-itau-navy p-5 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-[13px] text-white/70">Seus pontos</div>
-              <div className="text-[30px] font-bold leading-tight">{t.points}</div>
-            </div>
-            <div className="rounded-full bg-white/15 px-3 py-1 text-[15px] font-semibold">Nível {t.level}</div>
+        <h2 className="mt-6 text-[16px] font-bold text-black">Para você acompanhar</h2>
+        <div className="mt-3 rounded-[16px] bg-white p-4">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[16px] font-semibold text-[#222]">Pontos Itaú</span>
+            <span className="text-[18px] font-bold text-[#222]">{t.points} pts</span>
           </div>
-          <ProgressBar pct={t.levelPct} tone="white" className="mt-3" />
-          <div className="mt-2 text-[13px] text-white/75">
-            {t.nextLevelAt ? `Faltam ${t.nextLevelAt - t.points} pts pro Nível ${t.level + 1}. ` : "Nível máximo. "}Pontos não expiram e não viram dinheiro.
+          <div className="mt-1 flex justify-between text-[13px] text-[#666]">
+            <span>Valem na fatura</span>
+            <span>{brl(Math.round(t.points * POINT_BRL * 100))}</span>
           </div>
-          <Squish onClick={() => navigate(t.introSeen ? "/academia/trilha" : "/academia/intro")} className="mt-4 flex w-full items-center gap-3 rounded-[14px] bg-white/10 px-3 py-3" scale={0.97}>
-            <IaiAvatar size={30} />
-            <span className="flex-1 text-[15px]">
-              Ganhar pontos na <Wordmark />
-            </span>
-            <ChevronRight size={18} />
+          <Squish onClick={() => setExtrato(true)} className="mt-3 flex w-full items-center justify-between border-t border-[#EEE] pt-3 text-[14px] font-semibold text-itau-orange" scale={0.98}>
+            Acessar extrato <ChevronRight size={16} />
           </Squish>
         </div>
 
-        {[2, 3, 4, 5].map((lvl) => (
-          <div key={lvl} className="mt-6">
-            <h2 className="mb-2 flex items-baseline justify-between text-[16px] font-bold text-black">
-              <span>Nível {lvl}</span>
-              <span className="text-[13px] font-normal text-[#777]">a partir de {LEVELS[lvl - 1]} pts</span>
-            </h2>
-            <div className="flex flex-col gap-2">
-              {REWARDS.filter((r) => r.level === lvl).map((r) => {
-                const unlocked = t.rewardUnlocked(r.id);
-                const active = t.activeRewards.includes(r.id);
-                const missing = LEVELS[lvl - 1] - t.points;
-                return (
-                  <Squish
-                    key={r.id}
-                    onClick={() => {
-                      if (!unlocked) {
-                        navigate(t.introSeen ? "/academia/trilha" : "/academia/intro");
-                        return;
-                      }
-                      t.set((s) => ({ activeRewards: active ? s.activeRewards.filter((x) => x !== r.id) : [...s.activeRewards, r.id] }));
-                      toast(active ? "Benefício desativado" : "Benefício ativado");
-                    }}
-                    className={`flex w-full items-center gap-3 rounded-[16px] p-4 ${unlocked ? "bg-white" : "bg-white/60"}`}
-                    scale={0.98}
-                  >
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${active ? "bg-[#1B7F3B]" : unlocked ? "bg-[#FFF1E5]" : "bg-[#E6E6E6]"}`}>
-                      {active ? <Check size={18} color="white" /> : unlocked ? <Gift size={16} color="#FF6200" /> : <Lock size={16} color="#888" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className={`text-[15px] font-semibold ${unlocked ? "text-[#333]" : "text-[#888]"}`}>{r.title}</div>
-                      <div className="text-[13px] leading-snug text-[#666]">
-                        {unlocked ? (active ? `Ativo · ${r.detail}` : `${r.detail} · toque pra ativar`) : `Faltam ${missing} pts · ganhe no quiz das lições e nas missões`}
-                      </div>
-                    </div>
-                    {!unlocked && <ChevronRight size={18} color="#888" />}
-                  </Squish>
-                );
-              })}
-            </div>
+        <Squish onClick={() => navigate("/minhas-vantagens")} className="mt-3 flex w-full items-center gap-3 rounded-[16px] bg-white p-4 text-left" scale={0.98}>
+          <Hex n={t.mvLevel} size={40} />
+          <div className="flex-1">
+            <div className="text-[15px] font-semibold text-[#222]">Minhas Vantagens · nível {t.mvLevel}</div>
+            <div className="text-[13px] text-[#666]">{t.passosDone} passos · {t.mvNextAt ? `faltam ${t.mvNextAt - t.passosDone} pro nível ${t.mvLevel + 1}` : "nível máximo"}</div>
           </div>
-        ))}
+          <ChevronRight size={18} color="#888" />
+        </Squish>
 
-        <p className="mt-6 text-center text-[12px] leading-snug text-[#888]">
-          Recompensa nunca é crédito, limite ou empréstimo. Catálogo simulado no protótipo.
+        <h2 className="mt-6 text-[16px] font-bold text-black">Usar pontos Itaú</h2>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <Tile Icon={CreditCard} label="Desconto na fatura" onClick={soon} />
+          <Tile Icon={Plane} label="Passagens aéreas" onClick={soon} />
+          <Tile Icon={Store} label="Stix nas lojas" onClick={soon} />
+          <Tile Icon={ShoppingBag} label="Itaú Shop" onClick={() => navigate("/itau-shop")} />
+          <Tile Icon={ArrowLeftRight} label="Transferir para aéreas" onClick={soon} />
+          <Tile Icon={Smartphone} label="iPhone pra sempre" onClick={soon} />
+          <Tile Icon={HandHeart} label="Doações" onClick={soon} />
+        </div>
+
+        <h2 className="mt-6 text-[16px] font-bold text-black">Ganhar pontos Itaú</h2>
+        <Squish onClick={enter} className="mt-3 flex w-full items-center gap-3 rounded-[16px] bg-gradient-to-br from-[#1F2A63] to-[#003087] p-4 text-left text-white" scale={0.98}>
+          <IaiAvatar size={36} />
+          <div className="flex-1">
+            <Wordmark className="text-[16px]" />
+            <div className="text-[13px] text-white/80">Missões da semana (30 pts cada) e desafio de fim de unidade (até {quizMax} pts)</div>
+          </div>
+          <ChevronRight size={18} color="#FF8A3D" />
+        </Squish>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          <Tile Icon={BadgePercent} label="Cashback em lojas" onClick={() => navigate("/itau-shop")} />
+          <Tile Icon={ShoppingBag} label="Itaú Shop" onClick={() => navigate("/itau-shop")} />
+          <Tile Icon={Zap} label="Acelerador de pontos" onClick={soon} />
+        </div>
+        <Squish onClick={() => setHow(true)} className="mt-3 text-[14px] font-semibold text-itau-orange" scale={0.97}>
+          Saiba como ganhar
+        </Squish>
+
+        <h2 className="mt-6 text-[16px] font-bold text-black">Ofertas especiais</h2>
+        <div className="no-scrollbar -mx-5 mt-3 flex gap-3 overflow-x-auto px-5">
+          {[
+            { t: "Fone bluetooth com cashback em pontos", c: "from-[#1F2A63] to-[#3A4FB8]" },
+            { t: "Mochila pra notebook com frete grátis", c: "from-[#7A2E0E] to-[#EC7000]" },
+            { t: "Ingressos de shows: pague com pontos", c: "from-[#6B3FA0] to-[#C2459B]" },
+          ].map((o) => (
+            <Squish key={o.t} onClick={() => navigate("/itau-shop")} className={`flex h-[120px] w-[220px] shrink-0 flex-col justify-between rounded-[16px] bg-gradient-to-br ${o.c} p-4 text-left text-white`} scale={0.97}>
+              <Tag size={18} />
+              <span className="text-[15px] font-semibold leading-snug">{o.t}</span>
+            </Squish>
+          ))}
+        </div>
+
+        <p className="mt-6 text-[12px] leading-snug text-[#888]">
+          Protótipo. Pontos, níveis e ofertas simulados. Referência pública do Itaú: 1.000 pontos = R$ 20 de desconto na fatura; valores variam por modalidade e cartão. Pontos não são dinheiro sacável.
         </p>
       </div>
+
+      <BottomSheet open={extrato} onClose={() => setExtrato(false)} title="Extrato de Pontos Itaú">
+        {history.length === 0 ? (
+          <p className="text-[14px] text-[#666]">Nenhum ponto ainda. Faça as missões da semana ou o desafio de fim de unidade na academIA.I.</p>
+        ) : (
+          <div className="flex max-h-[50vh] flex-col divide-y divide-[#EEE] overflow-y-auto">
+            {history.map((h) => (
+              <div key={h.k} className="flex justify-between py-3 text-[14px]">
+                <span className="text-[#333]">{h.label}</span>
+                <span className="font-semibold text-[#00857A]">{h.pts ? `+${h.pts} pts` : "105% CDI"}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </BottomSheet>
+
+      <BottomSheet open={how} onClose={() => setHow(false)} title="Como a academIA.I dá pontos">
+        <div className="flex flex-col gap-3 text-[14px] leading-snug text-[#444]">
+          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Missões da semana: 30 Pontos Itaú cada, até 60 por semana.</div>
+          <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 7+ acertos em 10 = 20 pts por acerto. Vale só o melhor resultado.</div>
+          <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: não dá pontos. O prêmio é o cofrinho do objetivo rendendo 105% do CDI no mês seguinte (simulado).</div>
+          <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
+            Teto por pessoa: ~240 pts/mês nas missões ≈ R$ 4,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da academIA.I aparecem como passos só no protótipo.
+          </div>
+        </div>
+      </BottomSheet>
     </Screen>
   );
 }

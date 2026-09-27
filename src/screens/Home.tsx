@@ -13,7 +13,7 @@ import {
 } from "../components/Icons";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
-import { HomeCarousel, PixInvite } from "../components/Iai";
+import { AcademiaCard, GoalSlider, PixInvite } from "../components/Iai";
 import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
 import { useTrilha } from "../state/TrilhaContext";
 import { markHome } from "../state/homeHistory";
@@ -22,14 +22,14 @@ const K = "#1A1A1A";
 
 export function OrangeHeader() {
   const navigate = useNavigate();
-  const { level } = useTrilha();
+  const { mvLevel: level } = useTrilha();
   return (
     <div className="flex h-[66px] shrink-0 items-center justify-between bg-itau-orange px-5 pb-2">
       <div className="flex items-center gap-2">
         <Squish className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white text-[14px] text-[#333]" scale={0.9}>
-          MC
+          LR
         </Squish>
-        <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="flex items-center gap-[6px] rounded-full bg-white/20 px-[10px] py-[5px] text-[15px] font-semibold text-white" scale={0.94}>
+        <Squish onClick={() => navigate("/minhas-vantagens")} className="flex items-center gap-[6px] rounded-full bg-white/20 px-[10px] py-[5px] text-[15px] font-semibold text-white" scale={0.94}>
           <span className="relative flex h-[14px] w-[14px] items-center justify-center">
             <svg viewBox="0 0 24 24" className="absolute inset-0" fill="white">
               <path d="M12 1.5 21.5 7v10L12 22.5 2.5 17V7z" />
@@ -122,7 +122,7 @@ export function Home() {
           <Shortcut icon={<BarcodeIcon size={24} color={K} />} label="Pagar" />
           <Shortcut icon={<CompleteAccountIcon size={24} color={K} />} label="Complete sua conta" badge="Pendente" />
           <Shortcut icon={<VirtualCardIcon size={24} color={K} />} label="Cartão virtual" />
-          <Shortcut icon={<CofrinhoIcon size={24} color={K} />} label="Cofrinhos" />
+          <Shortcut icon={<CofrinhoIcon size={24} color={K} />} label="Cofrinhos" onClick={() => navigate("/cofrinhos")} />
           <Shortcut icon={<Smartphone size={24} color={K} strokeWidth={1.8} />} label="Recarga" />
           <Shortcut icon={<PiggyBank size={24} color={K} strokeWidth={1.8} />} label="Empréstimos" />
           <Shortcut icon={<TrendingUp size={24} color={K} strokeWidth={1.8} />} label="Investimentos" />
@@ -131,7 +131,10 @@ export function Home() {
 
         <div className="mt-[30px] flex flex-col gap-[29px] px-5">
           <PixInvite />
-          <HomeCarousel />
+          <div className="flex flex-col gap-2">
+            <AcademiaCard />
+            <GoalSlider />
+          </div>
           <div className="-mt-[12px] rounded-[18px] bg-white px-[22px] pb-[12px] pt-[22px]">
             <Squish className="block w-full" scale={0.98}>
               <CardHead icon={<ItauLogo size={16} />} title="Conta corrente" />
@@ -177,7 +180,7 @@ export function Home() {
                 { title: "Indique o Itaú", text: "Convide amigos e ganhe benefícios", bg: "bg-itau-navy", Icon: UserPlus },
                 { title: "Complete sua conta", text: "Libere mais funções no app", bg: "bg-[#1A3EBF]", Icon: Smartphone },
               ].map(({ title, text, bg, Icon }) => (
-                <Squish key={title} className={`flex h-[128px] w-[260px] shrink-0 snap-start flex-col justify-between rounded-[18px] p-[18px] text-white ${bg}`}>
+                <Squish key={title} onClick={title === "Cofrinhos" ? () => navigate("/cofrinhos") : undefined} className={`flex h-[128px] w-[260px] shrink-0 snap-start flex-col justify-between rounded-[18px] p-[18px] text-white ${bg}`}>
                   <Icon size={26} color="white" strokeWidth={1.8} />
                   <div>
                     <div className="text-[17px] font-bold">{title}</div>

@@ -10,13 +10,13 @@ export type Recipient = {
   own: boolean;
 };
 
-export const MATHEUS: Recipient = {
-  name: "Matheus Felipe Cavalcante Cunha",
-  key: "(18) 9 9775-6012",
-  keyFull: "+55 (18) 9 9775-6012",
-  cpf: "***.062.708-**",
-  bank: "Banco Santander (Brasil) S.A.",
-  agencyAccount: "0001 / 12345-6",
+export const LUCAS: Recipient = {
+  name: "Lucas Andrade Rocha",
+  key: "(11) 9 0000-0000",
+  keyFull: "+55 (11) 9 0000-0000",
+  cpf: "***.000.000-**",
+  bank: "Banco Exemplo S.A.",
+  agencyAccount: "0001 / 00000-0",
   own: true,
 };
 
@@ -44,7 +44,7 @@ const PixContext = createContext<PixState | null>(null);
 
 export function PixProvider({ children }: { children: ReactNode }) {
   const [amountCents, setAmountCents] = useState(1);
-  const [recipient, setRecipient] = useState<Recipient>(MATHEUS);
+  const [recipient, setRecipient] = useState<Recipient>(LUCAS);
   const [date, setDate] = useState<"Hoje" | "Agendar">("Hoje");
   const [repeat, setRepeat] = useState(false);
   const [message, setMessage] = useState("");
@@ -69,7 +69,7 @@ export function PixProvider({ children }: { children: ReactNode }) {
       setBalanceHidden,
       reset: () => {
         setAmountCents(1);
-        setRecipient(MATHEUS);
+        setRecipient(LUCAS);
         setDate("Hoje");
         setRepeat(false);
         setMessage("");

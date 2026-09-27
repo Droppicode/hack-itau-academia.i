@@ -6,7 +6,7 @@ import { ListRow } from "../components/ListRow";
 import { Screen } from "../components/Screen";
 import { ScreenHeader } from "../components/ScreenHeader";
 import { Squish } from "../components/Squish";
-import { MATHEUS, usePix } from "../state/PixContext";
+import { LUCAS, usePix } from "../state/PixContext";
 
 export function PixDestinatario() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export function PixDestinatario() {
   const [q, setQ] = useState("");
 
   const go = () => {
-    setRecipient(MATHEUS);
+    setRecipient(LUCAS);
     navigate("/pix/valor");
   };
 
@@ -42,11 +42,11 @@ export function PixDestinatario() {
           <div className="mt-4">
             <div className="mb-1 text-[14px] text-[#777]">Resultados</div>
             <Squish onClick={go} className="flex w-full items-center gap-3 border-b border-[#D6D6D6] py-[14px]" scale={0.98}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F1F3] text-[14px] font-semibold text-[#444]">MC</div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F1F3] text-[14px] font-semibold text-[#444]">LR</div>
               <div className="flex-1">
-                <div className="text-[16px] font-semibold text-[#3A3A3A]">{MATHEUS.name}</div>
+                <div className="text-[16px] font-semibold text-[#3A3A3A]">{LUCAS.name}</div>
                 <div className="text-[14px] text-[#666]">
-                  {MATHEUS.key} · Banco Santander
+                  {LUCAS.key} · Banco Exemplo
                 </div>
               </div>
               <ChevronRight size={20} strokeWidth={1.6} color="#4A4A4A" />

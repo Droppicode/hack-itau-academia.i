@@ -268,63 +268,110 @@ const SOON: Record<Exclude<UnitN, 1>, string[]> = {
 export const LESSONS: Lesson[] = [
   ...U1.map((l) => ({ ...l, unit: 1 as UnitN })),
   ...([2, 3, 4] as const).flatMap((u) =>
-    SOON[u].map((title, i) => ({ id: `U${u}L${i + 1}`, unit: u, title, learn: "Em breve na Academia Ia.i.", soon: true, steps: [], deep: [], quiz: [] })),
+    SOON[u].map((title, i) => ({ id: `U${u}L${i + 1}`, unit: u, title, learn: "Em breve na academIA.I.", soon: true, steps: [], deep: [], quiz: [] })),
   ),
 ];
 
 export const PLAYABLE = LESSONS.filter((l) => !l.soon);
 
-export const QUIZ_PASS = 3;
-export const POINTS_PER_RIGHT = 25;
+export type UnitDeep = { title: string; text: string };
 
-export type MissionKind = "semanal" | "mensal" | "lição";
+export const UNIT_DEEP: Partial<Record<UnitN, UnitDeep[]>> = {
+  1: [
+    { title: "O mapa do seu dinheiro", text: "Dinheiro entra (salário, bolsa, Pix), passa pela conta e sai (contas fixas, gastos do dia a dia). Saber o nome de cada pedaço — saldo, extrato, fatura, holerite — é o que deixa você decidir em vez de só reagir." },
+    { title: "Bruto não é o que cai", text: "O salário bruto vira líquido depois de INSS, IR e benefícios. Planeje sempre com o líquido. 13º, férias e FGTS são entradas extras ou protegidas: ótimas pra adiantar um objetivo." },
+    { title: "Guardar é separar, não perder", text: "Um cofrinho é dinheiro seu, separado do dia a dia e rendendo. Se ele rende 100% do CDI, acompanha a taxa básica de juros. Liquidez diária significa que dá pra resgatar quando precisar." },
+    { title: "Fixo primeiro, objetivo junto", text: "Some os gastos fixos, veja quanto sobra e defina um valor pro objetivo logo que o dinheiro entra. Pouco e todo mês vence muito e de vez em quando." },
+  ],
+};
+
+export const UNIT_QUIZ_PASS = 7;
+export const UNIT_POINTS_PER_RIGHT = 20;
+
+export function unitQuiz(unit: UnitN): QuizQ[] {
+  return LESSONS.filter((l) => l.unit === unit && !l.soon).map((l) => l.quiz[1] ?? l.quiz[0]);
+}
+
+export const unitQuizPoints = (unit: UnitN, correct: number | undefined) =>
+  correct !== undefined && correct >= UNIT_QUIZ_PASS ? Math.min(correct, unitQuiz(unit).length) * UNIT_POINTS_PER_RIGHT : 0;
+
+export type MissionKind = "semanal" | "mensal";
 export type MissionDef = { id: string; kind: MissionKind; title: string; text: string; points: number; unlock: LessonId; reward?: string };
 
 export const MISSIONS: MissionDef[] = [
-  { id: "w-licoes", kind: "semanal", title: "2 lições na semana", text: "Faça 2 lições da trilha até domingo", points: 50, unlock: "L1" },
-  { id: "w-quiz", kind: "semanal", title: "Mandar bem em 2 quizzes", text: "Acerte 3 de 4 em 2 quizzes de aprofundamento", points: 50, unlock: "L2" },
+  { id: "w-licoes", kind: "semanal", title: "2 lições na semana", text: "Faça 2 lições da trilha até domingo", points: 30, unlock: "L1" },
+  { id: "w-guardar", kind: "semanal", title: "Guardar no cofrinho", text: "Guarde qualquer valor no cofrinho do seu objetivo nesta semana", points: 30, unlock: "L1" },
   {
     id: "m-mes",
     kind: "mensal",
     title: "Guardar e deixar as contas em dia",
-    text: "Guarde pelo menos R$ 20 na caixinha e pague as contas do mês até o vencimento",
-    points: 150,
-    unlock: "L10",
-    reward: "Caixinha rendendo 105% do CDI no mês seguinte",
+    text: "Guarde pelo menos R$ 20 no cofrinho do objetivo e pague as contas do mês até o vencimento",
+    points: 0,
+    unlock: "L8",
+    reward: "Cofrinho do objetivo rendendo 105% do CDI no mês seguinte",
   },
-  { id: "l-objetivo", kind: "lição", title: "Criar seu cofrinho", text: "Dê nome, valor e quanto guardar por mês", points: 50, unlock: "L8" },
-  { id: "l-alerta", kind: "lição", title: "Ativar alerta de fatura", text: "Aviso 3 dias antes do vencimento", points: 30, unlock: "L3" },
-  { id: "l-pixnoturno", kind: "lição", title: "Limite de Pix noturno", text: "Reduzir o limite das 20h às 6h", points: 30, unlock: "L2" },
 ];
 
-export const GOALS = [
-  { id: "celular", label: "Celular novo", cents: 180000 },
-  { id: "viagem", label: "Viagem", cents: 150000 },
-  { id: "casa", label: "Sair de casa", cents: 300000 },
-  { id: "curso", label: "Curso", cents: 240000 },
-] as const;
-export type GoalId = (typeof GOALS)[number]["id"];
+export type GoalDef = { id: string; label: string; cents: number; from: string; to: string; line: string };
 
-export const LEVELS = [0, 150, 400, 800, 1200];
-
-export type Reward = { id: string; title: string; detail: string; level: number };
-
-export const REWARDS: Reward[] = [
-  { id: "r-delivery", title: "R$ 10 off no delivery", detail: "Cupom de uso único em app parceiro", level: 2 },
-  { id: "r-musica", title: "1 mês de streaming de música", detail: "Plano individual, parceiro", level: 2 },
-  { id: "r-cinema", title: "Meia-entrada no cinema", detail: "2 por mês em rede parceira", level: 3 },
-  { id: "r-transporte", title: "5% de volta em corridas", detail: "Em pontos, todo mês", level: 3 },
-  { id: "r-shows", title: "20% off em ingressos de shows", detail: "Em eventos parceiros", level: 4 },
-  { id: "r-frete", title: "Frete grátis em delivery", detail: "4 por mês", level: 4 },
-  { id: "r-festival", title: "Pré-venda de festivais", detail: "Acesso antecipado em eventos parceiros", level: 5 },
+export const GOALS: GoalDef[] = [
+  { id: "celular", label: "Celular novo", cents: 180000, from: "#1F2A63", to: "#3A4FB8", line: "Trocar de celular sem parcelar no cartão." },
+  { id: "viagem", label: "Viagem com a galera", cents: 150000, from: "#0B6E99", to: "#19A7B8", line: "Passagem, hospedagem e role garantidos." },
+  { id: "festival", label: "Show ou festival", cents: 80000, from: "#6B3FA0", to: "#C2459B", line: "Ingresso comprado no 1º lote, sem aperto." },
+  { id: "notebook", label: "Notebook pra estudar", cents: 350000, from: "#243447", to: "#4B6584", line: "Ferramenta de trabalho e estudo." },
+  { id: "curso", label: "Curso ou faculdade", cents: 240000, from: "#00574F", to: "#00857A", line: "Investir em você mesmo." },
+  { id: "moto", label: "Moto ou carro", cents: 900000, from: "#7A2E0E", to: "#C4501B", line: "Entrada de um veículo sem juros altos." },
+  { id: "casa", label: "Sair de casa", cents: 500000, from: "#8A4B00", to: "#EC7000", line: "Caução, mudança e primeiros móveis." },
+  { id: "reserva", label: "Reserva de emergência", cents: 300000, from: "#1B5E20", to: "#43A047", line: "Um colchão pra imprevistos." },
 ];
+export type GoalId = string;
 
 export const CATCHPHRASES = [
-  "5 minutos por dia. Zero juridiquês.",
-  "Aprende, acerta o quiz, ganha pontos no Minhas Vantagens.",
-  "Missão do mês cumprida = caixinha rendendo 105% do CDI.",
-  "Golpe do Pix? Aprende a farejar em 1 minuto.",
-  "Juros compostos: o crush que o seu dinheiro precisa.",
+  "5 minutos por lição. Zero juridiquês.",
+  "Aprende o vocabulário do dinheiro e vê seu objetivo enchendo.",
+  "Missão do mês cumprida = cofrinho rendendo 105% do CDI.",
+  "Desafio no fim da unidade vale Pontos Itaú.",
+  "Holerite, FGTS, CDI: agora faz sentido.",
 ];
 
 export const CDI_YEAR = 0.105;
+
+export const POINT_BRL = 0.02;
+
+export const MV_LEVELS = [0, 4, 12, 24, 44];
+
+export type PassoCat = "aprender" | "pagar" | "cartao" | "guardar" | "proteger" | "economizar";
+export const PASSO_CATS: { id: PassoCat; title: string; max: number }[] = [
+  { id: "aprender", title: "Aprender com a academIA.I", max: 3 },
+  { id: "pagar", title: "Pagar e receber", max: 9 },
+  { id: "cartao", title: "Usar cartão", max: 13 },
+  { id: "guardar", title: "Guardar dinheiro e ter rendimento", max: 6 },
+  { id: "proteger", title: "Proteger seu dinheiro e seus bens", max: 4 },
+  { id: "economizar", title: "Economizar", max: 1 },
+];
+
+export const MV_BENEFITS: { level: number; items: { title: string; detail: string }[] }[] = [
+  { level: 1, items: [
+    { title: "Até 70% de desconto em farmácias e exames", detail: "Rede parceira" },
+    { title: "Cashback em mais de 150 lojas parceiras", detail: "Em Pontos Itaú, pelo Itaú Shop" },
+  ] },
+  { level: 2, items: [
+    { title: "R$ 10 de desconto + frete grátis no Appgas", detail: "Parceiro" },
+    { title: "Desconto em instituições de ensino", detail: "Parceiros de educação" },
+    { title: "1 viagem grátis com Bike Itaú", detail: "Por mês" },
+  ] },
+  { level: 3, items: [
+    { title: "R$ 10 de desconto no Itaú Shop", detail: "Cupom mensal" },
+    { title: "25% de desconto em viagens de ônibus", detail: "Parceiro" },
+    { title: "Até 60% de desconto em cinema", detail: "Rede parceira" },
+  ] },
+  { level: 4, items: [
+    { title: "R$ 10 de desconto na Uber", detail: "Cupom mensal" },
+    { title: "R$ 25 de desconto no Itaú Shop", detail: "Cupom mensal" },
+  ] },
+  { level: 5, items: [
+    { title: "R$ 20 de desconto na Uber", detail: "Cupom mensal" },
+    { title: "R$ 20 de desconto no Assaí", detail: "Cupom mensal" },
+    { title: "R$ 40 de desconto no Itaú Shop", detail: "Cupom mensal" },
+  ] },
+];
