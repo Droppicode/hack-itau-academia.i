@@ -14,25 +14,37 @@ Regras:
 - Não prometa rentabilidade. 105% do CDI é uma condição simulada da missão do mês, a confirmar com o produto.
 - Quando fizer sentido, sugira a próxima lição da trilha, o cofrinho do objetivo ou as missões.`;
 
-export async function chat(body: ChatBody, key: string | undefined, model = "gemini-2.5-flash"): Promise<Result> {
+const FALLBACK_MODELS = ["gemini-3.8-flash", "gemini-flash-lite-latest", "gemini-2.5-flash-lite"];
+
+export async function chat(body: ChatBody, key: string | undefined, model = "gemini-flash-latest"): Promise<Result> {
   if (!key) return { status: 503, json: { error: "no_key" } };
   const contents = (body.messages ?? [])
     .slice(-12)
     .map((m) => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: String(m.text).slice(0, 2000) }] }));
   if (!contents.length || contents[contents.length - 1].role !== "user") return { status: 400, json: { error: "bad_request" } };
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: `${SYSTEM}\n\nContexto do cliente (simulado): ${String(body.context ?? "").slice(0, 1500)}` }] },
-      contents,
-      generationConfig: { temperature: 0.6, maxOutputTokens: 1024 },
-    }),
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: `${SYSTEM}\n\nContexto do cliente (simulado): ${String(body.context ?? "").slice(0, 1500)}` }] },
+    contents,
+    generationConfig: { temperature: 0.6, maxOutputTokens: 1024 },
   });
-  const data = (await r.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[]; error?: { message?: string } };
-  if (!r.ok) return { status: 502, json: { error: data.error?.message ?? "upstream_error" } };
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
-  return text ? { status: 200, json: { text } } : { status: 502, json: { error: "empty" } };
+  let last = "upstream_error";
+  for (const m of [model, ...FALLBACK_MODELS.filter((f) => f !== model)]) {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: payload,
+    });
+    const data = (await r.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[]; error?: { message?: string } };
+    if (!r.ok) {
+      last = data.error?.message ?? last;
+      if (r.status === 429 || r.status >= 500 || r.status === 404) continue;
+      return { status: 502, json: { error: last } };
+    }
+    const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
+    if (text) return { status: 200, json: { text } };
+    last = "empty";
+  }
+  return { status: 502, json: { error: last } };
 }
 
 type Req = { method?: string; body?: ChatBody };

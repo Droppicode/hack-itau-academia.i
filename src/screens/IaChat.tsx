@@ -98,9 +98,9 @@ export function IaChat() {
             {msgs.map((m, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={m.role === "user" ? "self-end" : "self-start"}>
                 <div className={`max-w-[290px] whitespace-pre-wrap rounded-[18px] px-4 py-3 text-[15px] leading-snug ${m.role === "user" ? "rounded-br-[6px] bg-[#14215A] text-white" : "rounded-bl-[6px] bg-white text-[#333] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"}`}>
-                  {m.text}
+                  {m.text.split(/\*\*(.+?)\*\*/g).map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part))}
                 </div>
-                {m.offline && <div className="mt-1 text-[11px] text-[#999]">Resposta pronta (IA offline no protótipo)</div>}
+                {m.offline ? <div className="mt-1 text-[11px] text-[#999]">Resposta pronta (IA offline no protótipo)</div> : m.role === "ia" && <div className="mt-1 text-[11px] text-[#999]">IA.I · Gemini · pode errar, confira informações importantes</div>}
               </motion.div>
             ))}
           </AnimatePresence>
