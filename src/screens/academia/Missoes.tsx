@@ -192,7 +192,7 @@ export function Missoes() {
           <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-[#222]">
             <PiggyBank size={16} color="#FF6200" /> Quanto vale o que você ganhou
           </div>
-          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o teto das missões é ~290 pts por mês (~R$ 5,80) por pessoa, até ~350 com o multiplicador de 1,2x. Pontos de missões e da academIA.I vencem em 6 meses, sempre no dia 25.
+          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na AcademIA.I, o teto das missões é ~290 pts por mês (~R$ 5,80) por pessoa, até ~350 com o multiplicador de 1,2x. Pontos de missões e da AcademIA.I vencem em 6 meses, sempre no dia 25.
         </div>
 
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="mt-6 flex w-full items-center gap-3 rounded-[16px] bg-itau-navy p-4 text-white" scale={0.98}>
@@ -206,7 +206,7 @@ export function Missoes() {
           {[
             { l: "Avançar 1 semana", run: () => t.advanceWeek() },
             { l: "Avançar 1 mês", run: () => t.advanceMonth() },
-            { l: "Resetar academIA.I", run: () => t.reset() },
+            { l: "Resetar AcademIA.I", run: () => t.reset() },
           ].map((b) => (
             <Squish
               key={b.l}

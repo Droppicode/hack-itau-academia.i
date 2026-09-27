@@ -93,7 +93,7 @@ export function Cofrinho() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="text-[18px] font-bold">{g.name}</div>
-                  <div className="text-[13px] text-white/80">Objetivo da academIA.I</div>
+                  <div className="text-[13px] text-white/80">Objetivo da AcademIA.I</div>
                 </div>
                 <span className="rounded-full bg-white/20 px-2 py-[3px] text-[12px] font-semibold">100% do CDI</span>
               </div>
@@ -134,7 +134,7 @@ export function Cofrinho() {
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF1E5]">
               <Plus size={22} color="#FF6200" />
             </span>
-            <span className="flex-1 text-[15px] font-semibold text-[#222]">Criar objetivo com a academIA.I</span>
+            <span className="flex-1 text-[15px] font-semibold text-[#222]">Criar objetivo com a AcademIA.I</span>
           </Squish>
         )}
 

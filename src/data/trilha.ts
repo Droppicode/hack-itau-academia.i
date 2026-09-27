@@ -119,7 +119,7 @@ export const MV_LEVELS = [0, 4, 12, 24, 44];
 
 export type PassoCat = "aprender" | "pagar" | "cartao" | "guardar" | "proteger" | "economizar";
 export const PASSO_CATS: { id: PassoCat; title: string; max: number }[] = [
-  { id: "aprender", title: "Aprender com a academIA.I", max: 3 },
+  { id: "aprender", title: "Aprender com a AcademIA.I", max: 3 },
   { id: "pagar", title: "Pagar e receber", max: 9 },
   { id: "cartao", title: "Usar cartão", max: 13 },
   { id: "guardar", title: "Guardar dinheiro e ter rendimento", max: 6 },

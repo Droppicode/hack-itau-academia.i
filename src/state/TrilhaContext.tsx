@@ -116,7 +116,7 @@ const BASE_PASSOS: Omit<Passo, "done">[] = [
   { id: "s-itoken", cat: "proteger", title: "Ativar o iToken no app" },
   { id: "s-seguro", cat: "proteger", title: "Proteger o celular" },
   { id: "e-shop", cat: "economizar", title: "Comprar no Itaú Shop" },
-  { id: "a-u1", cat: "aprender", title: "Concluir uma unidade da academIA.I", academia: true },
+  { id: "a-u1", cat: "aprender", title: "Concluir uma unidade da AcademIA.I", academia: true },
   { id: "a-desafio", cat: "aprender", title: "Passar num desafio de fim de unidade", academia: true },
   { id: "a-missao", cat: "aprender", title: "Cumprir a missão do mês", academia: true },
 ];

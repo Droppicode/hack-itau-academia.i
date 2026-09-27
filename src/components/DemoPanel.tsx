@@ -76,7 +76,7 @@ export function DemoPanel() {
     },
     {
       title: "Reset",
-      items: [{ l: "Resetar academIA.I (começar do zero)", run: () => (t.reset(), navigate("/home"), toast("academIA.I resetada")) }],
+      items: [{ l: "Resetar AcademIA.I (começar do zero)", run: () => (t.reset(), navigate("/home"), toast("AcademIA.I resetada")) }],
     },
   ];
 

@@ -90,7 +90,7 @@ export function MinhasVantagens() {
             <div className="p-4">
               <div className="text-[12px] text-[#666]">Atividade recomendada</div>
               <div className="mt-3 text-[18px] text-[#222]">{rec.title}</div>
-              <div className="text-[13px] text-[#666]">+1 passo{rec.academia ? " · academIA.I (simulado)" : ""}</div>
+              <div className="text-[13px] text-[#666]">+1 passo{rec.academia ? " · AcademIA.I (simulado)" : ""}</div>
               <div className="mt-3 flex justify-end">
                 <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFC400]">
                   <Sparkles size={30} color="#7A4B00" />
@@ -104,7 +104,7 @@ export function MinhasVantagens() {
         )}
 
         <p className="mt-6 text-[12px] leading-snug text-[#888]">
-          Protótipo. No programa real, os níveis vão de 1 a 5 e sobem com passos (uso de produtos e serviços). Passos da academIA.I são uma proposta simulada.
+          Protótipo. No programa real, os níveis vão de 1 a 5 e sobem com passos (uso de produtos e serviços). Passos da AcademIA.I são uma proposta simulada.
         </p>
       </div>
 

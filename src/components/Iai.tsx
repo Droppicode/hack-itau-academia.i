@@ -56,7 +56,7 @@ export function IaiAvatar({ size = 34 }: { size?: number }) {
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`font-bold tracking-tight ${className}`}>
-      academ<span className="text-[#FF8A3D]">IA.I</span>
+      Academ<span className="text-[#FF8A3D]">IA.I</span>
     </span>
   );
 }
@@ -100,7 +100,7 @@ export function AcademiaCard() {
   return (
     <Squish
       onClick={enter}
-      aria-label="Abrir academIA.I"
+      aria-label="Abrir AcademIA.I"
       className="relative block w-full overflow-hidden rounded-[18px] bg-gradient-to-br from-[#1F2A63] via-[#22307A] to-[#003087] px-4 py-3 text-white"
       scale={0.98}
     >
@@ -153,7 +153,7 @@ export function GoalSlider() {
           <Icon size={13} color="white" />
         </span>
         <span className="min-w-0 flex-1 truncate font-semibold text-[#333]">{g ? g.name : "Seu objetivo"}</span>
-        <span className="tabular-nums text-[#666]">{g ? `${brl(g.savedCents, false)} de ${brl(g.targetCents, false)}` : "defina na academIA.I"}</span>
+        <span className="tabular-nums text-[#666]">{g ? `${brl(g.savedCents, false)} de ${brl(g.targetCents, false)}` : "defina na AcademIA.I"}</span>
         <span className="w-[38px] text-right font-bold tabular-nums text-itau-orange">{Math.floor(pct)}%</span>
       </div>
       <div className="relative mt-2 h-[6px] rounded-full bg-[#ECECEC]">
@@ -170,9 +170,9 @@ export function GoalSlider() {
 }
 
 const CHANNELS = [
-  { Icon: Bell, name: "Push", tag: "EXISTE", body: "Pix feito ✓ Que tal 5 min pra ver seu objetivo enchendo? Conheça a academIA.I." },
-  { Icon: MessageCircle, name: "WhatsApp", tag: "VERIFICAR opt-in", body: "Oi, Lucas! Aqui é o Itaú. Vimos que você mandou um Pix pra sua outra conta. Conheça a academIA.I: lições de 5 min, um cofrinho pro seu objetivo e desafios que valem Pontos Itaú. Bora?" },
-  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu próximo objetivo começa com 5 minutos.\n\nA academIA.I é uma trilha de educação financeira dentro do app: lições curtas sobre o dinheiro do dia a dia, um cofrinho pro seu objetivo e desafios no fim de cada unidade que valem Pontos Itaú. Na missão do mês, o que fica guardado no cofrinho o mês inteiro vira Pontos Itaú (simulado no protótipo)." },
+  { Icon: Bell, name: "Push", tag: "EXISTE", body: "Pix feito ✓ Que tal 5 min pra ver seu objetivo enchendo? Conheça a AcademIA.I." },
+  { Icon: MessageCircle, name: "WhatsApp", tag: "VERIFICAR opt-in", body: "Oi, Lucas! Aqui é o Itaú. Vimos que você mandou um Pix pra sua outra conta. Conheça a AcademIA.I: lições de 5 min, um cofrinho pro seu objetivo e desafios que valem Pontos Itaú. Bora?" },
+  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu próximo objetivo começa com 5 minutos.\n\nA AcademIA.I é uma trilha de educação financeira dentro do app: lições curtas sobre o dinheiro do dia a dia, um cofrinho pro seu objetivo e desafios no fim de cada unidade que valem Pontos Itaú. Na missão do mês, o que fica guardado no cofrinho o mês inteiro vira Pontos Itaú (simulado no protótipo)." },
 ];
 
 export function PixInvite() {
@@ -235,7 +235,7 @@ export function PixInvite() {
           <IaiAvatar size={30} />
           <div className="flex-1">
             <div className="text-[16px] font-semibold leading-snug text-[#222]">Seu Pix pra sua outra conta foi feito. Que tal começar um objetivo?</div>
-            <div className="mt-1 text-[14px] text-[#555]">5 min na academIA.I: lições rápidas, um cofrinho rendendo pro seu objetivo e desafios que valem Pontos Itaú.</div>
+            <div className="mt-1 text-[14px] text-[#555]">5 min na AcademIA.I: lições rápidas, um cofrinho rendendo pro seu objetivo e desafios que valem Pontos Itaú.</div>
           </div>
           <Squish aria-label="Fechar" onClick={() => t.set((s) => ({ hook: { ...s.hook, pending: false } }))} className="flex h-8 w-8 items-center justify-center rounded-full" scale={0.88}>
             <X size={16} color="#555" />

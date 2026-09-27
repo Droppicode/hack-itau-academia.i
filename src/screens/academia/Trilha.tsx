@@ -122,7 +122,7 @@ export function Trilha() {
               <ChevronLeft size={28} strokeWidth={1.6} />
             </Squish>
             <Wordmark className="flex-1 text-[19px]" />
-            <Squish aria-label="Sobre a academIA.I" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
+            <Squish aria-label="Sobre a AcademIA.I" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
               <Info size={19} />
             </Squish>
           </div>

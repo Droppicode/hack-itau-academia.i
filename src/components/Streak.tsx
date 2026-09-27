@@ -88,7 +88,7 @@ export function ExpiryNote({ className = "", always }: { className?: string; alw
     <div className={`flex items-center gap-2 rounded-[12px] px-3 py-2 text-[13px] ${e.soon ? "bg-[#FFF1E5] text-[#8A4B00]" : "bg-[#F4F1EC] text-[#6C6257]"} ${className}`}>
       <AlertTriangle size={15} className="shrink-0" />
       <span>
-        {e.soon ? <b>{e.pts} Pontos Itaú vencem em {fmtDay(e.day)}.</b> : <>Próximo vencimento: {e.pts} pts em {fmtDay(e.day)}.</>} Pontos da academIA.I valem 6 meses e vencem todo dia 25.
+        {e.soon ? <b>{e.pts} Pontos Itaú vencem em {fmtDay(e.day)}.</b> : <>Próximo vencimento: {e.pts} pts em {fmtDay(e.day)}.</>} Pontos da AcademIA.I valem 6 meses e vencem todo dia 25.
       </span>
     </div>
   );

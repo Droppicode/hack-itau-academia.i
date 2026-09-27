@@ -14,7 +14,7 @@ export function PhoneFrame({ children }: { children: ReactNode }) {
         {children}
       </div>
       <aside className="absolute left-[calc(50%+243px)] top-1/2 hidden w-[240px] -translate-y-1/2 flex-col gap-3 lg:flex" aria-label="Dicas do protótipo">
-        <div className="text-[15px] font-bold text-[#14215A]">Protótipo academ<span className="text-[#EC7000]">IA.I</span></div>
+        <div className="text-[15px] font-bold text-[#14215A]">Protótipo Academ<span className="text-[#EC7000]">IA.I</span></div>
         {TIPS.map(({ icon: Icon, title, text }) => (
           <div key={title} className="flex gap-3 rounded-[16px] bg-white/70 p-3 shadow-[0_2px_10px_rgba(20,33,90,0.06)]">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFF1E5]">

@@ -112,7 +112,7 @@ export function NovaTrilha() {
               <MessageCircle size={15} /> Prefiro conversar com a IA.I antes
             </Squish>
             <p className="mt-4 text-[12px] leading-snug text-[#8A7B6C]">
-              A IA.I escolhe entre {UNITS.length} unidades revisadas da academIA.I. Educação financeira, não é recomendação de investimento.
+              A IA.I escolhe entre {UNITS.length} unidades revisadas da AcademIA.I. Educação financeira, não é recomendação de investimento.
             </p>
           </>
         ) : (

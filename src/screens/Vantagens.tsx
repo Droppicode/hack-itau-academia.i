@@ -57,7 +57,7 @@ export function Vantagens() {
           </div>
           <div className="mt-3 flex items-center gap-2">
             <StreakChip tone="light" />
-            <span className="text-[12px] text-[#666]">multiplica pontos da academIA.I</span>
+            <span className="text-[12px] text-[#666]">multiplica pontos da AcademIA.I</span>
           </div>
           <ExpiryNote className="mt-2" always />
           <Squish onClick={() => setExtrato(true)} className="mt-3 flex w-full items-center justify-between border-t border-[#EEE] pt-3 text-[14px] font-semibold text-itau-orange" scale={0.98}>
@@ -124,7 +124,7 @@ export function Vantagens() {
 
       <BottomSheet open={extrato} onClose={() => setExtrato(false)} title="Extrato de Pontos Itaú">
         {history.length === 0 ? (
-          <p className="text-[14px] text-[#666]">Nenhum ponto ainda. Faça as missões da semana ou o desafio de fim de unidade na academIA.I.</p>
+          <p className="text-[14px] text-[#666]">Nenhum ponto ainda. Faça as missões da semana ou o desafio de fim de unidade na AcademIA.I.</p>
         ) : (
           <div className="flex max-h-[50vh] flex-col divide-y divide-[#EEE] overflow-y-auto">
             {history.map((h) => (
@@ -143,15 +143,15 @@ export function Vantagens() {
         )}
       </BottomSheet>
 
-      <BottomSheet open={how} onClose={() => setHow(false)} title="Como a academIA.I dá pontos">
+      <BottomSheet open={how} onClose={() => setHow(false)} title="Como a AcademIA.I dá pontos">
         <div className="flex flex-col gap-3 text-[14px] leading-snug text-[#444]">
           <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Missões da semana: 30 Pontos Itaú cada, até 60 por semana.</div>
           <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 70%+ de acertos = 20 pts por acerto. Vale só o melhor resultado.</div>
-          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Sequência: cada semana com compra no débito ou no crédito soma +0,05x nos pontos da academIA.I, até 1,2x em 4 semanas. Semana sem compra volta pra 1x.</div>
-          <div className="flex gap-3"><Gift size={18} color="#8A4B00" className="shrink-0" /> Pontos de missões e da academIA.I valem 6 meses e vencem sempre no dia 25 do mês.</div>
+          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Sequência: cada semana com compra no débito ou no crédito soma +0,05x nos pontos da AcademIA.I, até 1,2x em 4 semanas. Semana sem compra volta pra 1x.</div>
+          <div className="flex gap-3"><Gift size={18} color="#8A4B00" className="shrink-0" /> Pontos de missões e da AcademIA.I valem 6 meses e vencem sempre no dia 25 do mês.</div>
           <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: 1 pt a cada R$ 20 que ficam no cofrinho o mês inteiro (a partir de R$ 50, até 50 pts). Vale o menor saldo do mês, então depositar e tirar não rende pontos. O cofrinho rende 100% do CDI.</div>
           <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
-            Teto por pessoa: ~290 pts/mês nas missões (240 semanais + 50 do mês) ≈ R$ 5,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da academIA.I aparecem como passos só no protótipo.
+            Teto por pessoa: ~290 pts/mês nas missões (240 semanais + 50 do mês) ≈ R$ 5,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da AcademIA.I aparecem como passos só no protótipo.
           </div>
         </div>
       </BottomSheet>
