@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { goBack } from "../state/goBack";
 import { ArrowDownToLine, ArrowUpFromLine, CalendarClock, ChevronLeft, CircleHelp, Info, Lock, PiggyBank, Plus, ShieldCheck, Sparkles, Target, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -65,7 +66,7 @@ export function Cofrinho() {
       bg="bg-itau-bg"
       header={
         <div className="flex h-[56px] shrink-0 items-center gap-1 bg-white px-3">
-          <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+          <Squish aria-label="Voltar" onClick={() => goBack(navigate)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
             <ChevronLeft size={28} strokeWidth={1.6} />
           </Squish>
           <div className="flex-1 text-[17px] font-semibold text-[#222]">Cofrinhos</div>

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { goBack } from "../../state/goBack";
 import { BookOpen, Clock, Flame, Lock, MessageSquareQuote, Target, Trophy, Unlock } from "lucide-react";
 import { StreakChip } from "../../components/Streak";
 import { useRef, useState } from "react";
@@ -116,7 +117,7 @@ export function Licao() {
           <div className="mt-auto flex flex-col gap-2 pt-6">
             {unitComplete && <PillButton label="Ir pro desafio da unidade" tone="orange" onClick={() => navigate(`/academia/desafio/${lesson.unit}`, { replace: true })} />}
             <PillButton label="Ler aprofundamento" tone={unitComplete ? "navy" : "orange"} onClick={() => navigate(`/academia/licao/${lesson.id}/aprofundar`, { replace: true })} />
-            <Squish onClick={() => navigate(-1)} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
+            <Squish onClick={() => goBack(navigate)} className="py-3 text-center text-[15px] font-semibold text-white/85" scale={0.97}>
               Voltar pra trilha
             </Squish>
           </div>
@@ -135,7 +136,7 @@ export function Licao() {
       setFinished(true);
     } else setPos(pos + 1);
   };
-  const shell = { total: queue.length, pos, onClose: () => navigate(-1), tag: `${unitDef(lesson.unit)?.name ?? "Lição"} · ${lesson.title}` };
+  const shell = { total: queue.length, pos, onClose: () => goBack(navigate), tag: `${unitDef(lesson.unit)?.name ?? "Lição"} · ${lesson.title}` };
 
   if (step.kind === "info") {
     return (

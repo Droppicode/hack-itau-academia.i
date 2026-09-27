@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { goBack } from "../state/goBack";
 import { ChevronRight, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -127,7 +128,7 @@ export function IaChat() {
         <StatusBar tone="dark" />
       </div>
       <div className="flex h-[52px] shrink-0 items-center justify-end px-3">
-        <Squish aria-label="Fechar" onClick={() => navigate(-1)} className="flex h-11 w-11 items-center justify-center" scale={0.88}>
+        <Squish aria-label="Fechar" onClick={() => goBack(navigate)} className="flex h-11 w-11 items-center justify-center" scale={0.88}>
           <X size={28} strokeWidth={1.6} color="#222" />
         </Squish>
       </div>

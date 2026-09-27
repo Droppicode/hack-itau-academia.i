@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { goBack } from "../../state/goBack";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -54,14 +55,14 @@ export function Aprofundar() {
       bg="bg-[#FBF6F0]"
       header={
         <div className="flex h-[52px] shrink-0 items-center px-3">
-          <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+          <Squish aria-label="Voltar" onClick={() => goBack(navigate)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
             <ChevronLeft size={28} strokeWidth={1.6} color="#14215A" />
           </Squish>
         </div>
       }
       footer={
         <FooterWrap>
-          <PillButton label="Voltar pra trilha" tone="orange" onClick={() => navigate(-1)} />
+          <PillButton label="Voltar pra trilha" tone="orange" onClick={() => goBack(navigate)} />
           <div className="mt-2 text-center text-[12px] text-[#8A7B6C]">Leitura livre, não vale pontos. Os pontos ficam no desafio do fim da unidade.</div>
         </FooterWrap>
       }

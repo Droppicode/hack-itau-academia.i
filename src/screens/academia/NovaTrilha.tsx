@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { goBack } from "../../state/goBack";
 import { Check, ChevronLeft, Loader2, MessageCircle, Sparkles, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -52,7 +53,7 @@ export function NovaTrilha() {
       bg="bg-[#FBF6F0]"
       header={
         <div className="flex h-[56px] shrink-0 items-center gap-1 bg-[#FBF6F0] px-3">
-          <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+          <Squish aria-label="Voltar" onClick={() => goBack(navigate)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
             <ChevronLeft size={28} strokeWidth={1.6} color="#14215A" />
           </Squish>
           <div className="flex-1 text-[18px] font-bold text-[#14215A]">Próxima trilha</div>

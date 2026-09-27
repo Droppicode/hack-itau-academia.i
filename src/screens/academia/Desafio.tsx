@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { goBack } from "../../state/goBack";
 import { ChevronLeft, RotateCcw, Star, Trophy } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -48,7 +49,7 @@ export function Desafio() {
         bg="bg-[#FBF6F0]"
         header={
           <div className="flex h-[52px] shrink-0 items-center px-3">
-            <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+            <Squish aria-label="Voltar" onClick={() => goBack(navigate)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
               <ChevronLeft size={28} strokeWidth={1.6} color="#14215A" />
             </Squish>
           </div>

@@ -1,4 +1,5 @@
 import { ChevronLeft } from "lucide-react";
+import { goBack } from "../state/goBack";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Squish } from "./Squish";
@@ -11,7 +12,7 @@ export function ScreenHeader({ right, onBack }: Props) {
     <div className="flex h-[56px] shrink-0 items-center justify-between px-3">
       <Squish
         aria-label="Voltar"
-        onClick={onBack ?? (() => navigate(-1))}
+        onClick={onBack ?? (() => goBack(navigate))}
         className="flex h-11 w-11 items-center justify-center rounded-full"
         scale={0.88}
       >

@@ -1,4 +1,5 @@
 import { ChevronLeft, Headphones, Laptop, Search, ShoppingBag, Smartphone, Ticket, Watch } from "lucide-react";
+import { goBack } from "../state/goBack";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Screen } from "../components/Screen";
@@ -29,7 +30,7 @@ export function ItauShop() {
       header={
         <div className="shrink-0 bg-[#14215A] px-3 pb-3 text-white">
           <div className="flex h-[52px] items-center gap-1">
-            <Squish aria-label="Voltar" onClick={() => navigate(-1)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
+            <Squish aria-label="Voltar" onClick={() => goBack(navigate)} className="flex h-10 w-10 items-center justify-center" scale={0.88}>
               <ChevronLeft size={26} />
             </Squish>
             <div className="flex-1 text-[17px] font-semibold">Itaú Shop</div>

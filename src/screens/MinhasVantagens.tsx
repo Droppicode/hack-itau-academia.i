@@ -1,4 +1,5 @@
 import { Check, ChevronLeft, ChevronRight, CircleHelp, Clock, Gift, Hexagon, Sparkles, Waypoints } from "lucide-react";
+import { goBack } from "../state/goBack";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../components/BottomSheet";
@@ -43,7 +44,7 @@ export function MinhasVantagens() {
   const rec = t.passos.find((p) => p.academia && !p.done) ?? t.passos.find((p) => !p.done);
 
   return (
-    <Screen bg="bg-itau-bg" header={<Header title="Minhas Vantagens" onBack={() => navigate(-1)} />}>
+    <Screen bg="bg-itau-bg" header={<Header title="Minhas Vantagens" onBack={() => goBack(navigate)} />}>
       <div className="px-5 pb-10">
         <div className="flex flex-col items-center pt-4">
           <Hex n={t.mvLevel} />

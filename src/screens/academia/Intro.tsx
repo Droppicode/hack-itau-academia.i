@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { goBack } from "../../state/goBack";
 import { BookOpen, ChevronDown, Flame, Loader2, Map as MapIcon, Sparkles, Target, Trophy, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +57,7 @@ export function Intro() {
     <Screen bg="bg-[#1F2A63]" statusTone="light">
       <motion.div className="flex min-h-full flex-col px-6 pb-8 text-white" animate={{ background: bg }} transition={{ duration: 0.5 }}>
         <div className="flex h-[56px] items-center justify-between">
-          <Squish aria-label="Fechar" onClick={() => (i > 0 ? setI(i - 1) : navigate(-1))} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
+          <Squish aria-label="Fechar" onClick={() => (i > 0 ? setI(i - 1) : goBack(navigate))} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
             <X size={20} />
           </Squish>
           {!goalPage && (
