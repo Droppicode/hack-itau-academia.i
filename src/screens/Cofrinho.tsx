@@ -29,6 +29,10 @@ export function Cofrinho() {
   const left = g ? Math.max(g.targetCents - g.savedCents, 0) : 0;
   const months = g ? monthsTo(left, g.monthlyCents) : 0;
 
+  const open = (k: "guardar" | "resgatar") => {
+    setAmount(k === "resgatar" ? Math.min(2000, g?.savedCents ?? 0) : 2000);
+    setSheet(k);
+  };
   const confirm = () => {
     if (!sheet) return;
     if (sheet === "guardar") {
@@ -36,7 +40,7 @@ export function Cofrinho() {
       toast(`${brl(amount)} guardados no cofrinho (simulado)`);
     } else {
       t.withdraw(amount);
-      toast(`${brl(Math.min(amount, g?.savedCents ?? 0))} de volta na conta (simulado)`);
+      toast(`${brl(amount)} de volta na conta (simulado)`);
     }
     setSheet(null);
   };
@@ -95,10 +99,10 @@ export function Cofrinho() {
               {pct >= 100 && <div className="mt-2 text-[14px] font-semibold">Objetivo alcançado!</div>}
             </div>
             <div className="grid grid-cols-2 gap-2 p-4">
-              <Squish onClick={() => setSheet("guardar")} className="flex items-center justify-center gap-2 rounded-[12px] bg-itau-orange py-3 text-[15px] font-semibold text-white" scale={0.96}>
+              <Squish onClick={() => open("guardar")} className="flex items-center justify-center gap-2 rounded-[12px] bg-itau-orange py-3 text-[15px] font-semibold text-white" scale={0.96}>
                 <ArrowDownToLine size={18} /> Guardar
               </Squish>
-              <Squish onClick={() => setSheet("resgatar")} className="flex items-center justify-center gap-2 rounded-[12px] border border-itau-orange py-3 text-[15px] font-semibold text-itau-orange" scale={0.96}>
+              <Squish onClick={() => open("resgatar")} className="flex items-center justify-center gap-2 rounded-[12px] border border-itau-orange py-3 text-[15px] font-semibold text-itau-orange" scale={0.96}>
                 <ArrowUpFromLine size={18} /> Resgatar
               </Squish>
             </div>
@@ -169,7 +173,7 @@ export function Cofrinho() {
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet === "guardar" ? "Quanto quer guardar?" : "Quanto quer resgatar?"}>
         <div className="grid grid-cols-4 gap-2">
           {AMOUNTS.map((a) => (
-            <Squish key={a} onClick={() => setAmount(a)} className={`rounded-[12px] py-3 text-center text-[15px] font-semibold ${amount === a ? "bg-itau-orange text-white" : "bg-[#F4F4F4] text-[#222]"}`} scale={0.94}>
+            <Squish key={a} disabled={sheet === "resgatar" && a > (g?.savedCents ?? 0)} onClick={() => setAmount(a)} className={`rounded-[12px] py-3 text-center text-[15px] font-semibold disabled:opacity-35 ${amount === a ? "bg-itau-orange text-white" : "bg-[#F4F4F4] text-[#222]"}`} scale={0.94}>
               {brl(a, false)}
             </Squish>
           ))}
@@ -177,7 +181,12 @@ export function Cofrinho() {
         <p className="mt-3 text-[13px] text-[#666]">
           {sheet === "guardar" ? "O valor sai da sua conta Itaú. Se seu salário cai em outro banco, dá pra mandar um Pix pra cá antes." : "O valor volta na hora pra sua conta corrente."} (simulado)
         </p>
-        <Squish onClick={confirm} className="mt-4 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
+        {sheet === "resgatar" && (
+          <Squish onClick={() => setAmount(g?.savedCents ?? 0)} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
+            Resgatar tudo ({brl(g?.savedCents ?? 0)})
+          </Squish>
+        )}
+        <Squish onClick={confirm} disabled={amount <= 0 || (sheet === "resgatar" && amount > (g?.savedCents ?? 0))} className="mt-4 disabled:opacity-40 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
           {sheet === "guardar" ? `Guardar ${brl(amount)}` : `Resgatar ${brl(amount)}`}
         </Squish>
       </BottomSheet>

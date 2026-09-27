@@ -116,7 +116,7 @@ export function AcademiaCard() {
         <Rotator items={CATCHPHRASES} className="text-[15px] font-semibold leading-snug" />
       </div>
       <div className="relative mt-1 truncate text-[13px] text-white/75">
-        {!started ? "Toque pra conhecer e escolher seu objetivo" : t.next ? `Continuar: ${t.next.title} · ${t.completed.length}/${PLAYABLE.length}` : "Unidade 1 concluída · desafio te espera"}
+        {!started ? "Toque pra conhecer e escolher seu objetivo" : t.next ? `Continuar: ${t.next.title} · ${t.completed.length}/${PLAYABLE.length}` : t.unitPassed(1) ? "Unidade 1 concluída · desafio feito" : "Unidade 1 concluída · desafio te espera"}
       </div>
     </Squish>
   );
