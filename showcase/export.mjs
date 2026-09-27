@@ -69,7 +69,7 @@ if (Math.abs(k - 1) > 0.02) console.log(`Ajustando velocidade da gravação: ×$
 console.log("Convertendo para MP4…");
 const ff = spawnSync(
   "ffmpeg",
-  ["-y", "-ss", (lead * k).toFixed(2), "-i", webm, "-vf", `setpts=PTS/${k.toFixed(5)}`, "-t", (played + 0.5).toFixed(2), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "slow", "-crf", "18", "-r", "30", "-movflags", "+faststart", outPath],
+  ["-y", "-ss", (lead * k).toFixed(2), "-i", webm, "-i", videoPath, "-vf", `setpts=PTS/${k.toFixed(5)}`, "-map", "0:v:0", "-map", "1:a:0?", "-c:a", "aac", "-b:a", "192k", "-t", (played + 0.5).toFixed(2), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "slow", "-crf", "18", "-r", "30", "-movflags", "+faststart", outPath],
   { stdio: "inherit" },
 );
 fs.rmSync(tmpDir, { recursive: true, force: true });

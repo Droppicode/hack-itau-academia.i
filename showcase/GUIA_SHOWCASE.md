@@ -17,7 +17,7 @@ npx playwright install ffmpeg   # 1x: gravador de tela do playwright
 npm run showcase:export -- public/showcase/academia_iai_video_final_2min_v2.mp4 showcase/showcase.mp4 --offset=0
 ```
 
-Abre o player em um Chrome headless 1920×1080, toca o vídeo inteiro em tempo real, grava a tela e converte para H.264 (`ffmpeg` precisa estar no PATH). Usa o Chrome ou Chromium do sistema (procura em `/usr/bin/chromium`, `/usr/bin/google-chrome` etc.; no Arch, `pacman -S chromium ffmpeg` basta); se não achar, aponte com `CHROME_PATH=/caminho/do/chromium`. Leva ~duração do vídeo + 1 min.
+Abre o player em um Chrome headless 1920×1080, toca o vídeo inteiro em tempo real, grava a tela e converte para H.264 (o áudio do mp4 original é copiado para o export) (`ffmpeg` precisa estar no PATH). Usa o Chrome ou Chromium do sistema (procura em `/usr/bin/chromium`, `/usr/bin/google-chrome` etc.; no Arch, `pacman -S chromium ffmpeg` basta); se não achar, aponte com `CHROME_PATH=/caminho/do/chromium`. Leva ~duração do vídeo + 1 min.
 
 ---
 
