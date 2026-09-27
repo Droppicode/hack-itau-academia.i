@@ -1,16 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Lock, Pencil, Sparkles, Star, Target, Trophy, Wand2 } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Lock, Sparkles, Star, Trophy, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
-import { GoalSheet } from "../../components/GoalSheet";
-import { AcademiaTabs, GOAL_ICON, HeroBg, Wordmark, goalDef } from "../../components/Iai";
+import { AcademiaTabs, HeroBg, Wordmark } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { IaFab } from "../../components/IaFab";
 import { Squish } from "../../components/Squish";
 import { ExpiryNote, StreakChip } from "../../components/Streak";
 import { fmtMult, lessonsOf, UNIT_POINTS_PER_RIGHT, unitDef, unitPass, unitQuiz, type Lesson, type UnitId } from "../../data/trilha";
-import { brl } from "../../data/money";
 import { deltaToHome, deltaToIa } from "../../state/homeHistory";
 import { useTrilha } from "../../state/TrilhaContext";
 import { PillButton } from "./Exercise";
@@ -97,9 +95,6 @@ export function Trilha() {
   const [open, setOpen] = useState<Lesson | null>(null);
   const [challenge, setChallenge] = useState<UnitId | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [goalOpen, setGoalOpen] = useState(false);
-  const def = goalDef(t.goal?.id);
-  const GoalIcon = GOAL_ICON[def.id] ?? Target;
   const challengeState = (u: UnitId): NodeState => (t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
 
   const back = () => {
@@ -135,26 +130,7 @@ export function Trilha() {
               <Info size={19} />
             </Squish>
           </div>
-          <div className="mt-1 flex items-center gap-2 rounded-[18px] bg-white/10 p-3">
-          <Squish onClick={() => navigate("/cofrinhos", { state: { fromAcademia: true } })} className="flex min-w-0 flex-1 items-center gap-3 text-left" scale={0.98}>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]" style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}>
-              <GoalIcon size={20} color="white" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between">
-                <span className="truncate text-[15px] font-semibold">{t.goal?.name ?? "Seu objetivo"}</span>
-                <span className="text-[12px] text-white/70">{t.goal ? `${brl(t.goal.savedCents, false)} de ${brl(t.goal.targetCents, false)}` : ""}</span>
-              </div>
-              <div className="mt-[6px] h-[6px] overflow-hidden rounded-full bg-white/15">
-                <motion.div className="h-full rounded-full bg-[#EC7000]" initial={{ width: 0 }} animate={{ width: `${Math.max(t.goalPct, 3)}%` }} />
-              </div>
-            </div>
-          </Squish>
-          <Squish aria-label="Trocar objetivo" onClick={() => setGoalOpen(true)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10" scale={0.9}>
-            <Pencil size={16} />
-          </Squish>
-          </div>
-          <div className="mt-3 flex gap-2 text-[13px] font-semibold">
+          <div className="mt-1 flex gap-2 text-[13px] font-semibold">
             <span className="flex items-center gap-1 rounded-full bg-[#EC7000] px-3 py-[5px]">
               <Star size={14} fill="white" /> <Odometer value={t.points} /> Pontos Itaú
             </span>
@@ -346,7 +322,6 @@ export function Trilha() {
           );
         })()}
       </BottomSheet>
-      <GoalSheet open={goalOpen} onClose={() => setGoalOpen(false)} />
     </Screen>
   );
 }
