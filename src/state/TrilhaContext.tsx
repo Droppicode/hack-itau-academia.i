@@ -284,7 +284,7 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
         const unlockedMonthly = q.completed.length >= (MISSIONS.find((m) => m.id === "m-mes")?.unlockAfter ?? 0);
         const held = q.goal ? q.monthMinCents : 0;
         const give = unlockedMonthly && !!q.goal;
-        const awards = give ? [...q.awards, { month: q.month, heldCents: held, pts: monthlyPoints(held) }] : q.awards;
+        const awards = give ? [...q.awards, { month: q.month, heldCents: held, pts: awarded(q, q.month * MONTH_DAYS, monthlyPoints(held)) }] : q.awards;
         const pointsLog = give ? earn(q, q.month * MONTH_DAYS, monthlyPoints(held), "Missão do mês: guardar e deixar lá", "mes") : q.pointsLog;
         const g = q.goal
           ? (() => {
