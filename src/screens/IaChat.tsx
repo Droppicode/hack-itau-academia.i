@@ -117,7 +117,7 @@ export function IaChat() {
     }
     setMsgs((m) => [...m, reply]);
     setBusy(false);
-    if (reply.go) {
+    if (reply.go && OPEN_WORDS.test(clean)) {
       const go = reply.go;
       setTimeout(() => navigate(go.to, { state: { fromAcademia: true } }), 1400);
     }
