@@ -30,7 +30,7 @@ import {
 export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; yieldCents: number; history: number[] };
 
 export type TxnKind = "salario" | "cofrinho" | "resgate" | "pix" | "compra";
-export type Txn = { id: number; day: number; kind: TxnKind; title: string; sub: string; cents: number; streak?: boolean };
+export type Txn = { id: number; day: number; kind: TxnKind; title: string; sub: string; cents: number; streak?: boolean; faturaCents?: number };
 export type MonthAward = { month: number; heldCents: number; pts: number };
 export type PointSource = "missao" | "mes" | "desafio";
 export type PointEntry = { id: number; day: number; label: string; source: PointSource; base: number; mult: number; pts: number; expiresDay: number };
@@ -160,7 +160,7 @@ type Ctx = Persisted & {
   claim: (m: MissionView) => void;
   setGoal: (g: Pick<Goal, "id" | "name" | "targetCents" | "monthlyCents">) => void;
   save: (cents: number) => void;
-  spend: (cents: number, where: string) => void;
+  spend: (cents: number, where: string, method?: "debito" | "credito") => void;
   withdraw: (cents: number) => void;
   advanceWeek: () => void;
   advanceMonth: () => void;
@@ -360,15 +360,23 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
           const left = p.goal.savedCents - amt;
           return { goal: setSaved(p, left), monthMinCents: Math.min(p.monthMinCents, left), txns: addTxn(p, "resgate", "Resgate Cofrinho", p.goal.name, amt) };
         }),
-      spend: (cents, where) =>
-        set((p) => (cents > p.txns.reduce((a, x) => a + x.cents, 0) ? {} : { txns: addTxn(p, "compra", "Compra no débito", where, -cents, true), txWeeks: markWeek(p) })),
+      spend: (cents, where, method = "debito") =>
+        set((p) => {
+          if (cents <= 0) return {};
+          if (method === "credito") {
+            const txns = addTxn(p, "compra", "Compra no crédito", `${where} · na fatura`, 0, true);
+            txns[txns.length - 1].faturaCents = cents;
+            return { txns, txWeeks: markWeek(p) };
+          }
+          if (cents > p.txns.reduce((a, x) => a + x.cents, 0)) return {};
+          return { txns: addTxn(p, "compra", "Compra no débito", where, -cents, true), txWeeks: markWeek(p) };
+        }),
       advanceWeek: () => set((p) => advance(p, 7)),
       advanceMonth: () => set((p) => advance(p, MONTH_DAYS)),
       registerPix: (own, cents, to) =>
         set((p) => ({
           pixDone: true,
-          txns: addTxn(p, "pix", "Pix enviado", to, -cents, !own),
-          txWeeks: own ? p.txWeeks : markWeek(p),
+          txns: addTxn(p, "pix", "Pix enviado", to, -cents),
           hook: own && !p.hook.off ? { ...p.hook, pending: true, pushSeen: false } : p.hook,
         })),
       reset: () => setS(INITIAL),

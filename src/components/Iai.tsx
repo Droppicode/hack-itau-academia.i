@@ -125,7 +125,7 @@ export function AcademiaCard() {
         <div className="relative mt-2 flex items-center gap-2">
           <StreakChip label />
           <span className="truncate text-[12px] text-white/75">
-            {t.nextExpiry?.soon ? `${t.nextExpiry.pts} pts vencem ${fmtDay(t.nextExpiry.day)}` : t.weekActive ? `pontos valendo ${fmtMult(t.multiplier)}` : "faça 1 Pix ou compra essa semana"}
+            {t.nextExpiry?.soon ? `${t.nextExpiry.pts} pts vencem ${fmtDay(t.nextExpiry.day)}` : t.weekActive ? `pontos valendo ${fmtMult(t.multiplier)}` : "faça 1 compra no cartão essa semana"}
           </span>
         </div>
       )}

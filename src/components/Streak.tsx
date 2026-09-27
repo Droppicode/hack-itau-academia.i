@@ -40,13 +40,13 @@ export function StreakSheet({ open, onClose }: { open: boolean; onClose: () => v
       <div className={`mt-4 flex items-start gap-2 rounded-[14px] p-3 text-[14px] ${t.weekActive ? "bg-[#E6F4F1] text-[#00574F]" : "bg-[#FFF1E5] text-[#8A4B00]"}`}>
         {t.weekActive ? <Check size={18} className="mt-[1px] shrink-0" /> : <AlertTriangle size={18} className="mt-[1px] shrink-0" />}
         {t.weekActive
-          ? `Semana garantida! Na próxima, uma transação leva seus pontos a ${fmtMult(t.nextMultiplier)}.`
-          : `Faça um Pix pra outra pessoa ou uma compra no débito até ${fmtDay(t.week * 7)} pra ${t.streak ? "manter a sequência" : "começar a sequência"} (${fmtMult(multiplierFor(t.streak + 1))}).`}
+          ? `Semana garantida! Na próxima, uma compra leva seus pontos a ${fmtMult(t.nextMultiplier)}.`
+          : `Faça uma compra no débito ou no crédito, de qualquer valor, até ${fmtDay(t.week * 7)} pra ${t.streak ? "manter a sequência" : "começar a sequência"} (${fmtMult(multiplierFor(t.streak + 1))}).`}
       </div>
       <ul className="mt-4 space-y-1 text-[13px] leading-snug text-[#6C6257]">
-        <li>• Cada semana com pelo menos uma transação no Itaú soma 1: +0,05x, até {fmtMult(multiplierFor(STREAK_MAX_WEEKS))} com {STREAK_MAX_WEEKS} semanas.</li>
-        <li>• Contam Pix pra outras pessoas e compras no débito. Transferência entre contas suas e cofrinho não contam.</li>
-        <li>• Uma semana inteira sem transação e o multiplicador volta pra 1x.</li>
+        <li>• Cada semana com pelo menos uma compra no cartão Itaú soma 1: +0,05x, até {fmtMult(multiplierFor(STREAK_MAX_WEEKS))} com {STREAK_MAX_WEEKS} semanas.</li>
+        <li>• Contam compras no débito ou no crédito, de qualquer valor. Pix, transferências e cofrinho não contam.</li>
+        <li>• Uma semana inteira sem compra no cartão e o multiplicador volta pra 1x.</li>
       </ul>
       {!t.weekActive && (
         <Squish onClick={() => (onClose(), navigate("/pix"))} className="mt-4 w-full rounded-full bg-[#EC7000] py-3 text-center text-[16px] font-semibold text-white">

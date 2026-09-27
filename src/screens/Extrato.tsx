@@ -14,6 +14,7 @@ const ICON = { salario: ArrowDownLeft, resgate: ArrowDownLeft, cofrinho: PiggyBa
 export function TxnRow({ x, hidden = false }: { x: Txn; hidden?: boolean }) {
   const I = ICON[x.kind];
   const inflow = x.cents > 0;
+  const fatura = x.faturaCents !== undefined;
   return (
     <div className="flex items-center gap-3 border-b border-[#EEE] py-[12px] last:border-0">
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${inflow ? "bg-[#E3F4EA]" : "bg-[#F0F1F3]"}`}>
@@ -26,7 +27,7 @@ export function TxnRow({ x, hidden = false }: { x: Txn; hidden?: boolean }) {
         </div>
       </div>
       <span className={`text-[15px] font-semibold tabular-nums ${inflow ? "text-[#00857A]" : "text-[#333]"}`}>
-        {hidden ? "R$ ••••" : `${inflow ? "+" : "-"} ${brl(Math.abs(x.cents))}`}
+        {hidden ? "R$ ••••" : fatura ? `${brl(x.faturaCents ?? 0)} fatura` : `${inflow ? "+" : "-"} ${brl(Math.abs(x.cents))}`}
       </span>
     </div>
   );

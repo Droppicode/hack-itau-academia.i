@@ -110,7 +110,7 @@ export function Missoes() {
         <div className="mt-3 flex items-center gap-3 rounded-[16px] bg-white p-3">
           <StreakChip tone="light" />
           <span className="flex-1 text-[13px] leading-snug text-[#555]">
-            {t.weekActive ? `Semana garantida. Pontos valendo ${fmtMult(t.multiplier)}.` : `Faça um Pix ou compra no débito até ${fmtDay(t.week * 7)} pra ${t.streak ? "manter" : "começar"} a sequência.`}
+            {t.weekActive ? `Semana garantida. Pontos valendo ${fmtMult(t.multiplier)}.` : `Faça uma compra no débito ou crédito até ${fmtDay(t.week * 7)} pra ${t.streak ? "manter" : "começar"} a sequência.`}
           </span>
         </div>
         <ExpiryNote className="mt-2" always />

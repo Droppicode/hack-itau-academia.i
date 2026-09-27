@@ -4,6 +4,7 @@ import { ArrowDownToLine, ArrowUpFromLine, CalendarClock, ChevronLeft, CircleHel
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomSheet } from "../components/BottomSheet";
+import { GoalSheet } from "../components/GoalSheet";
 import { GOAL_ICON, goalDef } from "../components/Iai";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
@@ -22,6 +23,7 @@ export function Cofrinho() {
   const [sheet, setSheet] = useState<"guardar" | "resgatar" | null>(null);
   const g = t.goal;
   const [raw, setRaw] = useState("");
+  const [goalOpen, setGoalOpen] = useState(false);
   const amount = parseCents(raw);
   const limit = sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents;
   const error = !raw.trim()
@@ -122,8 +124,8 @@ export function Cofrinho() {
               <div className="flex items-center gap-2">
                 <CalendarClock size={16} color="#FF6200" /> Guardando {brl(g.monthlyCents, false)}/mês, faltam ~{months} {months === 1 ? "mês" : "meses"}
               </div>
-              <Squish onClick={() => navigate("/academia/intro")} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
-                Editar objetivo
+              <Squish onClick={() => setGoalOpen(true)} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
+                Trocar objetivo
               </Squish>
             </div>
           </div>
@@ -230,6 +232,7 @@ export function Cofrinho() {
           </motion.div>
         )}
       </AnimatePresence>
+      <GoalSheet open={goalOpen} onClose={() => setGoalOpen(false)} />
     </Screen>
   );
 }

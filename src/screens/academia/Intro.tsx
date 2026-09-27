@@ -10,6 +10,7 @@ import { KNOWLEDGE, localTrail, requestTrail, type KnowledgeId } from "../../dat
 import { GOALS } from "../../data/trilha";
 import { useIaContext } from "../../state/iaContext";
 import { monthsTo, parseCents } from "../../data/money";
+import { MoneyField, reais } from "../../components/GoalSheet";
 import { useTrilha } from "../../state/TrilhaContext";
 
 const PAGES = [
@@ -17,7 +18,7 @@ const PAGES = [
   { Icon: BookOpen, title: "Educação financeira sem juridiquês", text: "Lições de 5 minutos sobre o dia a dia do dinheiro, cartão, reserva, investimentos, golpes e mais. A trilha é montada pro seu objetivo e pro que você já sabe." },
   { Icon: MapIcon, title: "Uma trilha, um passo por vez", text: "Cada lição libera a próxima. Quer ir além? Tem leitura de aprofundamento. No fim da unidade, um desafio opcional vale Pontos Itaú." },
   { Icon: Trophy, title: "Missões que ajudam o objetivo", text: "Missões da semana valem Pontos Itaú pra usar no Itaú Shop. Na missão do mês, o que fica guardado no cofrinho o mês inteiro também vira pontos." },
-  { Icon: Flame, title: "Sequência que multiplica", text: "Cada semana usando a conta (Pix pra alguém, compra no débito) aumenta sua sequência: seus pontos valem até 1,2x. Pontos valem 6 meses, e o dinheiro guardado continua seu." },
+  { Icon: Flame, title: "Sequência que multiplica", text: "Cada semana com uma compra no débito ou no crédito aumenta sua sequência: seus pontos valem até 1,2x. Pontos valem 6 meses, e o dinheiro guardado continua seu." },
 ];
 
 export function Intro() {
@@ -194,25 +195,5 @@ export function Intro() {
         <p className="mt-3 text-center text-[12px] text-white/60">Protótipo: conteúdo educacional, valores e rendimentos simulados.</p>
       </motion.div>
     </Screen>
-  );
-}
-
-const reais = (cents: number) => (cents / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-
-function MoneyField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  return (
-    <label className="block rounded-[14px] bg-white px-3 py-2 text-[#1A1A1A]">
-      <span className="block text-[12px] text-[#6C6257]">{label}</span>
-      <span className="flex items-baseline gap-1">
-        <span className="text-[15px] font-semibold text-[#6C6257]">R$</span>
-        <input
-          aria-label={label}
-          inputMode="decimal"
-          value={value}
-          onChange={(e) => onChange(e.target.value.replace(/[^\d,.]/g, "").slice(0, 12))}
-          className="w-full min-w-0 bg-transparent text-[18px] font-bold outline-none"
-        />
-      </span>
-    </label>
   );
 }

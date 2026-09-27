@@ -9,7 +9,7 @@ export function useIaContext() {
   return [
     `Hoje (simulado): ${fmtDay(t.day)}. Nome: Lucas Andrade Rocha (persona fictícia). Salário de ${brl(SALARY_CENTS)} cai todo dia ${SALARY_DAY} na conta Itaú (${SALARY_FROM}).`,
     `Saldo em conta corrente: ${brl(t.balanceCents)}.`,
-    `Últimos lançamentos: ${t.txns.slice(-8).reverse().map((x) => `${fmtDay(x.day)} ${x.title} (${x.sub}) ${x.cents > 0 ? "+" : "-"}${brl(Math.abs(x.cents))}${x.streak ? " [conta pra sequência]" : ""}`).join("; ")}.`,
+    `Últimos lançamentos: ${t.txns.slice(-8).reverse().map((x) => `${fmtDay(x.day)} ${x.title} (${x.sub}) ${x.faturaCents !== undefined ? `${brl(x.faturaCents)} no cartão de crédito (fatura, não sai do saldo)` : `${x.cents > 0 ? "+" : "-"}${brl(Math.abs(x.cents))}`}${x.streak ? " [conta pra sequência]" : ""}`).join("; ")}.`,
     t.goal
       ? `Objetivo: ${t.goal.name}. Cofrinho: ${brl(t.goal.savedCents)} de ${brl(t.goal.targetCents)} (${Math.floor(t.goalPct)}%), rendeu ${brl(t.goal.yieldCents)}, rende 100% do CDI. Plano: ${brl(t.goal.monthlyCents)}/mês.`
       : "Ainda não escolheu objetivo nem criou cofrinho na academIA.I.",

@@ -147,7 +147,7 @@ export function Vantagens() {
         <div className="flex flex-col gap-3 text-[14px] leading-snug text-[#444]">
           <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Missões da semana: 30 Pontos Itaú cada, até 60 por semana.</div>
           <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 70%+ de acertos = 20 pts por acerto. Vale só o melhor resultado.</div>
-          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Sequência: cada semana com Pix pra outra pessoa ou compra no débito soma +0,05x nos pontos da academIA.I, até 1,2x em 4 semanas. Semana sem transação volta pra 1x.</div>
+          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Sequência: cada semana com compra no débito ou no crédito soma +0,05x nos pontos da academIA.I, até 1,2x em 4 semanas. Semana sem compra volta pra 1x.</div>
           <div className="flex gap-3"><Gift size={18} color="#8A4B00" className="shrink-0" /> Pontos de missões e da academIA.I valem 6 meses e vencem sempre no dia 25 do mês.</div>
           <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: 1 pt a cada R$ 20 que ficam no cofrinho o mês inteiro (a partir de R$ 50, até 50 pts). Vale o menor saldo do mês, então depositar e tirar não rende pontos. O cofrinho rende 100% do CDI.</div>
           <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
