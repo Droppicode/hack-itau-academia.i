@@ -1,6 +1,5 @@
 import { AlertTriangle, Check, Flame } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { fmtDay, fmtMult, multiplierFor, STREAK_MAX_WEEKS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 import { BottomSheet } from "./BottomSheet";
@@ -8,7 +7,6 @@ import { Squish } from "./Squish";
 
 export function StreakSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useTrilha();
-  const navigate = useNavigate();
   const weeks = Array.from({ length: STREAK_MAX_WEEKS }, (_, i) => t.week - (STREAK_MAX_WEEKS - 1) + i).filter((w) => w >= 1);
   return (
     <BottomSheet open={open} onClose={onClose} title="Sua sequência">
@@ -48,11 +46,6 @@ export function StreakSheet({ open, onClose }: { open: boolean; onClose: () => v
         <li>• Contam compras no débito ou no crédito, de qualquer valor. Pix, transferências e cofrinho não contam.</li>
         <li>• Uma semana inteira sem compra no cartão e o multiplicador volta pra 1x.</li>
       </ul>
-      {!t.weekActive && (
-        <Squish onClick={() => (onClose(), navigate("/pix"))} className="mt-4 w-full rounded-full bg-[#EC7000] py-3 text-center text-[16px] font-semibold text-white">
-          Fazer um Pix
-        </Squish>
-      )}
     </BottomSheet>
   );
 }
