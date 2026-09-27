@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Lock, Sparkles, Star, Trophy, Wand2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
 import { AcademiaTabs, HeroBg, Wordmark } from "../../components/Iai";
@@ -21,6 +21,7 @@ const xAt = (i: number) => 50 + 30 * Math.sin(i * 1.05);
 type NodeState = "done" | "current" | "locked" | "soon";
 
 function Snake({ n, progress }: { n: number; progress: number }) {
+  const clipId = `snake-${useId().replace(/:/g, "")}`;
   const pts = Array.from({ length: n }, (_, i) => [xAt(i), ROW / 2 + i * ROW] as const);
   const d = pts.reduce((acc, [x, y], i) => {
     if (i === 0) return `M${x} ${y}`;
@@ -33,17 +34,14 @@ function Snake({ n, progress }: { n: number; progress: number }) {
       <path d={d} fill="none" stroke="#E8DCCD" strokeWidth={14} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       <path d={d} fill="none" stroke="#FFFFFF" strokeWidth={2} strokeDasharray="2 8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       {progress > 0 && (
-        <motion.path
-          d={d}
-          fill="none"
-          stroke="#EC7000"
-          strokeWidth={14}
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: progress }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
+        <>
+          <defs>
+            <clipPath id={clipId}>
+              <motion.rect x={-10} y={0} width={120} initial={{ height: 0 }} animate={{ height: ROW / 2 + progress * (n - 1) * ROW }} transition={{ duration: 0.8, ease: "easeOut" }} />
+            </clipPath>
+          </defs>
+          <path d={d} fill="none" stroke="#EC7000" strokeWidth={14} strokeLinecap="butt" vectorEffect="non-scaling-stroke" clipPath={`url(#${clipId})`} />
+        </>
       )}
     </svg>
   );

@@ -123,11 +123,13 @@ export function AcademiaCard() {
       <div className="relative mt-2">
         <Rotator key={started ? "on" : "new"} items={started ? CATCHPHRASES : CATCHPHRASES_NEW} className="text-[15px] font-semibold leading-snug" />
       </div>
-      <div className="relative mt-1 truncate text-[13px] text-white/75">
-        {!started ? (
-          <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[5px] text-[13px] font-semibold text-white">Começar em 2 min <ChevronRight size={14} /></span>
-        ) : t.next ? `Continuar: ${t.next.title} · ${t.trailLessons.filter((l) => t.done(l.id)).length}/${t.trailLessons.length}` : "Trilha concluída · monte a próxima"}
-      </div>
+      {!started && (
+        <div className="relative mt-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[5px] text-[13px] font-semibold text-white">
+            Começar em 2 min <ChevronRight size={14} />
+          </span>
+        </div>
+      )}
       {started && (
         <div className="relative mt-2 flex items-center gap-2">
           <StreakChip label />
@@ -147,30 +149,44 @@ export function GoalSlider() {
   const g = t.goal;
   const def = goalDef(g?.id);
   const Icon = GOAL_ICON[def.id] ?? Target;
-  const pct = t.goalPct;
+  const pct = Math.min(100, t.goalPct);
+  const shown = g ? Math.max(pct, 4) : 0;
   return (
     <Squish
       onClick={() => (g ? navigate("/cofrinhos", { state: { fromAcademia: true } }) : enter())}
       aria-label="Progresso do objetivo"
-      className="block w-full rounded-[14px] bg-white px-4 py-[10px]"
+      className="block w-full rounded-[16px] bg-white px-4 pb-3 pt-[10px] shadow-[0_2px_10px_rgba(20,33,90,0.06)]"
       scale={0.98}
     >
       <div className="flex items-center gap-2 text-[13px]">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full" style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}>
-          <Icon size={13} color="white" />
-        </span>
-        <span className="min-w-0 flex-1 truncate font-semibold text-[#333]">{g ? g.name : "Seu objetivo"}</span>
-        <span className="tabular-nums text-[#666]">{g ? `${brl(g.savedCents, false)} de ${brl(g.targetCents, false)}` : "defina na AcademIA.I"}</span>
-        <span className="w-[38px] text-right font-bold tabular-nums text-itau-orange">{Math.floor(pct)}%</span>
+        <span className="min-w-0 flex-1 truncate font-semibold text-[#14215A]">{g ? g.name : "Seu objetivo"}</span>
+        <span className="tabular-nums text-[#8A8A8A]">{g ? `${brl(g.savedCents, false)} / ${brl(g.targetCents, false)}` : "defina na AcademIA.I"}</span>
+        {g && <span className="rounded-full px-[7px] py-[1px] text-[12px] font-bold tabular-nums text-white" style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}>{Math.floor(pct)}%</span>}
       </div>
-      <div className="relative mt-2 h-[6px] rounded-full bg-[#ECECEC]">
-        <motion.div className="h-full rounded-full bg-itau-orange" initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.7, ease: "easeOut" }} />
+      <div className="relative mt-[14px] h-[10px] rounded-full bg-[#F1EEEA]">
+        {[25, 50, 75].map((m) => (
+          <span key={m} className="absolute top-1/2 h-[4px] w-[4px] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ left: `${m}%`, background: pct >= m ? "rgba(255,255,255,0.8)" : "#DCD5CC", zIndex: 1 }} />
+        ))}
+        <motion.div
+          className="relative h-full overflow-hidden rounded-full"
+          style={{ background: `linear-gradient(90deg, ${def.from}, ${def.to})` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${shown}%` }}
+          transition={{ type: "spring", stiffness: 70, damping: 18 }}
+        >
+          <span className="fx-glint absolute inset-0" />
+        </motion.div>
         <motion.span
-          className="absolute top-1/2 h-[14px] w-[14px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white bg-itau-orange shadow"
-          initial={{ left: 0 }}
-          animate={{ left: `${pct}%` }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        />
+          className="absolute top-1/2 z-[2] flex h-[28px] w-[28px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-white shadow-[0_3px_10px_rgba(20,33,90,0.25)]"
+          style={{ background: `linear-gradient(135deg, ${def.from}, ${def.to})` }}
+          initial={{ left: "0%" }}
+          animate={{ left: `${shown}%` }}
+          transition={{ type: "spring", stiffness: 70, damping: 18 }}
+        >
+          <motion.span animate={{ y: [0, -2, 0], rotate: [0, -8, 8, 0] }} transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.2 }} className="flex">
+            <Icon size={14} color="white" />
+          </motion.span>
+        </motion.span>
       </div>
     </Squish>
   );
