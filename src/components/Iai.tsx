@@ -108,7 +108,7 @@ export function AcademiaCard() {
       <div className="relative flex items-center gap-[10px]">
         <IaiAvatar size={30} />
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="text-[12px] text-white/70">{started ? "Educação financeira em 5 min" : "Novo no app · grátis pra você"}</div>
+          <div className="text-[12px] text-white/70">Educação financeira em 5 min</div>
           <Wordmark className="text-[17px]" />
         </div>
         <ChevronRight size={20} color="#FF8A3D" />
