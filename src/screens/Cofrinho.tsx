@@ -8,14 +8,10 @@ import { GOAL_ICON, goalDef } from "../components/Iai";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { useToast } from "../components/Toast";
-import { brl, monthsTo } from "../data/money";
+import { brl, monthsTo, parseCents } from "../data/money";
 import { MONTHLY_PTS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
-export const parseCents = (raw: string) => {
-  const n = Number(raw.replace(/[^\d,.]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
-  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
-};
 
 export function Cofrinho() {
   const navigate = useNavigate();

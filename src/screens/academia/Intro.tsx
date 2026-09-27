@@ -9,7 +9,7 @@ import { Squish } from "../../components/Squish";
 import { KNOWLEDGE, localTrail, requestTrail, type KnowledgeId } from "../../data/personalizar";
 import { GOALS } from "../../data/trilha";
 import { useIaContext } from "../../state/iaContext";
-import { brl, monthsTo } from "../../data/money";
+import { monthsTo, parseCents } from "../../data/money";
 import { useTrilha } from "../../state/TrilhaContext";
 
 const PAGES = [
@@ -26,8 +26,11 @@ export function Intro() {
   const [i, setI] = useState(0);
   const [goalId, setGoalId] = useState(t.goal?.id ?? GOALS[0].id);
   const def = goalDef(goalId);
-  const [target, setTarget] = useState(t.goal?.targetCents ?? def.cents);
-  const [monthly, setMonthly] = useState(t.goal?.monthlyCents ?? 10000);
+  const [targetRaw, setTargetRaw] = useState(reais(t.goal?.targetCents ?? def.cents));
+  const [monthlyRaw, setMonthlyRaw] = useState(reais(t.goal?.monthlyCents ?? 10000));
+  const target = parseCents(targetRaw);
+  const monthly = parseCents(monthlyRaw);
+  const amountsOk = target > 0 && monthly > 0;
   const [knowledge, setKnowledge] = useState<KnowledgeId | undefined>(t.profile.knowledge);
   const [situation, setSituation] = useState(t.profile.text ?? "");
   const [busy, setBusy] = useState(false);
@@ -36,7 +39,7 @@ export function Intro() {
   const GoalIcon = GOAL_ICON[def.id] ?? Target;
 
   const start = async () => {
-    if (busy) return;
+    if (busy || (goalPage && !amountsOk)) return;
     const profile = { knowledge, text: knowledge === "ia" && situation.trim() ? situation.trim().slice(0, 600) : undefined };
     t.setGoal({ id: def.id, name: def.label, targetCents: target, monthlyCents: monthly });
     const personalized = !!profile.knowledge;
@@ -86,7 +89,7 @@ export function Intro() {
                     onChange={(e) => {
                       const g = goalDef(e.target.value);
                       setGoalId(g.id);
-                      setTarget(g.cents);
+                      setTargetRaw(reais(g.cents));
                     }}
                     className="h-[54px] w-full appearance-none rounded-[16px] bg-white pl-4 pr-10 text-[17px] font-semibold text-[#1A1A1A] outline-none"
                   >
@@ -139,16 +142,18 @@ export function Intro() {
                   {knowledge ? "A IA.I monta sua trilha com base no seu objetivo e nessas respostas. Dá pra mudar quando quiser." : "Pulou? Tudo bem: a trilha começa pelo básico e você pode personalizar depois."}
                 </p>
 
-                <label className="mt-5 block text-[14px] text-white/85">
-                  Quanto custa: <b className="text-white">{brl(target, false)}</b>
-                  <input type="range" min={30000} max={1500000} step={10000} value={target} onChange={(e) => setTarget(Number(e.target.value))} className="mt-1 w-full accent-[#FF6200]" />
-                </label>
-                <label className="mt-2 block text-[14px] text-white/85">
-                  Quanto quer guardar por mês: <b className="text-white">{brl(monthly, false)}</b>
-                  <input type="range" min={1000} max={100000} step={1000} value={monthly} onChange={(e) => setMonthly(Number(e.target.value))} className="mt-1 w-full accent-[#FF6200]" />
-                </label>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <MoneyField label="Quanto custa" value={targetRaw} onChange={setTargetRaw} />
+                  <MoneyField label="Guardar por mês" value={monthlyRaw} onChange={setMonthlyRaw} />
+                </div>
                 <div className="mt-2 text-[14px] text-white/85">
-                  Chega lá em ~<b className="text-white">{months} {months === 1 ? "mês" : "meses"}</b>, sem contar o rendimento.
+                  {amountsOk ? (
+                    <>
+                      Chega lá em ~<b className="text-white">{months} {months === 1 ? "mês" : "meses"}</b>, sem contar o rendimento.
+                    </>
+                  ) : (
+                    "Digite valores maiores que zero."
+                  )}
                 </div>
               </motion.div>
             ) : (
@@ -175,7 +180,7 @@ export function Intro() {
             <Squish key={n} aria-label={`Página ${n + 1}`} onClick={() => setI(n)} className={`h-[7px] rounded-full ${n === i ? "w-6 bg-itau-orange" : "w-[7px] bg-white/30"}`} scale={0.8} />
           ))}
         </div>
-        <Squish onClick={() => (goalPage ? void start() : setI(i + 1))} disabled={busy} className="mt-6 flex w-full items-center justify-center gap-2 rounded-[14px] bg-itau-orange py-[14px] text-center text-[17px] font-bold" scale={0.97}>
+        <Squish onClick={() => (goalPage ? void start() : setI(i + 1))} disabled={busy || (goalPage && !amountsOk)} className="mt-6 flex disabled:opacity-40 w-full items-center justify-center gap-2 rounded-[14px] bg-itau-orange py-[14px] text-center text-[17px] font-bold" scale={0.97}>
           {busy ? (
             <>
               <Loader2 size={18} className="animate-spin" /> IA.I montando sua trilha…
@@ -189,5 +194,25 @@ export function Intro() {
         <p className="mt-3 text-center text-[12px] text-white/60">Protótipo: conteúdo educacional, valores e rendimentos simulados.</p>
       </motion.div>
     </Screen>
+  );
+}
+
+const reais = (cents: number) => (cents / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 });
+
+function MoneyField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="block rounded-[14px] bg-white px-3 py-2 text-[#1A1A1A]">
+      <span className="block text-[12px] text-[#6C6257]">{label}</span>
+      <span className="flex items-baseline gap-1">
+        <span className="text-[15px] font-semibold text-[#6C6257]">R$</span>
+        <input
+          aria-label={label}
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^\d,.]/g, "").slice(0, 12))}
+          className="w-full min-w-0 bg-transparent text-[18px] font-bold outline-none"
+        />
+      </span>
+    </label>
   );
 }

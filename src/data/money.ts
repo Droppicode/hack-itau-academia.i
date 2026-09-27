@@ -33,3 +33,8 @@ export function inss(grossCents: number) {
 }
 
 export const SIM = { cdiYear: 0.105, poupancaYear: 0.07, inflationYear: 0.045, rotativoMonth: 0.14 };
+
+export const parseCents = (raw: string) => {
+  const n = Number(raw.replace(/[^\d,.]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+};

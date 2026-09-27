@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { BookOpen, Check, ChevronLeft, Clock, Info, Lock, Sparkles, Star, Target, Trophy, Wand2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Lock, Sparkles, Star, Target, Trophy, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
@@ -94,6 +94,7 @@ export function Trilha() {
   const t = useTrilha();
   const [open, setOpen] = useState<Lesson | null>(null);
   const [challenge, setChallenge] = useState<UnitId | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const def = goalDef(t.goal?.id);
   const GoalIcon = GOAL_ICON[def.id] ?? Target;
   const challengeState = (u: UnitId): NodeState => (t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
@@ -119,9 +120,6 @@ export function Trilha() {
               <ChevronLeft size={28} strokeWidth={1.6} />
             </Squish>
             <Wordmark className="flex-1 text-[19px]" />
-            <Squish aria-label="Nova trilha" onClick={() => navigate("/academia/nova-trilha")} className="flex h-10 items-center gap-1 rounded-full bg-white/10 px-3 text-[13px] font-semibold" scale={0.9}>
-              <Wand2 size={16} /> Nova trilha
-            </Squish>
             <Squish aria-label="Sobre a academIA.I" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
               <Info size={19} />
             </Squish>
@@ -157,16 +155,31 @@ export function Trilha() {
       scrollClassName="[background-image:radial-gradient(#EADFD3_1px,transparent_1px)] [background-size:18px_18px]"
     >
       <div className="px-4 pb-8 pt-5">
-        <div className="mb-5 rounded-[22px] border border-[#EADFD3] bg-white p-4">
-          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#EC7000]">
-            <Sparkles size={13} /> Trilha {t.trailNow.n} · {t.trailNow.source === "ia" ? "montada pela IA.I" : "montada pelas suas respostas"}
-          </div>
-          <div className="mt-1 text-[18px] font-bold text-[#14215A]">{t.trailNow.title}</div>
-          {t.trailNow.intro && <p className="mt-1 text-[14px] leading-snug text-[#6C6257]">{t.trailNow.intro}</p>}
-          <div className="mt-2 text-[12px] text-[#8A7B6C]">
-            Pontos de missões e desafios: {fmtMult(t.multiplier)} pela sua sequência. Dá pra mudar a trilha quando quiser.
-          </div>
+        <div className="mb-2 overflow-hidden rounded-[18px] border border-[#EADFD3] bg-white">
+          <Squish onClick={() => setInfoOpen((v) => !v)} aria-expanded={infoOpen} className="flex w-full items-center gap-2 px-4 py-3 text-left" scale={0.99}>
+            <Sparkles size={14} color="#EC7000" />
+            <span className="min-w-0 flex-1 truncate text-[12px] font-bold uppercase tracking-wider text-[#EC7000]">
+              Trilha {t.trailNow.n} · {t.trailNow.source === "ia" ? "montada pela IA.I" : "montada pelas suas respostas"}
+            </span>
+            <ChevronDown size={18} color="#8A7B6C" className={`transition-transform ${infoOpen ? "rotate-180" : ""}`} />
+          </Squish>
+          <AnimatePresence initial={false}>
+            {infoOpen && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <div className="px-4 pb-4">
+                  <div className="text-[17px] font-bold text-[#14215A]">{t.trailNow.title}</div>
+                  {t.trailNow.intro && <p className="mt-1 text-[14px] leading-snug text-[#6C6257]">{t.trailNow.intro}</p>}
+                  <div className="mt-2 text-[12px] text-[#8A7B6C]">Pontos de missões e desafios: {fmtMult(t.multiplier)} pela sua sequência.</div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+        <Squish onClick={() => navigate("/academia/nova-trilha")} className="mb-5 flex w-full items-center gap-2 rounded-[14px] border border-dashed border-[#D9CBBB] bg-white/70 px-3 py-2 text-left" scale={0.98}>
+          <Wand2 size={16} color="#EC7000" />
+          <span className="flex-1 text-[13px] font-semibold text-[#14215A]">Quer aprender outra coisa? Trocar trilha</span>
+          <ChevronRight size={16} color="#8A7B6C" />
+        </Squish>
         {t.trailUnits.map((u, ui) => {
           const lessons = lessonsOf(u.id);
           const why = t.trailNow.units.find((x) => x.id === u.id)?.why;
@@ -252,6 +265,7 @@ export function Trilha() {
             </section>
           );
         })}
+        {t.trailDone && (
         <Squish
           onClick={() => navigate("/academia/nova-trilha")}
           className={`flex w-full items-center gap-3 rounded-[22px] p-4 text-left ${t.trailDone ? "bg-gradient-to-br from-[#14215A] to-[#2B3A87] text-white" : "border border-dashed border-[#D9CBBB] bg-white text-[#14215A]"}`}
@@ -267,6 +281,7 @@ export function Trilha() {
             </div>
           </div>
         </Squish>
+        )}
       </div>
 
       <BottomSheet open={!!open} onClose={() => setOpen(null)} title={open?.title ?? ""}>
