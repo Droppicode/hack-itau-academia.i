@@ -111,6 +111,7 @@ export function Trilha() {
       bg="bg-[#FBF6F0]"
       statusTone="light"
       statusBg="bg-[#0E1846]"
+      autoHideHeader
       header={
         <div className="relative shrink-0 overflow-hidden rounded-b-[28px] px-4 pb-4 text-white">
           <HeroBg radius="0 0 28px 28px" />
