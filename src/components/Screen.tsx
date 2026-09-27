@@ -9,6 +9,7 @@ type Props = {
   statusTone?: "dark" | "light";
   statusBg?: string;
   scrollClassName?: string;
+  overlay?: ReactNode;
 };
 
 export function Screen({
@@ -19,6 +20,7 @@ export function Screen({
   statusTone = "dark",
   statusBg,
   scrollClassName = "",
+  overlay,
 }: Props) {
   return (
     <div className={`absolute inset-0 flex flex-col ${bg}`}>
@@ -30,6 +32,7 @@ export function Screen({
         {children}
       </div>
       {footer}
+      {overlay}
     </div>
   );
 }

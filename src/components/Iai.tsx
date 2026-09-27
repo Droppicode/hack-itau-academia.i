@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CATCHPHRASES, GOALS, PLAYABLE, type GoalDef } from "../data/trilha";
+import { CATCHPHRASES, CATCHPHRASES_NEW, GOALS, PLAYABLE, type GoalDef } from "../data/trilha";
 import { brl } from "../data/money";
 import { useTrilha } from "../state/TrilhaContext";
 import { BottomSheet } from "./BottomSheet";
@@ -107,16 +107,18 @@ export function AcademiaCard() {
       <div className="relative flex items-center gap-[10px]">
         <IaiAvatar size={30} />
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="text-[12px] text-white/70">Educação financeira em 5 min</div>
+          <div className="text-[12px] text-white/70">{started ? "Educação financeira em 5 min" : "Novo no app · grátis pra você"}</div>
           <Wordmark className="text-[17px]" />
         </div>
         <ChevronRight size={20} color="#FF8A3D" />
       </div>
       <div className="relative mt-2">
-        <Rotator items={CATCHPHRASES} className="text-[15px] font-semibold leading-snug" />
+        <Rotator key={started ? "on" : "new"} items={started ? CATCHPHRASES : CATCHPHRASES_NEW} className="text-[15px] font-semibold leading-snug" />
       </div>
       <div className="relative mt-1 truncate text-[13px] text-white/75">
-        {!started ? "Toque pra conhecer e escolher seu objetivo" : t.next ? `Continuar: ${t.next.title} · ${t.completed.length}/${PLAYABLE.length}` : t.unitPassed(1) ? "Unidade 1 concluída · desafio feito" : "Unidade 1 concluída · desafio te espera"}
+        {!started ? (
+          <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[5px] text-[13px] font-semibold text-white">Começar em 2 min <ChevronRight size={14} /></span>
+        ) : t.next ? `Continuar: ${t.next.title} · ${t.completed.length}/${PLAYABLE.length}` : t.unitPassed(1) ? "Unidade 1 concluída · desafio feito" : "Unidade 1 concluída · desafio te espera"}
       </div>
     </Squish>
   );

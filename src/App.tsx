@@ -24,6 +24,8 @@ import { Cofrinho } from "./screens/Cofrinho";
 import { MinhasVantagens } from "./screens/MinhasVantagens";
 import { ItauShop } from "./screens/ItauShop";
 import { Desafio } from "./screens/academia/Desafio";
+import { IaChat } from "./screens/IaChat";
+import { DemoPanel } from "./components/DemoPanel";
 
 type Dir = "push" | "pop" | "fade";
 
@@ -65,6 +67,7 @@ function AnimatedRoutes() {
           <Route path="/academia/licao/:id" element={<Licao />} />
           <Route path="/academia/licao/:id/aprofundar" element={<Aprofundar />} />
           <Route path="/academia/desafio/:unit" element={<Desafio />} />
+          <Route path="/ia" element={<IaChat />} />
           <Route path="/cofrinhos" element={<Cofrinho />} />
           <Route path="/minhas-vantagens" element={<MinhasVantagens />} />
           <Route path="/itau-shop" element={<ItauShop />} />
@@ -90,6 +93,7 @@ export default function App() {
       <PhoneFrame>
         <ToastProvider>
           <AnimatedRoutes />
+          <DemoPanel />
         </ToastProvider>
       </PhoneFrame>
     </PixProvider>

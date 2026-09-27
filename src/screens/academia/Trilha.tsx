@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
 import { AcademiaTabs, GOAL_ICON, Wordmark, goalDef } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
+import { IaFab } from "../../components/IaFab";
 import { Squish } from "../../components/Squish";
 import { LESSONS, UNIT_POINTS_PER_RIGHT, UNIT_QUIZ_PASS, UNITS, unitQuiz, type Lesson, type UnitN } from "../../data/trilha";
 import { brl } from "../../data/money";
@@ -149,6 +150,7 @@ export function Trilha() {
         </div>
       }
       footer={<AcademiaTabs />}
+      overlay={<IaFab bottom={100} />}
       scrollClassName="[background-image:radial-gradient(#EADFD3_1px,transparent_1px)] [background-size:18px_18px]"
     >
       <div className="px-4 pb-8 pt-5">

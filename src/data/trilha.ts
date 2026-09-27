@@ -334,6 +334,15 @@ export const CATCHPHRASES = [
   "Holerite, FGTS, CDI: agora faz sentido.",
 ];
 
+export const CATCHPHRASES_NEW = [
+  "Primeiro salário? Descubra pra onde ele vai antes que ele suma.",
+  "Holerite, FGTS, CDI… ninguém te explicou? A gente explica em 5 min.",
+  "Aquele celular novo sem 12x no cartão: bora montar o plano?",
+  "Escolha um objetivo e veja o cofrinho enchendo até 100%.",
+  "Aprenda, cumpra missões e ganhe Pontos Itaú.",
+  "Sem sermão e sem juridiquês. Só o que você usa no dia a dia.",
+];
+
 export const CDI_YEAR = 0.105;
 
 export const POINT_BRL = 0.02;
