@@ -10,7 +10,7 @@ export function TabPlaceholder({ path }: { path: string }) {
   const tab = TABS.find((t) => t.path === path);
   return (
     <Screen bg="bg-itau-bg" statusTone="light" statusBg="bg-itau-orange" header={<OrangeHeader />} footer={<BottomTabBar />}>
-      <div className="px-5 pt-[34px]">
+      <div className="px-5 pt-[18px]">
         <h1 className="text-[18px] font-bold text-black">{tab?.label}</h1>
         <div className="mt-6 flex flex-col items-center rounded-[18px] bg-white px-6 py-12 text-center">
           <Construction size={36} color="#FF6200" strokeWidth={1.6} />

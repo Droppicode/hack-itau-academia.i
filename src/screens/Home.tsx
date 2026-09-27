@@ -108,7 +108,7 @@ export function Home() {
   return (
     <Screen bg="bg-itau-bg" statusTone="light" statusBg="bg-itau-orange" header={<OrangeHeader />} footer={<BottomTabBar />} overlay={<IaFab bottom={96} />}>
       <div className="pb-8">
-        <div className="mt-[34px] flex items-center justify-between px-5">
+        <div className="mt-[14px] flex items-center justify-between px-5">
           <h1 className="text-[18px] font-bold tracking-tight text-black">Meu Itaú</h1>
           <Squish
             aria-label="Mostrar ou ocultar saldo"

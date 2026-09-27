@@ -40,7 +40,7 @@ export function Extrato() {
   const months = [...new Set(t.txns.map((x) => Math.floor((x.day - 1) / MONTH_DAYS) + 1))].sort((a, b) => b - a);
   return (
     <Screen bg="bg-itau-bg" statusTone="light" statusBg="bg-itau-orange" header={<OrangeHeader />} footer={<BottomTabBar />}>
-      <div className="px-5 pb-8 pt-[34px]">
+      <div className="px-5 pb-8 pt-[18px]">
         <h1 className="text-[18px] font-bold text-black">Extrato</h1>
         <div className="mt-4 rounded-[18px] bg-white p-5">
           <div className="text-[14px] text-[#555]">Saldo em conta · hoje {fmtDay(t.day)}</div>
