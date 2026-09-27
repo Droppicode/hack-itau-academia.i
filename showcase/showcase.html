@@ -65,10 +65,20 @@
   .note{position:absolute;bottom:4%;left:5%;font:400 .85vw Inter;color:rgba(255,255,255,.45)}
   .url{position:absolute;bottom:4%;right:5%;font:500 .9vw Inter;color:rgba(255,255,255,.6)}
   .progress{position:absolute;top:0;left:0;height:4px;background:var(--orange);width:0;transition:width .25s linear}
-  .chapters{position:absolute;top:4%;right:5%;display:flex;gap:.6vw}
-  .chapters i{width:.55vw;height:.55vw;border-radius:50%;background:rgba(255,255,255,.25);transition:background .4s,transform .4s}
-  .chapters i.on{background:var(--orange);transform:scale(1.3)}
+  /* etapa (contexto lento, muda ~10x no vídeo) */
+  .chapters{position:absolute;top:4%;right:5%;display:flex;gap:.45vw;align-items:center}
+  .chapters i{width:.5vw;height:.5vw;border-radius:50%;background:rgba(255,255,255,.22);transition:background .4s,transform .4s}
+  .chapters i.done{background:rgba(255,255,255,.55)}
+  .chapters i.on{background:var(--orange);transform:scale(1.35)}
   [data-phase="act"] .chapters i.on{background:#FFE2C2}
+  .stage{display:flex;align-items:center;gap:.9vw;margin-bottom:1vw;min-height:2.8vw}
+  .stage .num{font:800 1.15vw/1 Manrope;color:var(--orange);padding:.55vw .7vw;border:1.5px solid rgba(255,255,255,.18);border-radius:.5vw;
+              background:rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
+  .stage .lbl{font:700 1.55vw/1 Manrope;letter-spacing:.02em;text-transform:uppercase;color:#fff}
+  .stage .of{font:500 1vw/1 Inter;color:var(--fg-dim)}
+  [data-phase="act"] .stage .num{color:#FFE2C2}
+  .stage.swap{animation:stageIn .6s var(--ease)}
+  @keyframes stageIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 
   /* controls (hidden while recording: press H) */
   #ui{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;
@@ -90,7 +100,10 @@
     <div class="chapters" id="chapters"></div>
     <div class="grid">
       <div class="phone"><video id="video" playsinline muted preload="auto"></video></div>
-      <div class="copy" id="copy"></div>
+      <div style="padding-left:6%;display:flex;flex-direction:column;justify-content:center;min-height:60%">
+        <div class="stage" id="etapa"></div>
+        <div class="copy" id="copy" style="padding-left:0"></div>
+      </div>
     </div>
     <div class="note">Protótipo · dados, rendimentos, pontos e integrações simulados</div>
     <div class="url">hack-itau-academia-i.vercel.app</div>
@@ -107,48 +120,72 @@
 
 <script>
 /* ===================== ROTEIRO DE TEXTOS (edite aqui) =====================
-   t: segundo em que o texto entra (base: vídeo academia_iai_apresentacao.mp4, 2min25s)
-   phase: intro | learn | act | close  (cor de fundo — muda só 3x no vídeo inteiro)
-   k: kicker (capítulo) · h: headline (≤ 7 palavras; <em> = destaque laranja)
+   Base de tempo: academia_iai_video_final_2min_v2.mp4 (2min00s, 720×1558, 30 fps).
+
+   ETAPAS = contexto da ação em tela. Muda pouco (11x em 2min) e fica fixo enquanto a ação dura.
+   t: segundo em que a etapa começa · label: rótulo curto · phase: intro | learn | act | close (cor do fundo, muda só 3x)
+*/
+const STAGES = [
+ {t:0,   label:"Transferência",          phase:"intro"},
+ {t:12,  label:"Convite Academia Ia.i",  phase:"intro"},
+ {t:16,  label:"Boas-vindas",            phase:"learn"},
+ {t:28,  label:"Objetivo",               phase:"learn"},
+ {t:40,  label:"Trilha de Aprendizado",  phase:"learn"},
+ {t:48,  label:"Lição e Quiz",           phase:"learn"},
+ {t:64,  label:"Cofrinho",               phase:"act"},
+ {t:88,  label:"Missões",                phase:"act"},
+ {t:96,  label:"Pontos Itaú",            phase:"act"},
+ {t:104, label:"Assistente IA.I",        phase:"act"},
+ {t:114, label:"Resultado",              phase:"close"},
+];
+
+/* CUES = texto explicativo. Só muda quando a ação muda de verdade (mín. ~4s, média ~7s em tela).
+   t: segundo em que entra · h: headline (≤ 7 palavras; <em> = destaque laranja)
    s: subline (≤ 16 palavras) · stat: número grande opcional · count: [de, até] anima o número
 */
 const CUES = [
- {t:0,   phase:"intro", k:"Este é o Lucas",        h:"O salário <em>caiu.</em>",                         s:"Mas ele ainda não tem um plano claro para esse dinheiro."},
- {t:5,   phase:"intro", k:"Como todo mês",          h:"Quase tudo <em>sai.</em>",  stat:"R$ 1.300",      s:"Pix para a própria conta em outro banco."},
- {t:14,  phase:"intro", k:"Como todo mês",          h:"Para o cliente, é só mais um Pix.",               s:"Para o Itaú, é a chance de entender o <b>objetivo</b> por trás dessa saída."},
- {t:20,  phase:"intro", k:"Comprovante",            h:"Pix enviado. <em>Nada muda.</em>",                s:"A transferência termina normalmente, sem interromper a jornada."},
- {t:24,  phase:"intro", k:"Depois do comprovante",  h:"Um convite <em>contextual.</em>",                 s:"Cinco minutos para começar um objetivo. Dá para ignorar ou desligar."},
+ {t:0,   h:"O salário <em>caiu.</em>",                         s:"Lucas ainda não tem um plano claro para esse dinheiro."},
+ {t:4,   h:"Quase tudo <em>sai.</em>",  stat:"R$ 1.300",      s:"Pix para a própria conta em outro banco. Para o Itaú, é a chance de entender o <b>objetivo</b> dessa saída."},
+ {t:10,  h:"Pix enviado. <em>Nada muda.</em>",                s:"A transferência termina normalmente, sem interromper a jornada."},
+ {t:12,  h:"Um convite <em>contextual.</em>",                 s:"Depois do comprovante: cinco minutos para começar um objetivo. Dá para ignorar."},
 
- {t:28,  phase:"learn", k:"Academia Ia.i",          h:"Finanças <em>sem juridiquês.</em>",               s:"Uma trilha por vez · missões ligadas ao objetivo · sequência que multiplica a recompensa."},
- {t:37,  phase:"learn", k:"Objetivo",               h:"Lucas escolhe: <em>sair de casa.</em>",           s:"Diz o que já sabe e conta, com as próprias palavras, o que quer."},
- {t:46,  phase:"learn", k:"Meta calculada",         h:"R$ 6.000 · <em>R$ 300/mês</em> · ~20 meses",      s:"Os números vêm do sistema, não da IA."},
- {t:49,  phase:"learn", k:"Onde entra a IA",        h:"A IA.I <em>redige.</em> O sistema <em>calcula.</em>", s:"O contexto do Lucas escolhe a linguagem e monta uma trilha personalizada."},
- {t:53,  phase:"learn", k:"Trilha",                 h:"Quatro unidades, <em>um passo por vez.</em>",     s:"Vocabulário do dinheiro → organizar o mês → reserva de emergência → grandes objetivos."},
- {t:62,  phase:"learn", k:"Lição",                  h:"Cabe em <em>poucos minutos.</em>",                s:"Um conceito, um exemplo do dia a dia e uma pergunta."},
- {t:75,  phase:"learn", k:"Quiz",                   h:"Corrige <em>na hora.</em>",                       s:"Explica a resposta e faz o erro voltar na revisão."},
- {t:88,  phase:"learn", k:"Lição concluída",        h:"Precisão, tempo e <em>missões desbloqueadas.</em>", s:"Cada lição termina numa ação real no app."},
+ {t:16,  h:"Finanças <em>sem juridiquês.</em>",               s:"Um objetivo · uma trilha por vez · missões ligadas ao objetivo · sequência que multiplica a recompensa."},
+ {t:28,  h:"Lucas escolhe: <em>sair de casa.</em>",           s:"Diz o que já sabe e conta, com as próprias palavras, o que quer."},
+ {t:34,  h:"R$ 6.000 · <em>R$ 300/mês</em> · ~20 meses",      s:"O sistema calcula os números. A IA.I escolhe a linguagem e monta a trilha."},
+ {t:40,  h:"Quatro unidades, <em>um passo por vez.</em>",     s:"Vocabulário do dinheiro → organizar o mês → reserva de emergência → grandes objetivos."},
+ {t:48,  h:"Cabe em <em>poucos minutos.</em>",                s:"Um conceito, um exemplo do dia a dia e uma pergunta."},
+ {t:54,  h:"Corrige <em>na hora.</em>",                       s:"Explica a resposta e faz o erro voltar na revisão."},
+ {t:60,  h:"Lição <em>concluída.</em>",                       s:"Precisão, tempo e missões desbloqueadas — cada lição termina numa ação real."},
 
- {t:91,  phase:"learn", k:"Painel de teste",        h:"Avançar o <em>tempo.</em>",                       s:"Simula meses e eventos financeiros para ver a experiência evoluir."},
- {t:96,  phase:"learn", k:"+1 mês",                 h:"O salário <em>cai de novo.</em>",                 s:"O app atualiza toda a jornada."},
+ {t:64,  h:"Um mês depois, o salário <em>cai de novo.</em>", s:"O painel de teste avança o tempo e o app atualiza toda a jornada."},
+ {t:68,  h:"R$ 300 <em>guardados.</em>",                      s:"No cofrinho criado junto com a trilha. Objetivo, progresso e prazo visíveis."},
+ {t:76,  h:"Simular <em>+1 mês.</em>",                        s:"Mostra o rendimento ao longo do tempo, sem novos depósitos."},
+ {t:84,  h:"O tempo <em>trabalha a favor.</em>", stat:"R$ 310,16", count:[300,310.16], s:"Após 4 meses simulados."},
+ {t:88,  h:"O hábito vira <em>missão.</em>",                  s:"Guardar, cumprir lições, completar desafios. Tudo opcional, ligado à vida real."},
+ {t:96,  h:"Pontos Itaú, <em>onde já existem.</em>",          s:"Minhas Vantagens: desconto na fatura, Itaú Shop e outros benefícios simulados."},
+ {t:104, h:"“Quanto posso guardar <em>esse mês?</em>”",       s:"Lê meta, saldo e histórico. Orienta — <b>não movimenta dinheiro.</b>"},
 
- {t:98,  phase:"act",   k:"Cofrinho “Sair de casa”", h:"R$ 300 <em>guardados.</em>",                     s:"Objetivo, progresso e prazo ficam visíveis. Criado junto com a trilha."},
- {t:107, phase:"act",   k:"Simular +1 mês",         h:"O tempo <em>trabalha a favor.</em>", stat:"R$ 310,16", count:[300,310.16], s:"Sem novos depósitos, após 4 meses simulados."},
- {t:119, phase:"act",   k:"Missões",                h:"O hábito vira <em>missão.</em>",                  s:"Guardar, cumprir lições, completar desafios. Tudo opcional, ligado à vida real."},
- {t:126, phase:"act",   k:"Minhas Vantagens",       h:"Pontos Itaú, <em>onde já existem.</em>",          s:"Desconto na fatura, Itaú Shop e outros benefícios simulados."},
- {t:131, phase:"act",   k:"Assistente IA.I",        h:"“Quanto posso guardar <em>esse mês?</em>”",       s:"Lê meta, saldo e histórico. Orienta — <b>não movimenta dinheiro.</b>"},
-
- {t:142, phase:"close", k:"De volta à home",        h:"Educação que <em>vira ação.</em>",                s:"Objetivo, progresso, sequência e saldo atualizados — dentro do próprio Itaú."},
+ {t:114, h:"Educação que <em>vira ação.</em>",                s:"Objetivo, progresso, sequência e saldo atualizados — dentro do próprio Itaú."},
 ];
 /* ========================================================================= */
 
 const video=document.getElementById('video'), copy=document.getElementById('copy'), canvas=document.getElementById('canvas');
 const progress=document.getElementById('progress'), cueEl=document.getElementById('cue'), offsetEl=document.getElementById('offset');
-const chapters=document.getElementById('chapters');
-const PHASES=["intro","learn","act","close"];
-PHASES.forEach(()=>chapters.appendChild(document.createElement('i')));
+const chapters=document.getElementById('chapters'), etapa=document.getElementById('etapa');
+STAGES.forEach(()=>chapters.appendChild(document.createElement('i')));
+let currentStage=-1;
+function renderStage(i){
+  const s=STAGES[i];
+  etapa.classList.remove('swap'); void etapa.offsetWidth;
+  etapa.innerHTML=`<span class="num">${String(i+1).padStart(2,'0')}</span><span class="lbl">${s.label}</span><span class="of">${i+1}/${STAGES.length}</span>`;
+  etapa.classList.add('swap');
+  canvas.dataset.phase=s.phase;
+  [...chapters.children].forEach((d,k)=>{d.classList.toggle('on',k===i);d.classList.toggle('done',k<i);});
+  currentStage=i;
+}
 
 const params=new URLSearchParams(location.search);
-video.src=params.get('src')||'academia_iai_apresentacao.mp4';
+video.src=params.get('src')||'academia_iai_video_final_2min_v2.mp4';
 if(params.get('offset')) offsetEl.value=params.get('offset');
 if(params.get('hide')) document.getElementById('ui').classList.add('hide');
 if(params.get('autoplay')) video.addEventListener('canplaythrough',()=>video.play(),{once:true});
@@ -167,8 +204,7 @@ function render(i){
   const c=CUES[i];
   copy.classList.remove('on');
   setTimeout(()=>{
-    copy.innerHTML=`<div class="kicker anim">${c.k||''}</div>
-      ${c.stat?`<div class="stat anim" id="stat">${c.count?fmtBRL(c.count[0]):c.stat}</div>`:''}
+    copy.innerHTML=`${c.stat?`<div class="stat anim" id="stat">${c.count?fmtBRL(c.count[0]):c.stat}</div>`:''}
       <div class="h anim">${c.h}</div>
       <div class="sub anim">${c.s||''}</div>`;
     requestAnimationFrame(()=>copy.classList.add('on'));
@@ -176,15 +212,15 @@ function render(i){
       (function step(now){const p=Math.min(1,(now-t0)/D),e=1-Math.pow(1-p,3);el.textContent=fmtBRL(a+(b-a)*e);if(p<1)requestAnimationFrame(step);})(t0);}
   },current<0?0:260);
   current=i;
-  canvas.dataset.phase=c.phase;
-  [...chapters.children].forEach((d,k)=>d.classList.toggle('on',k===PHASES.indexOf(c.phase)));
 }
 function tick(){
   const t=video.currentTime+parseFloat(offsetEl.value||0);
   let i=0; for(let k=0;k<CUES.length;k++) if(t>=CUES[k].t) i=k;
+  let j=0; for(let k=0;k<STAGES.length;k++) if(t>=STAGES[k].t) j=k;
+  if(j!==currentStage) renderStage(j);
   if(i!==current) render(i);
   if(video.duration) progress.style.width=(video.currentTime/video.duration*100)+'%';
-  cueEl.textContent=`${t.toFixed(1)}s · cue ${i+1}/${CUES.length}`;
+  cueEl.textContent=`${t.toFixed(1)}s · cue ${i+1}/${CUES.length} · ${STAGES[j].label}`;
   raf=requestAnimationFrame(tick);
 }
 tick();
