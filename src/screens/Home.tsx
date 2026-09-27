@@ -15,8 +15,9 @@ import { Screen } from "../components/Screen";
 import { IaFab } from "../components/IaFab";
 import { Squish } from "../components/Squish";
 import { AcademiaCard, GoalSlider, PixInvite } from "../components/Iai";
-import { BALANCE_CENTS, formatBRL, usePix } from "../state/PixContext";
+import { formatBRL, usePix } from "../state/PixContext";
 import { useTrilha } from "../state/TrilhaContext";
+import { TxnRow } from "./Extrato";
 import { markHome } from "../state/homeHistory";
 
 const K = "#1A1A1A";
@@ -100,6 +101,7 @@ function CardHead({ icon, title }: { icon: ReactNode; title: string }) {
 export function Home() {
   const navigate = useNavigate();
   const { balanceHidden, setBalanceHidden } = usePix();
+  const t = useTrilha();
   useEffect(markHome, []);
   const money = (cents: number) => (balanceHidden ? "R$ ••••" : `R$ ${formatBRL(cents)}`);
 
@@ -140,7 +142,7 @@ export function Home() {
             <Squish className="block w-full" scale={0.98}>
               <CardHead icon={<ItauLogo size={16} />} title="Conta corrente" />
               <div className="mt-[30px] text-[15px] text-[#444]">Saldo</div>
-              <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(BALANCE_CENTS)}</div>
+              <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(t.balanceCents)}</div>
             </Squish>
             <div className="mt-[14px] border-t border-[#CFCFCF]" />
             <Squish className="flex w-full items-center justify-between py-[14px]" scale={0.98}>
@@ -195,18 +197,13 @@ export function Home() {
           <div className="rounded-[18px] bg-white px-[22px] py-[20px]">
             <div className="flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-black">Minhas últimas transações</h2>
-              <Squish className="text-[14px] font-semibold text-itau-navy">Ver extrato</Squish>
+              <Squish onClick={() => navigate("/extrato", { state: { tab: true } })} className="text-[14px] font-semibold text-itau-navy">Ver extrato</Squish>
             </div>
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-center gap-3 border-b border-[#EEE] py-[14px] last:border-0">
-                <div className="h-9 w-9 rounded-full bg-[#F0F1F3]" />
-                <div className="flex-1">
-                  <div className="h-[10px] w-2/3 rounded bg-[#F0F1F3]" />
-                  <div className="mt-2 h-[8px] w-1/3 rounded bg-[#F4F4F4]" />
-                </div>
-              </div>
-            ))}
-            <div className="pt-1 text-center text-[14px] text-[#777]">Nenhuma transação recente</div>
+            <div className="mt-2">
+              {t.txns.slice(-3).reverse().map((x) => (
+                <TxnRow key={x.id} x={x} hidden={balanceHidden} />
+              ))}
+            </div>
           </div>
         </div>
       </div>

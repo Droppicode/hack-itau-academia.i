@@ -35,7 +35,8 @@ export function Vantagens() {
   const quizMax = unitQuiz(1).length * UNIT_POINTS_PER_RIGHT;
 
   const history = [
-    ...t.claimed.map((k) => ({ k, label: k.startsWith("w-licoes") ? "Missão: 2 lições na semana" : k.startsWith("w-guardar") ? "Missão: guardar no cofrinho" : "Missão do mês (105% CDI)", pts: k.startsWith("m-") ? 0 : 30 })),
+    ...t.claimed.map((k) => ({ k, label: k.startsWith("w-licoes") ? "Missão: 2 lições na semana" : "Missão: ir além em 1 lição", pts: 30 })),
+    ...t.awards.filter((w) => w.pts > 0).map((w) => ({ k: `m${w.month}`, label: `Missão do mês: ${brl(w.heldCents)} mantidos`, pts: w.pts })),
     ...(t.quizPoints > 0 ? [{ k: "quiz", label: "Desafio da Unidade 1", pts: t.quizPoints }] : []),
   ];
 
@@ -130,7 +131,7 @@ export function Vantagens() {
             {history.map((h) => (
               <div key={h.k} className="flex justify-between py-3 text-[14px]">
                 <span className="text-[#333]">{h.label}</span>
-                <span className="font-semibold text-[#00857A]">{h.pts ? `+${h.pts} pts` : "105% CDI"}</span>
+                <span className="font-semibold text-[#00857A]">+{h.pts} pts</span>
               </div>
             ))}
           </div>
@@ -141,9 +142,9 @@ export function Vantagens() {
         <div className="flex flex-col gap-3 text-[14px] leading-snug text-[#444]">
           <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Missões da semana: 30 Pontos Itaú cada, até 60 por semana.</div>
           <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 7+ acertos em 10 = 20 pts por acerto. Vale só o melhor resultado.</div>
-          <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: não dá pontos. O prêmio é o cofrinho do objetivo rendendo 105% do CDI no mês seguinte (simulado).</div>
+          <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: 1 pt a cada R$ 20 que ficam no cofrinho o mês inteiro (a partir de R$ 50, até 50 pts). Vale o menor saldo do mês, então depositar e tirar não rende pontos. O cofrinho rende 100% do CDI.</div>
           <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
-            Teto por pessoa: ~240 pts/mês nas missões ≈ R$ 4,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da academIA.I aparecem como passos só no protótipo.
+            Teto por pessoa: ~290 pts/mês nas missões (240 semanais + 50 do mês) ≈ R$ 5,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da academIA.I aparecem como passos só no protótipo.
           </div>
         </div>
       </BottomSheet>

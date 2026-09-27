@@ -1,17 +1,42 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Mic, SendHorizontal, Sparkles, X } from "lucide-react";
+import { ChevronRight, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Squish } from "../components/Squish";
 import { StatusBar } from "../components/StatusBar";
 import { useToast } from "../components/Toast";
 import { brl } from "../data/money";
-import { PLAYABLE } from "../data/trilha";
+import { fmtDay, MONTH_DAYS, PLAYABLE, POINT_BRL, SALARY_CENTS, SALARY_DAY, SALARY_FROM, type LessonId } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
-type Msg = { role: "user" | "ia"; text: string; offline?: boolean };
+type Msg = { role: "user" | "ia"; text: string; offline?: boolean; go?: { to: string; label: string } };
 
-const SUGGESTIONS = ["O que é CDI?", "Como começo a guardar?", "Me explica o holerite", "Qual minha próxima lição?", "Crédito x débito"];
+const DEST: Record<string, { to: string; label: string }> = {
+  home: { to: "/home", label: "Início" },
+  extrato: { to: "/extrato", label: "Extrato" },
+  cofrinho: { to: "/cofrinhos", label: "Cofrinho" },
+  missoes: { to: "/academia/missoes", label: "Missões" },
+  trilha: { to: "/academia/trilha", label: "Trilha" },
+  pontos: { to: "/pra-voce", label: "Pontos e Benefícios" },
+  "minhas-vantagens": { to: "/minhas-vantagens", label: "Minhas Vantagens" },
+  shop: { to: "/itau-shop", label: "Itaú Shop" },
+  pix: { to: "/pix", label: "Pix" },
+};
+
+const OPEN_WORDS = /\b(abr[ea]|abrir|vai pra|vai para|ir pra|ir para|me leva|mostra|quero ver)\b/i;
+const OPEN_KEYS: [RegExp, string][] = [
+  [/cofrinho|caixinha/i, "cofrinho"],
+  [/miss/i, "missoes"],
+  [/extrato/i, "extrato"],
+  [/trilha|li[cç][aã]o/i, "trilha"],
+  [/minhas vantagens|n[ií]vel/i, "minhas-vantagens"],
+  [/shop|loja/i, "shop"],
+  [/ponto/i, "pontos"],
+  [/pix/i, "pix"],
+  [/in[ií]cio|home/i, "home"],
+];
+
+const SUGGESTIONS = ["Quanto posso guardar esse mês?", "O que é CDI?", "Como ganho pontos no mês?", "Qual minha próxima lição?", "Abre o cofrinho"];
 
 const CANNED: { k: RegExp; a: string }[] = [
   { k: /cdi|render|rendimento|liquidez/i, a: "CDI é a taxa que os bancos usam pra emprestar entre si, e ela anda junto com a Selic. Quando um cofrinho rende 100% do CDI, ele acompanha essa taxa. Liquidez diária quer dizer que você resgata quando quiser." },
@@ -33,17 +58,37 @@ export function IaChat() {
 
   useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs, busy]);
 
-  const context = [
-    "Nome: Lucas (persona fictícia).",
-    t.goal ? `Objetivo: ${t.goal.name}, ${brl(t.goal.savedCents)} de ${brl(t.goal.targetCents)} (${Math.floor(t.goalPct)}%), aporte ${brl(t.goal.monthlyCents)}/mês.` : "Ainda não escolheu objetivo na academIA.I.",
-    `Lições feitas: ${t.completed.length}/${PLAYABLE.length}.`,
-    t.next ? `Próxima lição: ${t.next.title}.` : "Unidade 1 concluída.",
-    `Pontos Itaú: ${t.points}. Cofrinho a ${t.cdi105 ? "105%" : "100%"} do CDI (simulado).`,
-  ].join(" ");
+  const resolve = (dest: string): Msg["go"] => {
+    const lesson = dest.match(/^licao-(L\d+)$/)?.[1] as LessonId | undefined;
+    if (lesson) {
+      const l = PLAYABLE.find((x) => x.id === lesson);
+      return l && t.unlocked(l.id) ? { to: `/academia/licao/${l.id}`, label: `Lição: ${l.title}` } : undefined;
+    }
+    if (dest === "desafio-1") return t.unitDone(1) ? { to: "/academia/desafio/1", label: "Desafio da Unidade 1" } : undefined;
+    return DEST[dest];
+  };
 
-  const offline = (q: string) => {
-    if (/próxima|proxima|lição|licao|trilha/i.test(q)) return t.next ? `Sua próxima lição é "${t.next.title}". Leva uns 5 minutos, é só abrir a trilha da academIA.I.` : "Você fechou a Unidade 1! Se ainda não fez, o desafio do fim da unidade vale Pontos Itaú.";
-    return CANNED.find((c) => c.k.test(q))?.a ?? "Posso te ajudar com o vocabulário do dinheiro: saldo, fatura, holerite, FGTS, CDI, cofrinho… Me pergunta sobre algum desses.";
+  const context = [
+    `Hoje (simulado): ${fmtDay(t.day)}. Nome: Lucas Andrade Rocha (persona fictícia). Salário de ${brl(SALARY_CENTS)} cai todo dia ${SALARY_DAY} na conta Itaú (${SALARY_FROM}).`,
+    `Saldo em conta corrente: ${brl(t.balanceCents)}.`,
+    `Últimos lançamentos: ${t.txns.slice(-8).reverse().map((x) => `${fmtDay(x.day)} ${x.title} (${x.sub}) ${x.cents > 0 ? "+" : "-"}${brl(Math.abs(x.cents))}`).join("; ")}.`,
+    t.goal
+      ? `Objetivo: ${t.goal.name}. Cofrinho: ${brl(t.goal.savedCents)} de ${brl(t.goal.targetCents)} (${Math.floor(t.goalPct)}%), rendeu ${brl(t.goal.yieldCents)}, rende 100% do CDI. Plano: ${brl(t.goal.monthlyCents)}/mês.`
+      : "Ainda não escolheu objetivo nem criou cofrinho na academIA.I.",
+    `Trilha Unidade 1: ${t.completed.length}/${PLAYABLE.length} lições. ${t.next ? `Próxima liberada: ${t.next.id} "${t.next.title}".` : "Unidade 1 concluída."} Lições: ${PLAYABLE.map((l) => `${l.id} ${l.title}${t.done(l.id) ? " (feita)" : t.unlocked(l.id) ? " (liberada)" : " (bloqueada)"}`).join("; ")}.`,
+    `Desafio Unidade 1: ${t.unitDone(1) ? (t.unitBest[1] !== undefined ? `melhor ${t.unitBest[1]}/10` : "liberado, não feito") : "bloqueado"}.`,
+    `Missões: ${t.missions.map((m) => `${m.title} [${m.status}${m.kind === "mensal" ? `, ${brl(t.monthMinCents)} mantidos no mês, previsão +${t.monthPtsPreview} pts no fechamento ${fmtDay(t.month * MONTH_DAYS)}` : `, ${m.progress}/${m.goal}`}]`).join("; ")}.`,
+    `Pontos Itaú: ${t.points} (≈ ${brl(Math.round(t.points * POINT_BRL * 100))}). Minhas Vantagens nível ${t.mvLevel}, ${t.passosDone} passos.`,
+  ].join("\n");
+
+  const offline = (q: string): Pick<Msg, "text" | "go"> => {
+    if (OPEN_WORDS.test(q)) {
+      const hit = OPEN_KEYS.find(([k]) => k.test(q));
+      if (hit) return { text: `Abrindo ${DEST[hit[1]].label}.`, go: DEST[hit[1]] };
+    }
+    if (/saldo|quanto (eu )?tenho/i.test(q)) return { text: `Seu saldo em conta é ${brl(t.balanceCents)}${t.goal ? ` e o cofrinho ${t.goal.name} tem ${brl(t.goal.savedCents)}` : ""}.` };
+    if (/próxima|proxima|lição|licao|trilha/i.test(q)) return { text: t.next ? `Sua próxima lição é "${t.next.title}". Leva uns 5 minutos.` : "Você fechou a Unidade 1! Se ainda não fez, o desafio do fim da unidade vale Pontos Itaú.", go: t.next ? resolve(`licao-${t.next.id}`) : resolve("desafio-1") };
+    return { text: CANNED.find((c) => c.k.test(q))?.a ?? "Posso te ajudar com o vocabulário do dinheiro (saldo, fatura, holerite, FGTS, CDI, cofrinho) ou abrir uma tela pra você, tipo \"abre o cofrinho\"." };
   };
 
   const send = async (q: string) => {
@@ -61,12 +106,19 @@ export function IaChat() {
         body: JSON.stringify({ messages: next.map(({ role, text: tx }) => ({ role, text: tx })), context }),
       });
       const data = (await r.json()) as { text?: string };
-      reply = r.ok && data.text ? { role: "ia", text: data.text } : { role: "ia", text: offline(clean), offline: true };
+      if (r.ok && data.text) {
+        const tag = data.text.match(/\[\[abrir:([a-z0-9-]+)\]\]/i);
+        reply = { role: "ia", text: data.text.replace(/\[\[abrir:[^\]]*\]\]/gi, "").trim(), go: tag ? resolve(tag[1].toLowerCase()) : undefined };
+      } else reply = { role: "ia", ...offline(clean), offline: true };
     } catch {
-      reply = { role: "ia", text: offline(clean), offline: true };
+      reply = { role: "ia", ...offline(clean), offline: true };
     }
     setMsgs((m) => [...m, reply]);
     setBusy(false);
+    if (reply.go) {
+      const go = reply.go;
+      setTimeout(() => navigate(go.to, { state: { fromAcademia: true } }), 1400);
+    }
   };
 
   return (
@@ -100,6 +152,11 @@ export function IaChat() {
                 <div className={`max-w-[290px] whitespace-pre-wrap rounded-[18px] px-4 py-3 text-[15px] leading-snug ${m.role === "user" ? "rounded-br-[6px] bg-[#14215A] text-white" : "rounded-bl-[6px] bg-white text-[#333] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"}`}>
                   {m.text.split(/\*\*(.+?)\*\*/g).map((part, j) => (j % 2 ? <strong key={j}>{part}</strong> : part))}
                 </div>
+                {m.go && (
+                  <Squish onClick={() => navigate(m.go!.to, { state: { fromAcademia: true } })} className="mt-2 inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[6px] text-[13px] font-semibold text-white" scale={0.95}>
+                    Abrir {m.go.label} <ChevronRight size={14} />
+                  </Squish>
+                )}
                 {m.offline ? <div className="mt-1 text-[11px] text-[#999]">Resposta pronta (IA offline no protótipo)</div> : m.role === "ia" && <div className="mt-1 text-[11px] text-[#999]">IA.I · Gemini · pode errar, confira informações importantes</div>}
               </motion.div>
             ))}

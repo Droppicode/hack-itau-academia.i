@@ -8,6 +8,7 @@ import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
 import { useToast } from "../components/Toast";
 import { brl, monthsTo } from "../data/money";
+import { MONTHLY_PTS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
 const AMOUNTS = [1000, 2000, 5000, 10000];
@@ -25,12 +26,11 @@ export function Cofrinho() {
   const Icon = GOAL_ICON[def.id] ?? Target;
   const warn = fromAcademia && !t.cofrinhoWarned && !!g;
   const pct = t.goalPct;
-  const rateLabel = t.cdi105 ? "105% do CDI" : "100% do CDI";
   const left = g ? Math.max(g.targetCents - g.savedCents, 0) : 0;
   const months = g ? monthsTo(left, g.monthlyCents) : 0;
 
   const open = (k: "guardar" | "resgatar") => {
-    setAmount(k === "resgatar" ? Math.min(2000, g?.savedCents ?? 0) : 2000);
+    setAmount(Math.min(2000, k === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents));
     setSheet(k);
   };
   const confirm = () => {
@@ -81,7 +81,7 @@ export function Cofrinho() {
                   <div className="text-[18px] font-bold">{g.name}</div>
                   <div className="text-[13px] text-white/80">Objetivo da academIA.I</div>
                 </div>
-                <span className={`rounded-full px-2 py-[3px] text-[12px] font-semibold ${t.cdi105 ? "bg-white text-[#00857A]" : "bg-white/20"}`}>{rateLabel}</span>
+                <span className="rounded-full bg-white/20 px-2 py-[3px] text-[12px] font-semibold">100% do CDI</span>
               </div>
               <div className="mt-4 flex items-end justify-between">
                 <div>
@@ -134,19 +134,19 @@ export function Cofrinho() {
           </div>
         </Squish>
 
-        <div className={`mt-6 rounded-[18px] p-4 ${t.cdi105 ? "bg-[#00857A] text-white" : "bg-white"}`}>
-          <div className="flex items-center gap-2 text-[15px] font-semibold">
-            <Sparkles size={17} color={t.cdi105 ? "white" : "#FF6200"} /> {t.cdi105 ? "105% do CDI ativo este mês" : "Quer render 105% do CDI?"}
-          </div>
-          <p className={`mt-1 text-[13px] leading-snug ${t.cdi105 ? "text-white/90" : "text-[#555]"}`}>
-            {t.cdi105 ? "Prêmio da missão do mês da academIA.I." : "Cumpra a missão do mês da academIA.I (guardar R$ 20 + contas em dia) e o cofrinho do objetivo rende 105% do CDI no mês seguinte."} Condição simulada, a confirmar com o produto.
-          </p>
-          {!t.cdi105 && (
+        {g && (
+          <div className="mt-6 rounded-[18px] bg-white p-4">
+            <div className="flex items-center gap-2 text-[15px] font-semibold text-[#222]">
+              <Sparkles size={17} color="#FF6200" /> Missão do mês: guardar e deixar lá
+            </div>
+            <p className="mt-1 text-[13px] leading-snug text-[#555]">
+              1 Ponto Itaú a cada R$ 20 que ficam aqui o mês inteiro (a partir de R$ 50, até {MONTHLY_PTS.cap} pts). Vale o menor saldo do mês. Hoje: {brl(t.monthMinCents)} mantidos, <b className="text-[#00857A]">+{t.monthPtsPreview} pts</b> no fechamento.
+            </p>
             <Squish onClick={() => navigate("/academia/missoes", { state: { tab: true } })} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
               Ver missão do mês
             </Squish>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="mt-6 rounded-[18px] bg-white p-4">
           <h3 className="text-[15px] font-semibold text-[#222]">Como funciona</h3>
@@ -165,7 +165,7 @@ export function Cofrinho() {
           </p>
         </div>
 
-        <Squish onClick={() => (t.advanceMonth(), toast("+1 mês: aporte do mês e rendimento aplicados (simulado)"))} className="mt-4 w-full rounded-[14px] border border-dashed border-[#BBB] py-3 text-center text-[14px] font-semibold text-[#555]" scale={0.97}>
+        <Squish onClick={() => (t.advanceMonth(), toast("+1 mês: salário na conta e rendimento aplicados (simulado)"))} className="mt-4 w-full rounded-[14px] border border-dashed border-[#BBB] py-3 text-center text-[14px] font-semibold text-[#555]" scale={0.97}>
           Simular +1 mês
         </Squish>
       </div>
@@ -173,20 +173,20 @@ export function Cofrinho() {
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet === "guardar" ? "Quanto quer guardar?" : "Quanto quer resgatar?"}>
         <div className="grid grid-cols-4 gap-2">
           {AMOUNTS.map((a) => (
-            <Squish key={a} disabled={sheet === "resgatar" && a > (g?.savedCents ?? 0)} onClick={() => setAmount(a)} className={`rounded-[12px] py-3 text-center text-[15px] font-semibold disabled:opacity-35 ${amount === a ? "bg-itau-orange text-white" : "bg-[#F4F4F4] text-[#222]"}`} scale={0.94}>
+            <Squish key={a} disabled={a > (sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents)} onClick={() => setAmount(a)} className={`rounded-[12px] py-3 text-center text-[15px] font-semibold disabled:opacity-35 ${amount === a ? "bg-itau-orange text-white" : "bg-[#F4F4F4] text-[#222]"}`} scale={0.94}>
               {brl(a, false)}
             </Squish>
           ))}
         </div>
         <p className="mt-3 text-[13px] text-[#666]">
-          {sheet === "guardar" ? "O valor sai da sua conta Itaú. Se seu salário cai em outro banco, dá pra mandar um Pix pra cá antes." : "O valor volta na hora pra sua conta corrente."} (simulado)
+          {sheet === "guardar" ? `Sai da sua conta corrente. Saldo em conta: ${brl(t.balanceCents)}.` : "O valor volta na hora pra sua conta corrente."} (simulado)
         </p>
         {sheet === "resgatar" && (
           <Squish onClick={() => setAmount(g?.savedCents ?? 0)} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
             Resgatar tudo ({brl(g?.savedCents ?? 0)})
           </Squish>
         )}
-        <Squish onClick={confirm} disabled={amount <= 0 || (sheet === "resgatar" && amount > (g?.savedCents ?? 0))} className="mt-4 disabled:opacity-40 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
+        <Squish onClick={confirm} disabled={amount <= 0 || amount > (sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents)} className="mt-4 disabled:opacity-40 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
           {sheet === "guardar" ? `Guardar ${brl(amount)}` : `Resgatar ${brl(amount)}`}
         </Squish>
       </BottomSheet>

@@ -2,6 +2,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import {
   CDI_YEAR,
   LESSONS,
+  MONTH_DAYS,
+  monthlyPoints,
+  SALARY_CENTS,
+  SALARY_DAY,
+  SALARY_FROM,
   MISSIONS,
   MV_LEVELS,
   PASSO_CATS,
@@ -18,6 +23,10 @@ import {
 
 export type Goal = { id: GoalId; name: string; targetCents: number; monthlyCents: number; savedCents: number; yieldCents: number; history: number[] };
 
+export type TxnKind = "salario" | "cofrinho" | "resgate" | "pix" | "compra";
+export type Txn = { id: number; day: number; kind: TxnKind; title: string; sub: string; cents: number };
+export type MonthAward = { month: number; heldCents: number; pts: number };
+
 export type Persisted = {
   introSeen: boolean;
   completed: LessonId[];
@@ -28,13 +37,15 @@ export type Persisted = {
   week: number;
   month: number;
   weekLessons: number;
-  weekSavedCents: number;
+  weekDeep: number;
+  day: number;
+  txns: Txn[];
+  salaryMonth: number;
+  monthMinCents: number;
+  awards: MonthAward[];
   streak: number;
   lastActiveWeek: number;
   goal?: Goal;
-  monthSavedCents: number;
-  billsPaid: boolean;
-  cdi105: boolean;
   cofrinhoWarned: boolean;
   pixDone: boolean;
   hook: { pending: boolean; pushSeen: boolean; off: boolean };
@@ -50,18 +61,20 @@ const INITIAL: Persisted = {
   week: 1,
   month: 1,
   weekLessons: 0,
-  weekSavedCents: 0,
+  weekDeep: 0,
+  day: SALARY_DAY,
+  txns: [{ id: 1, day: SALARY_DAY, kind: "salario", title: "Salário", sub: SALARY_FROM, cents: SALARY_CENTS }],
+  salaryMonth: 1,
+  monthMinCents: 0,
+  awards: [],
   streak: 0,
   lastActiveWeek: 0,
-  monthSavedCents: 0,
-  billsPaid: false,
-  cdi105: false,
   cofrinhoWarned: false,
   pixDone: false,
   hook: { pending: false, pushSeen: false, off: false },
 };
 
-const KEY = "academiai-v5";
+const KEY = "academiai-v6";
 
 export type MissionStatus = "bloqueada" | "disponível" | "em andamento" | "concluída" | "resgatada";
 export type MissionView = MissionDef & { status: MissionStatus; progress: number; goal: number; key: string };
@@ -111,6 +124,9 @@ type Ctx = Persisted & {
   mvNextAt?: number;
   goalPct: number;
   rate: number;
+  balanceCents: number;
+  monthPtsPreview: number;
+  awardPoints: number;
   missions: MissionView[];
   completeLesson: (id: LessonId) => void;
   markDeep: (id: LessonId) => void;
@@ -118,10 +134,11 @@ type Ctx = Persisted & {
   claim: (m: MissionView) => void;
   setGoal: (g: Pick<Goal, "id" | "name" | "targetCents" | "monthlyCents">) => void;
   save: (cents: number) => void;
+  spend: (cents: number, where: string) => void;
   withdraw: (cents: number) => void;
   advanceWeek: () => void;
   advanceMonth: () => void;
-  registerPix: (own: boolean) => void;
+  registerPix: (own: boolean, cents: number, to: string) => void;
   reset: () => void;
 };
 
@@ -146,7 +163,10 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
     };
     const unitPassed = (u: UnitN) => (s.unitBest[u] ?? 0) >= UNIT_QUIZ_PASS;
 
-    const missionPoints = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0);
+    const awardPoints = s.awards.reduce((a, w) => a + w.pts, 0);
+    const missionPoints = s.claimed.reduce((a, k) => a + (MISSIONS.find((m) => m.id === k.split("@")[0])?.points ?? 0), 0) + awardPoints;
+    const balanceCents = s.txns.reduce((a, x) => a + x.cents, 0);
+    const monthPtsPreview = s.goal ? monthlyPoints(s.monthMinCents) : 0;
     const quizPoints = ([1, 2, 3, 4] as UnitN[]).reduce((a, u) => a + unitQuizPoints(u, s.unitBest[u]), 0);
     const points = missionPoints + quizPoints;
 
@@ -158,27 +178,27 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
       "g-100": saved >= 10000,
       "a-u1": unitDone(1),
       "a-desafio": unitPassed(1),
-      "a-missao": s.claimed.some((k) => k.startsWith("m-mes@")) || s.cdi105,
+      "a-missao": s.awards.some((w) => w.pts > 0),
     };
     const passos: Passo[] = BASE_PASSOS.map((p) => ({ ...p, done: !!flags[p.id] }));
     const passosDone = passos.filter((p) => p.done).length;
     const mvLevel = MV_LEVELS.filter((v) => passosDone >= v).length;
     const mvNextAt = MV_LEVELS[mvLevel];
     const goalPct = s.goal ? Math.min((s.goal.savedCents / s.goal.targetCents) * 100, 100) : 0;
-    const rate = (s.cdi105 ? 1.05 : 1) * CDI_YEAR;
+    const rate = CDI_YEAR;
 
     const missions: MissionView[] = MISSIONS.map((m) => {
       const key = m.kind === "semanal" ? `${m.id}@w${s.week}` : `${m.id}@m${s.month}`;
       let progress = 0;
       let goal = 1;
       if (m.id === "w-licoes") [progress, goal] = [Math.min(s.weekLessons, 2), 2];
-      else if (m.id === "w-guardar") progress = s.weekSavedCents > 0 ? 1 : 0;
-      else if (m.id === "m-mes") [progress, goal] = [(s.monthSavedCents >= 2000 ? 1 : 0) + (s.billsPaid ? 1 : 0), 2];
+      else if (m.id === "w-aprofundar") progress = s.weekDeep > 0 ? 1 : 0;
+      else if (m.id === "m-mes") [progress, goal] = [monthPtsPreview, m.points];
       const status: MissionStatus = !done(m.unlock)
         ? "bloqueada"
         : s.claimed.includes(key)
           ? "resgatada"
-          : progress >= goal
+          : progress >= goal && m.kind === "semanal"
             ? "concluída"
             : progress > 0
               ? "em andamento"
@@ -186,15 +206,45 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
       return { ...m, key, progress, goal, status };
     });
 
-    const addSaved = (p: Persisted, cents: number): Partial<Persisted> => ({
-      monthSavedCents: Math.max(p.monthSavedCents + cents, 0),
-      weekSavedCents: Math.max(p.weekSavedCents + cents, 0),
-      goal: p.goal ? { ...p.goal, savedCents: Math.max(p.goal.savedCents + cents, 0), history: [...p.goal.history, Math.max(p.goal.savedCents + cents, 0)] } : p.goal,
-    });
+    const addTxn = (p: Persisted, kind: TxnKind, title: string, sub: string, cents: number): Txn[] => [
+      ...p.txns,
+      { id: (p.txns[p.txns.length - 1]?.id ?? 0) + 1, day: p.day, kind, title, sub, cents },
+    ];
+    const setSaved = (p: Persisted, savedCents: number): Goal | undefined =>
+      p.goal ? { ...p.goal, savedCents, history: [...p.goal.history, savedCents] } : p.goal;
+
+    const advance = (p: Persisted, days: number): Persisted => {
+      const end = p.day + days;
+      let q = { ...p };
+      const paySalary = () => {
+        const d = (q.month - 1) * MONTH_DAYS + SALARY_DAY;
+        if (q.salaryMonth < q.month && end >= d)
+          q = { ...q, salaryMonth: q.month, txns: [...q.txns, { id: (q.txns[q.txns.length - 1]?.id ?? 0) + 1, day: d, kind: "salario", title: "Salário", sub: SALARY_FROM, cents: SALARY_CENTS }] };
+      };
+      while (end > q.month * MONTH_DAYS) {
+        const unlockedMonthly = q.completed.includes("L8");
+        const held = q.goal ? q.monthMinCents : 0;
+        const awards = unlockedMonthly && q.goal ? [...q.awards, { month: q.month, heldCents: held, pts: monthlyPoints(held) }] : q.awards;
+        const g = q.goal
+          ? (() => {
+              const y = Math.round(q.goal.savedCents * (Math.pow(1 + CDI_YEAR, 1 / 12) - 1));
+              return { ...q.goal, savedCents: q.goal.savedCents + y, yieldCents: q.goal.yieldCents + y, history: [...q.goal.history, q.goal.savedCents + y] };
+            })()
+          : q.goal;
+        q = { ...q, month: q.month + 1, awards, goal: g, monthMinCents: g?.savedCents ?? 0 };
+        paySalary();
+      }
+      paySalary();
+      const week = Math.floor((end - 1) / 7) + 1;
+      return { ...q, day: end, week, ...(week !== p.week ? { weekLessons: 0, weekDeep: 0 } : {}) };
+    };
 
     return {
       ...s,
       set,
+      balanceCents,
+      monthPtsPreview,
+      awardPoints,
       done,
       unlocked,
       unitDone,
@@ -220,7 +270,7 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
             lastActiveWeek: p.week,
           };
         }),
-      markDeep: (id) => set((p) => ({ deepSeen: p.deepSeen.includes(id) ? p.deepSeen : [...p.deepSeen, id] })),
+      markDeep: (id) => set((p) => ({ deepSeen: p.deepSeen.includes(id) ? p.deepSeen : [...p.deepSeen, id], weekDeep: p.weekDeep + 1 })),
       recordUnitQuiz: (u, correct) => {
         const before = unitQuizPoints(u, s.unitBest[u]);
         const best = Math.max(correct, s.unitBest[u] ?? 0);
@@ -235,25 +285,29 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
         set((p) => ({
           goal: p.goal ? { ...p.goal, ...g } : { ...g, savedCents: 0, yieldCents: 0, history: [0] },
         })),
-      save: (cents) => set((p) => addSaved(p, cents)),
-      withdraw: (cents) => set((p) => addSaved(p, -Math.min(cents, p.goal?.savedCents ?? 0))),
-      advanceWeek: () => set((p) => ({ week: p.week + 1, weekLessons: 0, weekSavedCents: 0 })),
-      advanceMonth: () =>
+      save: (cents) =>
         set((p) => {
-          const monthDone = p.claimed.includes(`m-mes@m${p.month}`) || (p.monthSavedCents >= 2000 && p.billsPaid);
-          const r = (p.cdi105 ? 1.05 : 1) * CDI_YEAR;
-          const goal = p.goal
-            ? (() => {
-                const deposit = Math.max(p.goal.monthlyCents - p.monthSavedCents, 0);
-                const base = p.goal.savedCents + deposit;
-                const y = Math.round(base * (Math.pow(1 + r, 1 / 12) - 1));
-                return { ...p.goal, savedCents: base + y, yieldCents: p.goal.yieldCents + y, history: [...p.goal.history, base + y] };
-              })()
-            : p.goal;
-          return { month: p.month + 1, week: p.week + 4, weekLessons: 0, weekSavedCents: 0, monthSavedCents: 0, billsPaid: false, cdi105: monthDone, goal };
+          const bal = p.txns.reduce((a, x) => a + x.cents, 0);
+          if (!p.goal || cents <= 0 || cents > bal) return {};
+          return { goal: setSaved(p, p.goal.savedCents + cents), txns: addTxn(p, "cofrinho", "Aplicação Cofrinho", p.goal.name, -cents) };
         }),
-      registerPix: (own) =>
-        set((p) => ({ pixDone: true, hook: own && !p.hook.off ? { ...p.hook, pending: true, pushSeen: false } : p.hook })),
+      withdraw: (cents) =>
+        set((p) => {
+          const amt = Math.min(cents, p.goal?.savedCents ?? 0);
+          if (!p.goal || amt <= 0) return {};
+          const left = p.goal.savedCents - amt;
+          return { goal: setSaved(p, left), monthMinCents: Math.min(p.monthMinCents, left), txns: addTxn(p, "resgate", "Resgate Cofrinho", p.goal.name, amt) };
+        }),
+      spend: (cents, where) =>
+        set((p) => (cents > p.txns.reduce((a, x) => a + x.cents, 0) ? {} : { txns: addTxn(p, "compra", "Compra no débito", where, -cents) })),
+      advanceWeek: () => set((p) => advance(p, 7)),
+      advanceMonth: () => set((p) => advance(p, MONTH_DAYS)),
+      registerPix: (own, cents, to) =>
+        set((p) => ({
+          pixDone: true,
+          txns: addTxn(p, "pix", "Pix enviado", to, -cents),
+          hook: own && !p.hook.off ? { ...p.hook, pending: true, pushSeen: false } : p.hook,
+        })),
       reset: () => setS(INITIAL),
     };
   }, [s, set]);

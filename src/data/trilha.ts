@@ -223,7 +223,7 @@ const U1: Omit<Lesson, "unit">[] = [
       { kind: "choice", q: "Pra reserva de emergência, o mais importante é…", options: ["Liquidez diária", "Prazo de 5 anos"], right: 0, why: "Emergência não espera." },
     ],
     deep: [
-      { title: "105% do CDI é melhor que 100%?", text: "Sim: rende 5% a mais do que a taxa de referência. Aqui na Academia, cumprir a missão do mês deixa o cofrinho em 105% do CDI (condição simulada no protótipo)." },
+      { title: "105% do CDI é melhor que 100%?", text: "Sim: rende 5% a mais do que a taxa de referência. Na hora de comparar, veja também a liquidez: um produto que rende mais mas trava o dinheiro por anos não serve pra emergência." },
       { title: "Inflação", text: "É o aumento geral dos preços, medido pelo IPCA. Se o rendimento for menor que a inflação, o dinheiro perde valor mesmo crescendo." },
       { title: "Imposto e proteção", text: "Produtos como CDB pagam IR sobre o rendimento, menor quanto mais tempo. Muitos têm garantia do FGC até o limite por CPF e instituição." },
     ],
@@ -300,17 +300,31 @@ export type MissionDef = { id: string; kind: MissionKind; title: string; text: s
 
 export const MISSIONS: MissionDef[] = [
   { id: "w-licoes", kind: "semanal", title: "2 lições na semana", text: "Faça 2 lições da trilha até domingo", points: 30, unlock: "L1" },
-  { id: "w-guardar", kind: "semanal", title: "Guardar no cofrinho", text: "Guarde qualquer valor no cofrinho do seu objetivo nesta semana", points: 30, unlock: "L1" },
+  { id: "w-aprofundar", kind: "semanal", title: "Ir além em 1 lição", text: "Leia o aprofundamento de qualquer lição nesta semana", points: 30, unlock: "L1" },
   {
     id: "m-mes",
     kind: "mensal",
-    title: "Guardar e deixar as contas em dia",
-    text: "Guarde pelo menos R$ 20 no cofrinho do objetivo e pague as contas do mês até o vencimento",
-    points: 0,
+    title: "Guardar e deixar lá o mês todo",
+    text: "No fechamento do mês, você ganha 1 Ponto Itaú a cada R$ 20 que ficaram no cofrinho o mês inteiro (a partir de R$ 50, até 50 pontos). Tirou no meio do mês, conta o menor saldo.",
+    points: 50,
     unlock: "L8",
-    reward: "Cofrinho do objetivo rendendo 105% do CDI no mês seguinte",
   },
 ];
+
+export const MONTHLY_PTS = { perCents: 2000, minCents: 5000, cap: 50 };
+export const monthlyPoints = (heldCents: number) =>
+  heldCents < MONTHLY_PTS.minCents ? 0 : Math.min(MONTHLY_PTS.cap, Math.floor(heldCents / MONTHLY_PTS.perCents));
+
+export const SALARY_CENTS = 132000;
+export const SALARY_FROM = "Empresa Exemplo Ltda";
+export const SALARY_DAY = 5;
+export const MONTH_DAYS = 30;
+export const simDate = (day: number) => new Date(2026, 9 + Math.floor((day - 1) / MONTH_DAYS), ((day - 1) % MONTH_DAYS) + 1);
+export const fmtDay = (day: number) => simDate(day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+export const fmtMonth = (month: number) => {
+  const s = simDate((month - 1) * MONTH_DAYS + 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 export type GoalDef = { id: string; label: string; cents: number; from: string; to: string; line: string };
 
@@ -329,7 +343,7 @@ export type GoalId = string;
 export const CATCHPHRASES = [
   "5 minutos por lição. Zero juridiquês.",
   "Aprende o vocabulário do dinheiro e vê seu objetivo enchendo.",
-  "Missão do mês cumprida = cofrinho rendendo 105% do CDI.",
+  "Guardou e deixou lá o mês todo? Vira Pontos Itaú.",
   "Desafio no fim da unidade vale Pontos Itaú.",
   "Holerite, FGTS, CDI: agora faz sentido.",
 ];

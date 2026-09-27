@@ -8,7 +8,7 @@ import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
 import { useToast } from "../../components/Toast";
 import { brl } from "../../data/money";
-import { LESSONS, POINT_BRL, UNIT_POINTS_PER_RIGHT, UNITS, unitQuiz, unitQuizPoints } from "../../data/trilha";
+import { fmtDay, fmtMonth, LESSONS, MONTH_DAYS, MONTHLY_PTS, POINT_BRL, UNIT_POINTS_PER_RIGHT, UNITS, unitQuiz, unitQuizPoints } from "../../data/trilha";
 import { deltaToHome } from "../../state/homeHistory";
 import { useTrilha, type MissionStatus, type MissionView } from "../../state/TrilhaContext";
 
@@ -34,7 +34,8 @@ export function Missoes() {
 
   const actionFor = (m: MissionView) => {
     if (m.id === "w-licoes") return { label: "Ir pra trilha", run: () => navigate("/academia/trilha", { replace: true, state: { tab: true } }) };
-    if (m.id === "w-guardar" || m.id === "m-mes") return { label: "Abrir cofrinho", run: () => navigate("/cofrinhos", { state: { fromAcademia: true } }) };
+    if (m.id === "w-aprofundar") return { label: "Ir pra trilha", run: () => navigate("/academia/trilha", { replace: true, state: { tab: true } }) };
+    if (m.id === "m-mes") return { label: "Abrir cofrinho", run: () => navigate("/cofrinhos", { state: { fromAcademia: true } }) };
     return undefined;
   };
 
@@ -54,22 +55,22 @@ export function Missoes() {
             <div className="text-[13px] leading-snug text-[#666]">{m.status === "bloqueada" ? `Libera ao concluir a lição ${m.unlock.slice(1)}: ${lesson?.title}` : m.text}</div>
             <div className="mt-2 flex items-center gap-2">
               <span className={`rounded-full px-2 py-[2px] text-[11px] font-semibold ${BADGE[m.status]}`}>{m.status}</span>
-              {m.points > 0 && <span className="text-[12px] font-semibold text-[#1F2A63]">+{m.points} Pontos Itaú</span>}
+              <span className="text-[12px] font-semibold text-[#1F2A63]">{m.kind === "mensal" ? `até ${m.points}` : `+${m.points}`} Pontos Itaú</span>
             </div>
             {m.reward && <div className="mt-1 text-[12px] font-semibold text-[#1B7F3B]">+ {m.reward} (simulado)</div>}
           </div>
         </div>
-        {m.status !== "bloqueada" && m.goal > 1 && <ProgressBar pct={(m.progress / m.goal) * 100} tone="green" className="mt-3" />}
+        {m.status !== "bloqueada" && m.kind === "semanal" && m.goal > 1 && <ProgressBar pct={(m.progress / m.goal) * 100} tone="green" className="mt-3" />}
         {m.status === "concluída" && (
           <Squish
             onClick={() => {
               t.claim(m);
-              toast(m.points ? `+${m.points} Pontos Itaú (simulado)` : "Cofrinho do objetivo vai render 105% do CDI no próximo mês (simulado)");
+              toast(`+${m.points} Pontos Itaú (simulado)`);
             }}
             className="mt-3 w-full rounded-[12px] bg-[#00857A] py-[10px] text-center text-[15px] font-bold text-white"
             scale={0.97}
           >
-            {m.points ? `Resgatar +${m.points} Pontos Itaú` : "Ativar 105% do CDI"}
+            {`Resgatar +${m.points} Pontos Itaú`}
           </Squish>
         )}
         {(m.status === "disponível" || m.status === "em andamento") && action && (
@@ -102,45 +103,38 @@ export function Missoes() {
     >
       <div className="px-4 pb-10 pt-4">
         <div className="flex items-center gap-2 text-[13px] text-[#666]">
-          <CalendarDays size={15} /> Semana {t.week} · Mês {t.month} · {t.points} Pontos Itaú
+          <CalendarDays size={15} /> Hoje {fmtDay(t.day)} · Semana {t.week} · {t.points} Pontos Itaú
         </div>
 
         {month && (
           <section className="mt-4">
             <h2 className="mb-2 text-[16px] font-bold text-black">Missão do mês</h2>
             <Card m={month} />
-            {month.status !== "bloqueada" && month.status !== "resgatada" && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Squish
-                  onClick={() => {
-                    t.save(2000);
-                    toast("R$ 20 no cofrinho do objetivo (simulado)");
-                  }}
-                  className={`rounded-[14px] p-3 text-left ${t.monthSavedCents >= 2000 ? "bg-[#E3F4EA]" : "bg-white"}`}
-                  scale={0.97}
-                >
-                  <div className="text-[12px] text-[#666]">Guardado no mês</div>
-                  <div className="text-[16px] font-bold text-[#222]">{brl(t.monthSavedCents)}</div>
-                  <div className="mt-1 text-[13px] font-semibold text-itau-orange">{t.monthSavedCents >= 2000 ? "✓ meta de R$ 20" : "+ Guardar R$ 20"}</div>
-                </Squish>
-                <Squish
-                  onClick={() => {
-                    t.set({ billsPaid: true });
-                    toast("Contas do mês pagas (simulado)");
-                  }}
-                  className={`rounded-[14px] p-3 text-left ${t.billsPaid ? "bg-[#E3F4EA]" : "bg-white"}`}
-                  scale={0.97}
-                >
-                  <div className="text-[12px] text-[#666]">Contas do mês</div>
-                  <div className="text-[16px] font-bold text-[#222]">{t.billsPaid ? "Em dia" : "Luz vence dia 10"}</div>
-                  <div className="mt-1 text-[13px] font-semibold text-itau-orange">{t.billsPaid ? "✓ pagas" : "Pagar agora"}</div>
-                </Squish>
+            {month.status !== "bloqueada" && (
+              <div className="mt-2 rounded-[14px] bg-white p-3 text-[13px] text-[#555]">
+                <div className="flex justify-between">
+                  <span>Ficou no cofrinho o mês todo</span>
+                  <b className="text-[#222]">{brl(t.goal ? t.monthMinCents : 0)}</b>
+                </div>
+                <div className="mt-1 flex justify-between">
+                  <span>Pontos no fechamento ({fmtDay(t.month * MONTH_DAYS)})</span>
+                  <b className="text-[#00857A]">+{t.monthPtsPreview} de {MONTHLY_PTS.cap}</b>
+                </div>
+                <p className="mt-2 text-[12px] leading-snug text-[#777]">
+                  Depositou agora? Conta cheio no próximo fechamento se ficar lá. Vale o menor saldo do mês, então depositar e tirar não gera pontos. Cofrinho rende 100% do CDI.
+                </p>
+                {t.awards.length > 0 && (
+                  <div className="mt-2 border-t border-[#EEE] pt-2">
+                    {t.awards.slice(-3).map((w) => (
+                      <div key={w.month} className="flex justify-between text-[12px]">
+                        <span>{fmtMonth(w.month)} · {brl(w.heldCents)} guardados</span>
+                        <span className="font-semibold text-[#00857A]">+{w.pts} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-            <div className={`mt-2 rounded-[14px] p-3 text-[13px] ${t.cdi105 ? "bg-[#00857A] text-white" : "bg-white text-[#555]"}`}>
-              Cofrinho do objetivo agora: <b>{t.cdi105 ? "105%" : "100%"} do CDI</b> (simulado · condição a confirmar com o produto).
-              {!t.cdi105 && " Cumpra a missão e vire o mês pra ativar. A missão do mês não dá pontos: o prêmio é o rendimento."}
-            </div>
           </section>
         )}
 
@@ -188,7 +182,7 @@ export function Missoes() {
           <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-[#222]">
             <PiggyBank size={16} color="#FF6200" /> Quanto vale o que você ganhou
           </div>
-          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o máximo é ~R$ 5 por mês por pessoa, dentro do custo de um programa de relacionamento.
+          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o teto das missões é ~290 pts por mês (~R$ 5,80) por pessoa.
         </div>
 
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="mt-6 flex w-full items-center gap-3 rounded-[16px] bg-itau-navy p-4 text-white" scale={0.98}>

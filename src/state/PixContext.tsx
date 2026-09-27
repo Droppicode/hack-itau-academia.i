@@ -20,7 +20,6 @@ export const LUCAS: Recipient = {
   own: true,
 };
 
-export const BALANCE_CENTS = 1;
 
 type PixState = {
   amountCents: number;

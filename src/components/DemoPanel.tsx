@@ -30,8 +30,8 @@ export function DemoPanel() {
     {
       title: "Tempo",
       items: [
-        { l: "Passar 1 semana", run: () => (t.advanceWeek(), toast("+1 semana: missões semanais reiniciadas")) },
-        { l: "Passar 1 mês", run: () => (t.advanceMonth(), toast("+1 mês: aporte e rendimento aplicados")) },
+        { l: "Passar 1 semana", run: () => (t.advanceWeek(), toast("+7 dias")) },
+        { l: "Passar 1 mês", run: () => (t.advanceMonth(), toast("+30 dias: salário na conta, rendimento e pontos do mês")) },
       ],
     },
     {
@@ -47,9 +47,11 @@ export function DemoPanel() {
     {
       title: "Dinheiro (simulado)",
       items: [
-        { l: "Guardar R$ 50 no cofrinho", run: () => (ensureGoal(), t.save(5000), toast("R$ 50 guardados")) },
-        { l: "Pagar contas do mês", run: () => (t.set({ billsPaid: true }), toast("Contas do mês em dia")), off: t.billsPaid },
-        { l: "Pix pra própria conta (convite na Home)", run: () => (t.registerPix(true), navigate("/home")) },
+        { l: "Guardar R$ 50 no cofrinho", run: () => (ensureGoal(), t.save(5000), toast("R$ 50 da conta pro cofrinho")), off: t.balanceCents < 5000 },
+        { l: "Resgatar R$ 50 do cofrinho", run: () => (t.withdraw(5000), toast("R$ 50 de volta na conta")), off: (t.goal?.savedCents ?? 0) < 5000 },
+        { l: "Compra no débito (R$ 38,90)", run: () => (t.spend(3890, "Mercado Exemplo"), toast("Compra no débito no extrato")), off: t.balanceCents < 3890 },
+        { l: "Pix de R$ 200 pra outra conta sua", run: () => (t.registerPix(true, 20000, "Lucas Andrade Rocha"), navigate("/home")), off: t.balanceCents < 20000 },
+        { l: "Ver extrato", run: () => navigate("/extrato", { state: { tab: true } }) },
       ],
     },
     {

@@ -163,7 +163,7 @@ export function GoalSlider() {
 const CHANNELS = [
   { Icon: Bell, name: "Push", tag: "EXISTE", body: "Pix feito ✓ Que tal 5 min pra ver seu objetivo enchendo? Conheça a academIA.I." },
   { Icon: MessageCircle, name: "WhatsApp", tag: "VERIFICAR opt-in", body: "Oi, Lucas! Aqui é o Itaú. Vimos que você mandou um Pix pra sua outra conta. Conheça a academIA.I: lições de 5 min, um cofrinho pro seu objetivo e desafios que valem Pontos Itaú. Bora?" },
-  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu próximo objetivo começa com 5 minutos.\n\nA academIA.I é uma trilha de educação financeira dentro do app: lições curtas sobre o dinheiro do dia a dia, um cofrinho pro seu objetivo e desafios no fim de cada unidade que valem Pontos Itaú. Cumpra a missão do mês e o cofrinho do objetivo rende 105% do CDI (condição simulada no protótipo)." },
+  { Icon: Mail, name: "E-mail", tag: "VERIFICAR opt-in", body: "Assunto: Seu próximo objetivo começa com 5 minutos.\n\nA academIA.I é uma trilha de educação financeira dentro do app: lições curtas sobre o dinheiro do dia a dia, um cofrinho pro seu objetivo e desafios no fim de cada unidade que valem Pontos Itaú. Na missão do mês, o que fica guardado no cofrinho o mês inteiro vira Pontos Itaú (simulado no protótipo)." },
 ];
 
 export function PixInvite() {

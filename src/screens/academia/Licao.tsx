@@ -91,7 +91,7 @@ export function Licao() {
               {unlocks.map((m) => (
                 <div key={m.id} className="mt-1 flex justify-between text-[15px] font-semibold">
                   <span>{m.title}</span>
-                  <span className="text-[#EC7000]">{m.points ? `+${m.points} pts` : "105% CDI"}</span>
+                  <span className="text-[#EC7000]">{m.kind === "mensal" ? `até ${m.points} pts` : `+${m.points} pts`}</span>
                 </div>
               ))}
             </div>

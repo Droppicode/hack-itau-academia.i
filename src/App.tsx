@@ -25,6 +25,7 @@ import { MinhasVantagens } from "./screens/MinhasVantagens";
 import { ItauShop } from "./screens/ItauShop";
 import { Desafio } from "./screens/academia/Desafio";
 import { IaChat } from "./screens/IaChat";
+import { Extrato } from "./screens/Extrato";
 import { DemoPanel } from "./components/DemoPanel";
 
 type Dir = "push" | "pop" | "fade";
@@ -57,7 +58,7 @@ function AnimatedRoutes() {
         <Routes location={location}>
           <Route path="/" element={<PreLogin />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/extrato" element={<TabPlaceholder path="/extrato" />} />
+          <Route path="/extrato" element={<Extrato />} />
           <Route path="/pagamentos" element={<TabPlaceholder path="/pagamentos" />} />
           <Route path="/pra-voce" element={<Vantagens />} />
           <Route path="/academia" element={<Navigate to="/academia/trilha" replace />} />

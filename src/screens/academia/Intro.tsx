@@ -13,7 +13,7 @@ const PAGES = [
   { Icon: Target, title: "Tudo começa com um objetivo", text: "Você escolhe o que quer conquistar, a gente cria um cofrinho pra ele e você vê a barra enchendo na tela inicial." },
   { Icon: BookOpen, title: "Educação financeira sem juridiquês", text: "Lições de 5 minutos pra dominar o vocabulário do dinheiro: conta, Pix, fatura, holerite, benefícios, cofrinho e mais." },
   { Icon: MapIcon, title: "Uma trilha, um passo por vez", text: "Cada lição libera a próxima. Quer ir além? Tem leitura de aprofundamento. No fim da unidade, um desafio opcional vale Pontos Itaú." },
-  { Icon: Trophy, title: "Missões que ajudam o objetivo", text: "Missões da semana valem Pontos Itaú pra usar no Itaú Shop. A missão do mês faz o cofrinho do objetivo render 105% do CDI." },
+  { Icon: Trophy, title: "Missões que ajudam o objetivo", text: "Missões da semana valem Pontos Itaú pra usar no Itaú Shop. Na missão do mês, o que fica guardado no cofrinho o mês inteiro também vira pontos." },
   { Icon: HeartHandshake, title: "Sem pressão", text: "Parou uma semana? Tudo bem. Você nunca perde pontos, e o dinheiro guardado continua seu." },
 ];
 

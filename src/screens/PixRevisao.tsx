@@ -63,7 +63,7 @@ export function PixRevisao() {
             label="Confirmar transferência"
             icon={<ChevronRight size={24} strokeWidth={1.6} />}
             onClick={() => {
-              registerPix(recipient.own);
+              registerPix(recipient.own, amountCents, recipient.name);
               navigate("/pix/sucesso");
             }}
           />
