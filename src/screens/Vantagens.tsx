@@ -10,7 +10,7 @@ import { brl } from "../data/money";
 import { ExpiryNote, StreakChip } from "../components/Streak";
 import { motion } from "framer-motion";
 import { Odometer } from "../components/fx";
-import { fmtDay, fmtMult, POINT_BRL, UNIT_POINTS_PER_RIGHT } from "../data/trilha";
+import { fmtDay, fmtMult, POINT_BRL, QUARTER_CAP_PTS, UNIT_POINTS_PER_RIGHT } from "../data/trilha";
 import { markHome } from "../state/homeHistory";
 import { useTrilha } from "../state/TrilhaContext";
 import { OrangeHeader } from "./Home";
@@ -164,7 +164,7 @@ export function Vantagens() {
           <div className="flex gap-3"><Gift size={18} color="#8A4B00" className="shrink-0" /> Pontos de missões e da AcademIA.I valem 6 meses e vencem sempre no dia 25 do mês.</div>
           <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: 1 pt a cada R$ 20 que ficam no cofrinho o mês inteiro (a partir de R$ 50, até 50 pts). Vale o menor saldo do mês, então depositar e tirar não rende pontos. O cofrinho rende 100% do CDI.</div>
           <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
-            Teto por pessoa: ~290 pts/mês nas missões (240 semanais + 50 do mês) ≈ R$ 5,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da AcademIA.I aparecem como passos só no protótipo.
+            Teto por pessoa: {QUARTER_CAP_PTS} pts a cada 3 meses, somando missões, desafios e multiplicador ≈ {brl(Math.round(QUARTER_CAP_PTS * POINT_BRL * 100))} de desconto na fatura. Passou do teto, a atividade continua valendo, mas não gera pontos até o próximo trimestre. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da AcademIA.I aparecem como passos só no protótipo.
           </div>
         </div>
       </BottomSheet>

@@ -23,6 +23,8 @@ import {
   type LessonId,
   type MissionDef,
   type PassoCat,
+  quarterOf,
+  QUARTER_CAP_PTS,
   type UnitDef,
   type UnitId,
 } from "../data/trilha";
@@ -257,8 +259,11 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
     const earn = (p: Persisted, day: number, base: number, label: string, source: PointSource): PointEntry[] => {
       if (base <= 0) return p.pointsLog;
       const mult = multiplierFor(streakOf(p.txWeeks, Math.floor((day - 1) / 7) + 1));
+      const used = p.pointsLog.filter((e) => quarterOf(e.day) === quarterOf(day)).reduce((a, e) => a + e.pts, 0);
+      const pts = Math.min(Math.round(base * mult), QUARTER_CAP_PTS - used);
+      if (pts <= 0) return p.pointsLog;
       const id = (p.pointsLog[p.pointsLog.length - 1]?.id ?? 0) + 1;
-      return [...p.pointsLog, { id, day, label, source, base, mult, pts: Math.round(base * mult), expiresDay: expiryDayFor(day) }];
+      return [...p.pointsLog, { id, day, label, source, base, mult, pts, expiresDay: expiryDayFor(day) }];
     };
     const setSaved = (p: Persisted, savedCents: number): Goal | undefined =>
       p.goal ? { ...p.goal, savedCents, history: [...p.goal.history, savedCents] } : p.goal;
