@@ -139,7 +139,7 @@ export function Home() {
             <GoalSlider />
           </div>
           <div className="-mt-[12px] rounded-[18px] bg-white px-[22px] pb-[12px] pt-[22px]">
-            <Squish className="block w-full" scale={0.98}>
+            <Squish onClick={() => navigate("/extrato")} className="block w-full" scale={0.98}>
               <CardHead icon={<ItauLogo size={16} />} title="Conta corrente" />
               <div className="mt-[30px] text-[15px] text-[#444]">Saldo</div>
               <div className="text-[22px] font-semibold text-[#3A3A3A]">{money(t.balanceCents)}</div>
@@ -197,7 +197,7 @@ export function Home() {
           <div className="rounded-[18px] bg-white px-[22px] py-[20px]">
             <div className="flex items-center justify-between">
               <h2 className="text-[17px] font-bold text-black">Minhas últimas transações</h2>
-              <Squish onClick={() => navigate("/extrato", { state: { tab: true } })} className="text-[14px] font-semibold text-itau-navy">Ver extrato</Squish>
+              <Squish onClick={() => navigate("/extrato")} className="text-[14px] font-semibold text-itau-navy">Ver extrato</Squish>
             </div>
             <div className="mt-2">
               {t.txns.slice(-3).reverse().map((x) => (

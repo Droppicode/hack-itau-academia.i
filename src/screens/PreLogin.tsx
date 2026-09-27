@@ -45,11 +45,11 @@ export function PreLogin() {
           />
           <Tile className="h-[164px]" icon={<TransferIcon size={26} color={O} />} label="Pix e transferir" onClick={() => navigate("/pix")} />
           <Tile className="h-[164px]" icon={<BarcodeIcon size={26} color={O} />} label="Pagar" />
-          <Tile className="h-[164px]" icon={<ExtratoIcon size={26} color={O} />} label="Extrato" />
+          <Tile className="h-[164px]" icon={<ExtratoIcon size={26} color={O} />} label="Extrato" onClick={() => navigate("/extrato")} />
           <Tile className="h-[164px]" icon={<VirtualCardIcon size={26} color={O} />} label="Cartão virtual" />
         </div>
         <div className="mt-[11px] grid grid-cols-3 gap-[7px]">
-          <Tile className="h-[112px] !p-[10px]" icon={<PixIcon size={20} color={O} />} label="Área Pix" />
+          <Tile className="h-[112px] !p-[10px]" icon={<PixIcon size={20} color={O} />} label="Área Pix" onClick={() => navigate("/pix")} />
           <Tile className="h-[112px] !p-[10px]" icon={<ITokenIcon size={20} color={O} />} label="iToken" />
           <Tile className="h-[112px] !p-[10px]" icon={<CircleHelp size={20} color={O} strokeWidth={1.8} />} label="Ajuda" />
         </div>
@@ -58,7 +58,7 @@ export function PreLogin() {
         <div className="grid grid-cols-2 gap-[11px]">
           <Tile className="h-[104px]" icon={<Smartphone size={22} color={O} strokeWidth={1.8} />} label="Recarga de celular" />
           <Tile className="h-[104px]" icon={<ShieldCheck size={22} color={O} strokeWidth={1.8} />} label="Seguros" />
-          <Tile className="h-[104px]" icon={<TrendingUp size={22} color={O} strokeWidth={1.8} />} label="Investimentos" />
+          <Tile className="h-[104px]" icon={<TrendingUp size={22} color={O} strokeWidth={1.8} />} label="Investimentos" onClick={() => navigate("/cofrinhos")} />
           <Tile className="h-[104px]" icon={<PiggyBank size={22} color={O} strokeWidth={1.8} />} label="Empréstimos" />
         </div>
 
