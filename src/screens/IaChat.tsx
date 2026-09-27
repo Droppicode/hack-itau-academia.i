@@ -57,7 +57,9 @@ export function IaChat() {
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
 
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs, busy]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth" });
+  }, [msgs, busy]);
 
   const resolve = (dest: string): Msg["go"] => {
     const lesson = dest.match(/^licao-(.+)$/)?.[1];
