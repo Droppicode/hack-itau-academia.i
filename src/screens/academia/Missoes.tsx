@@ -10,7 +10,7 @@ import { useToast } from "../../components/Toast";
 import { brl } from "../../data/money";
 import { ExpiryNote, StreakChip } from "../../components/Streak";
 import { fmtDay, fmtMonth, fmtMult, MONTH_DAYS, MONTHLY_PTS, POINT_BRL, UNIT_POINTS_PER_RIGHT, unitDef, unitQuiz, unitQuizPoints, UNITS } from "../../data/trilha";
-import { deltaToHome } from "../../state/homeHistory";
+import { deltaToHome, deltaToIa } from "../../state/homeHistory";
 import { useTrilha, type MissionStatus, type MissionView } from "../../state/TrilhaContext";
 
 const BADGE: Record<MissionStatus, string> = {
@@ -28,7 +28,7 @@ export function Missoes() {
   const [demo, setDemo] = useState(false);
 
   const back = () => {
-    const d = deltaToHome();
+    const d = deltaToIa() ?? deltaToHome();
     if (d !== undefined) navigate(d);
     else navigate("/home", { replace: true, state: { tab: true } });
   };

@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { goBack } from "../state/goBack";
+import { clearIa, markIa } from "../state/homeHistory";
 import { ChevronRight, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -49,13 +50,30 @@ const CANNED: { k: RegExp; a: string }[] = [
   { k: /fgts|13|férias|ferias/i, a: "O 13º é um salário extra no fim do ano, férias vêm com 1/3 a mais e o FGTS é um depósito mensal da empresa numa conta sua na Caixa. Ótimos pra adiantar um objetivo." },
 ];
 
+const CHAT_KEY = "iai-chat-msgs";
+
+function loadMsgs(): Msg[] {
+  try {
+    const raw = sessionStorage.getItem(CHAT_KEY);
+    return raw ? (JSON.parse(raw) as Msg[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function IaChat() {
   const navigate = useNavigate();
   const t = useTrilha();
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [msgs, setMsgs] = useState<Msg[]>(loadMsgs);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const end = useRef<HTMLDivElement>(null);
+
+  useEffect(markIa, []);
+
+  useEffect(() => {
+    sessionStorage.setItem(CHAT_KEY, JSON.stringify(msgs));
+  }, [msgs]);
 
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
@@ -129,7 +147,7 @@ export function IaChat() {
         <div className="h-3 md:h-5" />
       </div>
       <div className="flex h-[52px] shrink-0 items-center justify-end px-3">
-        <Squish aria-label="Fechar" onClick={() => goBack(navigate)} className="flex h-11 w-11 items-center justify-center" scale={0.88}>
+        <Squish aria-label="Fechar" onClick={() => (clearIa(), goBack(navigate))} className="flex h-11 w-11 items-center justify-center" scale={0.88}>
           <X size={28} strokeWidth={1.6} color="#222" />
         </Squish>
       </div>

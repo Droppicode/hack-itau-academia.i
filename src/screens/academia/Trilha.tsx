@@ -11,7 +11,7 @@ import { Squish } from "../../components/Squish";
 import { ExpiryNote, StreakChip } from "../../components/Streak";
 import { fmtMult, lessonsOf, UNIT_POINTS_PER_RIGHT, unitDef, unitPass, unitQuiz, type Lesson, type UnitId } from "../../data/trilha";
 import { brl } from "../../data/money";
-import { deltaToHome } from "../../state/homeHistory";
+import { deltaToHome, deltaToIa } from "../../state/homeHistory";
 import { useTrilha } from "../../state/TrilhaContext";
 import { PillButton } from "./Exercise";
 
@@ -102,7 +102,7 @@ export function Trilha() {
   const challengeState = (u: UnitId): NodeState => (t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
 
   const back = () => {
-    const d = deltaToHome();
+    const d = deltaToIa() ?? deltaToHome();
     if (d !== undefined) navigate(d);
     else navigate("/home", { replace: true, state: { tab: true } });
   };
