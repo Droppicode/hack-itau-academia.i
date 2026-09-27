@@ -157,9 +157,9 @@ export function Missoes() {
       );
     }
     window.setTimeout(() => {
-      t.claim(m);
+      const gained = t.claim(m);
       setClaiming(null);
-      toast(`+${Math.round(m.points * t.multiplier)} Pontos Itaú (simulado)`);
+      toast(gained > 0 ? `+${gained} Pontos Itaú (simulado)` : `Teto de ${QUARTER_CAP_PTS} pts do trimestre atingido (simulado)`);
     }, 750);
     window.setTimeout(() => setFlyers([]), 1300);
   };

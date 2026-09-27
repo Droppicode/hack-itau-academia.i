@@ -159,7 +159,7 @@ type Ctx = Persisted & {
   markDeep: (id: LessonId) => void;
   recordUnitQuiz: (u: UnitId, correct: number) => number;
   setTrail: (t: Trail) => void;
-  claim: (m: MissionView) => void;
+  claim: (m: MissionView) => number;
   setGoal: (g: Pick<Goal, "id" | "name" | "targetCents" | "monthlyCents">) => void;
   save: (cents: number) => void;
   spend: (cents: number, where: string, method?: "debito" | "credito") => void;
@@ -256,12 +256,16 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
       { id: (p.txns[p.txns.length - 1]?.id ?? 0) + 1, day: p.day, kind, title, sub, cents, ...(streak ? { streak } : {}) },
     ];
     const markWeek = (p: Persisted) => (p.txWeeks.includes(p.week) ? p.txWeeks : [...p.txWeeks, p.week]);
-    const earn = (p: Persisted, day: number, base: number, label: string, source: PointSource): PointEntry[] => {
-      if (base <= 0) return p.pointsLog;
-      const mult = multiplierFor(streakOf(p.txWeeks, Math.floor((day - 1) / 7) + 1));
+    const multAt = (p: Persisted, day: number) => multiplierFor(streakOf(p.txWeeks, Math.floor((day - 1) / 7) + 1));
+    const awarded = (p: Persisted, day: number, base: number) => {
+      if (base <= 0) return 0;
       const used = p.pointsLog.filter((e) => quarterOf(e.day) === quarterOf(day)).reduce((a, e) => a + e.pts, 0);
-      const pts = Math.min(Math.round(base * mult), QUARTER_CAP_PTS - used);
+      return Math.max(0, Math.min(Math.round(base * multAt(p, day)), QUARTER_CAP_PTS - used));
+    };
+    const earn = (p: Persisted, day: number, base: number, label: string, source: PointSource): PointEntry[] => {
+      const pts = awarded(p, day, base);
       if (pts <= 0) return p.pointsLog;
+      const mult = multAt(p, day);
       const id = (p.pointsLog[p.pointsLog.length - 1]?.id ?? 0) + 1;
       return [...p.pointsLog, { id, day, label, source, base, mult, pts, expiresDay: expiryDayFor(day) }];
     };
@@ -339,10 +343,14 @@ export function TrilhaProvider({ children }: { children: ReactNode }) {
           unitDeepSeen: p.unitDeepSeen.includes(u) ? p.unitDeepSeen : [...p.unitDeepSeen, u],
           pointsLog: earn(p, p.day, base, `Desafio: ${unitDef(u)?.name ?? u}`, "desafio"),
         }));
-        return Math.round(base * multiplier);
+        return awarded(s, s.day, base);
       },
-      claim: (m) =>
-        set((p) => (p.claimed.includes(m.key) ? {} : { claimed: [...p.claimed, m.key], pointsLog: earn(p, p.day, m.points, `Missão: ${m.title}`, "missao") })),
+      claim: (m) => {
+        if (s.claimed.includes(m.key)) return 0;
+        const gained = awarded(s, s.day, m.points);
+        set((p) => (p.claimed.includes(m.key) ? {} : { claimed: [...p.claimed, m.key], pointsLog: earn(p, p.day, m.points, `Missão: ${m.title}`, "missao") }));
+        return gained;
+      },
       setTrail: (t) =>
         set((p) => ({
           trail: t,
