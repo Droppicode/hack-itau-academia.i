@@ -9,7 +9,7 @@ import { brl } from "../data/money";
 import { fmtDay, MONTH_DAYS, PLAYABLE, POINT_BRL, SALARY_CENTS, SALARY_DAY, SALARY_FROM, type LessonId } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
-type Msg = { role: "user" | "ia"; text: string; offline?: boolean; go?: { to: string; label: string } };
+type Msg = { role: "user" | "ia"; text: string; offline?: boolean; note?: string; go?: { to: string; label: string } };
 
 const DEST: Record<string, { to: string; label: string }> = {
   home: { to: "/home", label: "Início" },
@@ -105,11 +105,17 @@ export function IaChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next.map(({ role, text: tx }) => ({ role, text: tx })), context }),
       });
-      const data = (await r.json()) as { text?: string };
+      const data = (await r.json()) as { text?: string; retryAfter?: number };
       if (r.ok && data.text) {
         const tag = data.text.match(/\[\[abrir:([a-z0-9-]+)\]\]/i);
         reply = { role: "ia", text: data.text.replace(/\[\[abrir:[^\]]*\]\]/gi, "").trim(), go: tag ? resolve(tag[1].toLowerCase()) : undefined };
-      } else reply = { role: "ia", ...offline(clean), offline: true };
+      } else
+        reply = {
+          role: "ia",
+          ...offline(clean),
+          offline: true,
+          note: r.status === 429 ? `IA.I com muita procura agora: resposta pronta. Tente de novo em ${data.retryAfter ?? 30}s.` : undefined,
+        };
     } catch {
       reply = { role: "ia", ...offline(clean), offline: true };
     }
@@ -157,7 +163,7 @@ export function IaChat() {
                     Abrir {m.go.label} <ChevronRight size={14} />
                   </Squish>
                 )}
-                {m.offline ? <div className="mt-1 text-[11px] text-[#999]">Resposta pronta (IA offline no protótipo)</div> : m.role === "ia" && <div className="mt-1 text-[11px] text-[#999]">IA.I · Gemini · pode errar, confira informações importantes</div>}
+                {m.offline ? <div className="mt-1 text-[11px] text-[#999]">{m.note ?? "Resposta pronta (IA offline no protótipo)"}</div> : m.role === "ia" && <div className="mt-1 text-[11px] text-[#999]">IA.I · Gemini · pode errar, confira informações importantes</div>}
               </motion.div>
             ))}
           </AnimatePresence>

@@ -11,7 +11,7 @@ function localApi(env: Record<string, string>): Plugin {
       req.on("end", async () => {
         let out;
         try {
-          out = req.method === "POST" ? await chat(JSON.parse(raw || "{}") as ChatBody, env.GEMINI_API_KEY, env.GEMINI_MODEL || undefined) : { status: 405, json: { error: "method_not_allowed" } };
+          out = req.method === "POST" ? await chat(JSON.parse(raw || "{}") as ChatBody, env.GEMINI_API_KEY, String(req.headers["x-forwarded-for"] ?? req.socket.remoteAddress ?? "local")) : { status: 405, json: { error: "method_not_allowed" } };
         } catch {
           out = { status: 500, json: { error: "internal" } };
         }
