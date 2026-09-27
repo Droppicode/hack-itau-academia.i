@@ -32,7 +32,8 @@
   [data-phase="close"] .glow{background:var(--orange);transform:translate(30%,30%);opacity:.25}
 
   /* layout: phone left, text right */
-  .grid{position:absolute;inset:0;display:grid;grid-template-columns:44% 56%;align-items:center;padding:0 5%}
+  .grid{position:absolute;inset:0;display:grid;grid-template-columns:44% 56%;grid-template-rows:100%;align-items:center;padding:0 5%}
+  .grid>*{min-height:0}
 
   .phone{position:relative;justify-self:center;height:86%;aspect-ratio:720/1558;
          background:#111;border-radius:6.5% / 3%;padding:1.6%;
