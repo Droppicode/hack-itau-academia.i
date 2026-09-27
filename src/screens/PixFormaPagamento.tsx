@@ -4,13 +4,11 @@ import { ItauLogo, OpenFinanceIcon } from "../components/Icons";
 import { ListRow } from "../components/ListRow";
 import { Screen } from "../components/Screen";
 import { HeaderIcon, ScreenHeader } from "../components/ScreenHeader";
-import { useToast } from "../components/Toast";
 import { formatBRL, usePix } from "../state/PixContext";
 import { useTrilha } from "../state/TrilhaContext";
 
 export function PixFormaPagamento() {
   const navigate = useNavigate();
-  const toast = useToast();
   const { amountCents, balanceHidden, setBalanceHidden } = usePix();
   const { balanceCents } = useTrilha();
 
@@ -53,7 +51,6 @@ export function PixFormaPagamento() {
             }
             title="Pagar com outro banco"
             subtitle="Via Open Finance"
-            onClick={() => toast("Open Finance indisponível no protótipo")}
           />
         </div>
       </div>

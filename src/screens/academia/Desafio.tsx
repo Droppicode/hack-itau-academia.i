@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
-import { POINT_BRL, UNIT_DEEP, UNIT_POINTS_PER_RIGHT, UNIT_QUIZ_PASS, UNITS, unitQuiz, unitQuizPoints, type UnitN } from "../../data/trilha";
+import { fmtMult, POINT_BRL, UNIT_POINTS_PER_RIGHT, unitDef, unitPass, unitQuiz, unitQuizPoints } from "../../data/trilha";
 import { brl } from "../../data/money";
 import { useTrilha } from "../../state/TrilhaContext";
 import { DeepCards } from "./Aprofundar";
@@ -13,18 +13,19 @@ import { Medal } from "./Licao";
 
 export function Desafio() {
   const { unit } = useParams();
-  const u = Number(unit) as UnitN;
+  const u = unit ?? "";
   const navigate = useNavigate();
   const t = useTrilha();
-  const info = UNITS.find((x) => x.n === u);
+  const info = unitDef(u);
   const qs = unitQuiz(u);
+  const need = unitPass(u);
   const [mode, setMode] = useState<"read" | "quiz" | "result">("read");
   const [n, setN] = useState(0);
   const [right, setRight] = useState(0);
   const [gained, setGained] = useState(0);
   const a = useAnswer();
 
-  if (!info || info.soon || !t.unitDone(u) || qs.length === 0) {
+  if (!info || !t.unitDone(u) || qs.length === 0) {
     return (
       <Screen bg="bg-[#FBF6F0]">
         <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
@@ -65,7 +66,7 @@ export function Desafio() {
               }}
             />
             <div className="mt-2 text-center text-[12px] text-[#8A7B6C]">
-              {qs.length} perguntas · {UNIT_QUIZ_PASS}+ acertos = {UNIT_POINTS_PER_RIGHT} Pontos Itaú por acerto (até {max}){best !== undefined ? ` · seu melhor: ${best}/${qs.length}` : ""}
+              {qs.length} perguntas · {need}+ acertos = {UNIT_POINTS_PER_RIGHT} Pontos Itaú por acerto (até {max}) × {fmtMult(t.multiplier)} da sequência{best !== undefined ? ` · seu melhor: ${best}/${qs.length}` : ""}
             </div>
           </FooterWrap>
         }
@@ -76,11 +77,11 @@ export function Desafio() {
               <Trophy size={15} /> Desafio final · opcional
             </div>
             <h1 className="mt-2 text-[24px] font-bold leading-tight">
-              Unidade {u}: {info.name}
+              {info.name}
             </h1>
             <p className="mt-1 text-[14px] text-white/80">Revise os pontos-chave e, se quiser, faça o quiz. Vale sempre o seu melhor resultado — refazer nunca tira pontos.</p>
           </div>
-          <DeepCards items={UNIT_DEEP[u] ?? []} />
+          <DeepCards items={info.deep} />
           <p className="mt-6 text-[12px] text-[#8A7B6C]">Pontos Itaú simulados no protótipo. Referência pública: 1.000 pontos = R$ 20 de desconto na fatura.</p>
         </div>
       </Screen>
@@ -88,7 +89,7 @@ export function Desafio() {
   }
 
   if (mode === "result") {
-    const pass = right >= UNIT_QUIZ_PASS;
+    const pass = right >= need;
     return (
       <Screen bg="bg-[#14215A]" statusTone="light">
         <div className="flex min-h-full flex-col items-center px-6 pb-8 pt-10 text-center text-white">
@@ -109,7 +110,7 @@ export function Desafio() {
               )
             ) : (
               <div className="text-[15px]">
-                Com {UNIT_QUIZ_PASS} acertos você ganha {UNIT_QUIZ_PASS * UNIT_POINTS_PER_RIGHT} Pontos Itaú. Relê o resumo e tenta de novo: você não perde nada.
+                Com {need} acertos você ganha {need * UNIT_POINTS_PER_RIGHT} Pontos Itaú (× {fmtMult(t.multiplier)}). Relê o resumo e tenta de novo: você não perde nada.
               </div>
             )}
           </div>

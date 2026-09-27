@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
-import { useToast } from "../components/Toast";
 import { brl } from "../data/money";
 import { POINT_BRL } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
@@ -20,7 +19,6 @@ const PRODUCTS = [
 
 export function ItauShop() {
   const navigate = useNavigate();
-  const toast = useToast();
   const t = useTrilha();
   const [cat, setCat] = useState("Todos");
   const list = PRODUCTS.filter((p) => cat === "Todos" || p.c === cat);
@@ -59,7 +57,7 @@ export function ItauShop() {
           {list.map(({ n, cents, I }) => {
             const pts = Math.ceil(cents / 100 / POINT_BRL);
             return (
-              <Squish key={n} onClick={() => toast("Protótipo: compra desativada")} className="rounded-[16px] bg-white p-3 text-left" scale={0.96}>
+              <Squish key={n} off className="rounded-[16px] bg-white p-3 text-left" scale={0.96}>
                 <div className="flex h-[90px] items-center justify-center rounded-[12px] bg-[#F4F4F4]">
                   <I size={40} color="#14215A" strokeWidth={1.4} />
                 </div>

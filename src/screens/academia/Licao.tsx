@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Flame, Lock, MessageSquareQuote, Target, Trophy, Unlock } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { StreakChip } from "../../components/Streak";
+import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IaiAvatar } from "../../components/Iai";
 import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
-import { LESSONS, MISSIONS, type Step } from "../../data/trilha";
+import { findLesson, fmtMult, lessonsOf, MISSIONS, unitDef, type Step } from "../../data/trilha";
 import { useTrilha } from "../../state/TrilhaContext";
 import { CheckFooter, FooterWrap, PillButton, PlayerShell, QuestionBody, useAnswer } from "./Exercise";
 
@@ -28,22 +29,21 @@ export function Licao() {
   const { id } = useParams();
   const navigate = useNavigate();
   const t = useTrilha();
-  const lesson = LESSONS.find((l) => l.id === id);
+  const lesson = findLesson(id ?? "");
   const [queue, setQueue] = useState<number[]>(() => (lesson ? lesson.steps.map((_, i) => i) : []));
   const [pos, setPos] = useState(0);
   const [misses, setMisses] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [streakBefore] = useState(t.streak);
+  const [doneBefore] = useState(t.completed.length);
   const start = useRef(Date.now());
   const a = useAnswer();
-  const unlocks = useMemo(() => MISSIONS.filter((m) => m.unlock === id), [id]);
 
-  if (!lesson || lesson.soon || !t.unlocked(lesson.id)) {
+  if (!lesson || !t.unlocked(lesson.id)) {
     return (
       <Screen bg="bg-[#FBF6F0]">
         <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
           <Lock size={40} color="#A89A8B" />
-          <div className="text-[18px] font-semibold text-[#14215A]">{lesson?.soon ? "Essa lição chega em breve" : "Essa lição ainda está bloqueada"}</div>
+          <div className="text-[18px] font-semibold text-[#14215A]">Essa lição ainda está bloqueada</div>
           <div className="w-full">
             <PillButton label="Ir pra trilha" onClick={() => navigate("/academia/trilha", { replace: true })} />
           </div>
@@ -56,14 +56,14 @@ export function Licao() {
     const secs = Math.max(Math.round((Date.now() - start.current) / 1000), 1);
     const qs = lesson.steps.filter((s) => s.kind !== "info").length;
     const acc = Math.round((qs / (qs + misses)) * 100);
-    const kept = t.streak > streakBefore && t.streak >= 2;
-    const unitComplete = LESSONS.filter((l) => l.unit === lesson.unit).every((l) => t.done(l.id));
+    const unlocks = MISSIONS.filter((m) => doneBefore < m.unlockAfter && t.completed.length >= m.unlockAfter);
+    const unitComplete = t.unitDone(lesson.unit);
     return (
       <Screen bg="bg-[#14215A]" statusTone="light">
         <div className="flex min-h-full flex-col px-6 pb-8 pt-8 text-white">
           <div className="flex flex-col items-center text-center">
             <Medal>
-              <span className="text-[30px] font-bold">{lesson.id.replace("L", "").padStart(2, "0")}</span>
+              <span className="text-[30px] font-bold">{String(lessonsOf(lesson.unit).findIndex((l) => l.id === lesson.id) + 1).padStart(2, "0")}</span>
             </Medal>
             <div className="mt-5 text-[13px] font-semibold uppercase tracking-[0.12em] text-[#FFB27A]">Lição concluída</div>
             <h1 className="mt-1 text-[24px] font-bold leading-tight">{lesson.title}</h1>
@@ -81,7 +81,10 @@ export function Licao() {
               </div>
             ))}
           </div>
-          {kept && <div className="mt-3 text-center text-[14px] font-semibold text-[#FFB27A]">Sequência mantida: {t.streak} semanas seguidas</div>}
+          <div className="mt-3 flex flex-col items-center gap-1 text-center text-[13px] text-white/80">
+            <StreakChip />
+            {t.weekActive ? `Pontos de missões e desafios valendo ${fmtMult(t.multiplier)} pela sua sequência.` : "Faça uma transação esta semana pra manter a sequência e o multiplicador."}
+          </div>
 
           {unlocks.length > 0 && (
             <div className="mt-5 rounded-[18px] bg-white p-4 text-[#14215A]">
@@ -101,7 +104,7 @@ export function Licao() {
             <div className="text-[14px] leading-snug text-white/90">
               {unitComplete ? (
                 <>
-                  <b className="text-white">Unidade {lesson.unit} concluída!</b> O desafio final é opcional: aprofundamento + quiz que vale Pontos Itaú.
+                  <b className="text-white">{unitDef(lesson.unit)?.name} concluída!</b> O desafio final é opcional: aprofundamento + quiz que vale Pontos Itaú.
                 </>
               ) : (
                 <>
@@ -132,7 +135,7 @@ export function Licao() {
       setFinished(true);
     } else setPos(pos + 1);
   };
-  const shell = { total: queue.length, pos, onClose: () => navigate(-1), tag: `Lição ${lesson.id.slice(1)} · ${lesson.title}` };
+  const shell = { total: queue.length, pos, onClose: () => navigate(-1), tag: `${unitDef(lesson.unit)?.name ?? "Lição"} · ${lesson.title}` };
 
   if (step.kind === "info") {
     return (

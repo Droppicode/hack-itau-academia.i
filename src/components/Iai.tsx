@@ -21,7 +21,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { CATCHPHRASES, CATCHPHRASES_NEW, GOALS, PLAYABLE, type GoalDef } from "../data/trilha";
+import { CATCHPHRASES, CATCHPHRASES_NEW, fmtDay, fmtMult, GOALS, type GoalDef } from "../data/trilha";
+import { StreakChip } from "./Streak";
 import { brl } from "../data/money";
 import { useTrilha } from "../state/TrilhaContext";
 import { BottomSheet } from "./BottomSheet";
@@ -118,8 +119,16 @@ export function AcademiaCard() {
       <div className="relative mt-1 truncate text-[13px] text-white/75">
         {!started ? (
           <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-itau-orange px-3 py-[5px] text-[13px] font-semibold text-white">Começar em 2 min <ChevronRight size={14} /></span>
-        ) : t.next ? `Continuar: ${t.next.title} · ${t.completed.length}/${PLAYABLE.length}` : t.unitPassed(1) ? "Unidade 1 concluída · desafio feito" : "Unidade 1 concluída · desafio te espera"}
+        ) : t.next ? `Continuar: ${t.next.title} · ${t.trailLessons.filter((l) => t.done(l.id)).length}/${t.trailLessons.length}` : "Trilha concluída · monte a próxima"}
       </div>
+      {started && (
+        <div className="relative mt-2 flex items-center gap-2">
+          <StreakChip label />
+          <span className="truncate text-[12px] text-white/75">
+            {t.nextExpiry?.soon ? `${t.nextExpiry.pts} pts vencem ${fmtDay(t.nextExpiry.day)}` : t.weekActive ? `pontos valendo ${fmtMult(t.multiplier)}` : "faça 1 Pix ou compra essa semana"}
+          </span>
+        </div>
+      )}
     </Squish>
   );
 }

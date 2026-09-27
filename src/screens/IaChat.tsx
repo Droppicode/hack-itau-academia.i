@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Squish } from "../components/Squish";
 import { StatusBar } from "../components/StatusBar";
-import { useToast } from "../components/Toast";
 import { brl } from "../data/money";
-import { fmtDay, MONTH_DAYS, PLAYABLE, POINT_BRL, SALARY_CENTS, SALARY_DAY, SALARY_FROM, type LessonId } from "../data/trilha";
+import { findLesson, unitDef } from "../data/trilha";
+import { useIaContext } from "../state/iaContext";
 import { useTrilha } from "../state/TrilhaContext";
 
 type Msg = { role: "user" | "ia"; text: string; offline?: boolean; note?: string; go?: { to: string; label: string } };
@@ -21,6 +21,7 @@ const DEST: Record<string, { to: string; label: string }> = {
   "minhas-vantagens": { to: "/minhas-vantagens", label: "Minhas Vantagens" },
   shop: { to: "/itau-shop", label: "Itaú Shop" },
   pix: { to: "/pix", label: "Pix" },
+  "nova-trilha": { to: "/academia/nova-trilha", label: "Montar nova trilha" },
 };
 
 const OPEN_WORDS = /\b(abr[ea]|abrir|vai pra|vai para|ir pra|ir para|me leva|mostra|quero ver)\b/i;
@@ -28,6 +29,7 @@ const OPEN_KEYS: [RegExp, string][] = [
   [/cofrinho|caixinha/i, "cofrinho"],
   [/miss/i, "missoes"],
   [/extrato/i, "extrato"],
+  [/nova trilha|pr[óo]xima trilha|outra trilha/i, "nova-trilha"],
   [/trilha|li[cç][aã]o/i, "trilha"],
   [/minhas vantagens|n[ií]vel/i, "minhas-vantagens"],
   [/shop|loja/i, "shop"],
@@ -36,7 +38,7 @@ const OPEN_KEYS: [RegExp, string][] = [
   [/in[ií]cio|home/i, "home"],
 ];
 
-const SUGGESTIONS = ["Quanto posso guardar esse mês?", "O que é CDI?", "Como ganho pontos no mês?", "Qual minha próxima lição?", "Abre o cofrinho"];
+const SUGGESTIONS = ["Quanto posso guardar esse mês?", "O que é CDI?", "Como ganho pontos no mês?", "Qual minha próxima lição?", "Quero montar uma nova trilha", "Abre o cofrinho"];
 
 const CANNED: { k: RegExp; a: string }[] = [
   { k: /cdi|render|rendimento|liquidez/i, a: "CDI é a taxa que os bancos usam pra emprestar entre si, e ela anda junto com a Selic. Quando um cofrinho rende 100% do CDI, ele acompanha essa taxa. Liquidez diária quer dizer que você resgata quando quiser." },
@@ -49,7 +51,6 @@ const CANNED: { k: RegExp; a: string }[] = [
 
 export function IaChat() {
   const navigate = useNavigate();
-  const toast = useToast();
   const t = useTrilha();
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -59,27 +60,20 @@ export function IaChat() {
   useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [msgs, busy]);
 
   const resolve = (dest: string): Msg["go"] => {
-    const lesson = dest.match(/^licao-(L\d+)$/)?.[1] as LessonId | undefined;
+    const lesson = dest.match(/^licao-(.+)$/)?.[1];
     if (lesson) {
-      const l = PLAYABLE.find((x) => x.id === lesson);
+      const l = findLesson(lesson);
       return l && t.unlocked(l.id) ? { to: `/academia/licao/${l.id}`, label: `Lição: ${l.title}` } : undefined;
     }
-    if (dest === "desafio-1") return t.unitDone(1) ? { to: "/academia/desafio/1", label: "Desafio da Unidade 1" } : undefined;
+    const unit = dest.match(/^desafio-(.+)$/)?.[1];
+    if (unit) {
+      const u = unitDef(unit);
+      return u && t.unitDone(u.id) ? { to: `/academia/desafio/${u.id}`, label: `Desafio: ${u.name}` } : undefined;
+    }
     return DEST[dest];
   };
 
-  const context = [
-    `Hoje (simulado): ${fmtDay(t.day)}. Nome: Lucas Andrade Rocha (persona fictícia). Salário de ${brl(SALARY_CENTS)} cai todo dia ${SALARY_DAY} na conta Itaú (${SALARY_FROM}).`,
-    `Saldo em conta corrente: ${brl(t.balanceCents)}.`,
-    `Últimos lançamentos: ${t.txns.slice(-8).reverse().map((x) => `${fmtDay(x.day)} ${x.title} (${x.sub}) ${x.cents > 0 ? "+" : "-"}${brl(Math.abs(x.cents))}`).join("; ")}.`,
-    t.goal
-      ? `Objetivo: ${t.goal.name}. Cofrinho: ${brl(t.goal.savedCents)} de ${brl(t.goal.targetCents)} (${Math.floor(t.goalPct)}%), rendeu ${brl(t.goal.yieldCents)}, rende 100% do CDI. Plano: ${brl(t.goal.monthlyCents)}/mês.`
-      : "Ainda não escolheu objetivo nem criou cofrinho na academIA.I.",
-    `Trilha Unidade 1: ${t.completed.length}/${PLAYABLE.length} lições. ${t.next ? `Próxima liberada: ${t.next.id} "${t.next.title}".` : "Unidade 1 concluída."} Lições: ${PLAYABLE.map((l) => `${l.id} ${l.title}${t.done(l.id) ? " (feita)" : t.unlocked(l.id) ? " (liberada)" : " (bloqueada)"}`).join("; ")}.`,
-    `Desafio Unidade 1: ${t.unitDone(1) ? (t.unitBest[1] !== undefined ? `melhor ${t.unitBest[1]}/10` : "liberado, não feito") : "bloqueado"}.`,
-    `Missões: ${t.missions.map((m) => `${m.title} [${m.status}${m.kind === "mensal" ? `, ${brl(t.monthMinCents)} mantidos no mês, previsão +${t.monthPtsPreview} pts no fechamento ${fmtDay(t.month * MONTH_DAYS)}` : `, ${m.progress}/${m.goal}`}]`).join("; ")}.`,
-    `Pontos Itaú: ${t.points} (≈ ${brl(Math.round(t.points * POINT_BRL * 100))}). Minhas Vantagens nível ${t.mvLevel}, ${t.passosDone} passos.`,
-  ].join("\n");
+  const context = useIaContext();
 
   const offline = (q: string): Pick<Msg, "text" | "go"> => {
     if (OPEN_WORDS.test(q)) {
@@ -87,7 +81,7 @@ export function IaChat() {
       if (hit) return { text: `Abrindo ${DEST[hit[1]].label}.`, go: DEST[hit[1]] };
     }
     if (/saldo|quanto (eu )?tenho/i.test(q)) return { text: `Seu saldo em conta é ${brl(t.balanceCents)}${t.goal ? ` e o cofrinho ${t.goal.name} tem ${brl(t.goal.savedCents)}` : ""}.` };
-    if (/próxima|proxima|lição|licao|trilha/i.test(q)) return { text: t.next ? `Sua próxima lição é "${t.next.title}". Leva uns 5 minutos.` : "Você fechou a Unidade 1! Se ainda não fez, o desafio do fim da unidade vale Pontos Itaú.", go: t.next ? resolve(`licao-${t.next.id}`) : resolve("desafio-1") };
+    if (/próxima|proxima|lição|licao|trilha/i.test(q)) return { text: t.next ? `Sua próxima lição é "${t.next.title}". Leva uns 5 minutos.` : "Você fechou sua trilha! Me conta o que quer aprender agora e eu monto a próxima.", go: t.next ? resolve(`licao-${t.next.id}`) : DEST["nova-trilha"] };
     return { text: CANNED.find((c) => c.k.test(q))?.a ?? "Posso te ajudar com o vocabulário do dinheiro (saldo, fatura, holerite, FGTS, CDI, cofrinho) ou abrir uma tela pra você, tipo \"abre o cofrinho\"." };
   };
 
@@ -192,7 +186,7 @@ export function IaChat() {
               <SendHorizontal size={20} color="white" />
             </Squish>
           ) : (
-            <Squish aria-label="Falar" onClick={() => toast("Protótipo: voz desativada")} className="flex h-10 w-10 items-center justify-center" scale={0.9}>
+            <Squish aria-label="Falar" off className="flex h-10 w-10 items-center justify-center" scale={0.9}>
               <Mic size={24} color="#333" />
             </Squish>
           )}

@@ -6,17 +6,17 @@ import { BottomTabBar } from "../components/BottomTabBar";
 import { IaiAvatar, Wordmark, useAcademiaEntry } from "../components/Iai";
 import { Screen } from "../components/Screen";
 import { Squish } from "../components/Squish";
-import { useToast } from "../components/Toast";
 import { brl } from "../data/money";
-import { POINT_BRL, UNIT_POINTS_PER_RIGHT, unitQuiz } from "../data/trilha";
+import { ExpiryNote, StreakChip } from "../components/Streak";
+import { fmtDay, fmtMult, POINT_BRL, UNIT_POINTS_PER_RIGHT } from "../data/trilha";
 import { markHome } from "../state/homeHistory";
 import { useTrilha } from "../state/TrilhaContext";
 import { OrangeHeader } from "./Home";
 import { Hex } from "./MinhasVantagens";
 
-function Tile({ Icon, label, onClick }: { Icon: typeof Gift; label: string; onClick: () => void }) {
+function Tile({ Icon, label, onClick }: { Icon: typeof Gift; label: string; onClick?: () => void }) {
   return (
-    <Squish onClick={onClick} className="flex h-[84px] flex-col justify-between rounded-[14px] bg-white p-3 text-left" scale={0.95}>
+    <Squish onClick={onClick} off={!onClick} className="flex h-[84px] flex-col justify-between rounded-[14px] bg-white p-3 text-left" scale={0.95}>
       <Icon size={20} color="#EC7000" />
       <span className="text-[13px] leading-tight text-[#333]">{label}</span>
     </Squish>
@@ -26,19 +26,13 @@ function Tile({ Icon, label, onClick }: { Icon: typeof Gift; label: string; onCl
 export function Vantagens() {
   useEffect(markHome, []);
   const navigate = useNavigate();
-  const toast = useToast();
   const t = useTrilha();
   const enter = useAcademiaEntry();
   const [extrato, setExtrato] = useState(false);
   const [how, setHow] = useState(false);
-  const soon = () => toast("Protótipo: disponível só no app real");
-  const quizMax = unitQuiz(1).length * UNIT_POINTS_PER_RIGHT;
+  const quizMax = 10 * UNIT_POINTS_PER_RIGHT;
 
-  const history = [
-    ...t.claimed.map((k) => ({ k, label: k.startsWith("w-licoes") ? "Missão: 2 lições na semana" : "Missão: ir além em 1 lição", pts: 30 })),
-    ...t.awards.filter((w) => w.pts > 0).map((w) => ({ k: `m${w.month}`, label: `Missão do mês: ${brl(w.heldCents)} mantidos`, pts: w.pts })),
-    ...(t.quizPoints > 0 ? [{ k: "quiz", label: "Desafio da Unidade 1", pts: t.quizPoints }] : []),
-  ];
+  const history = [...t.pointsLog].reverse();
 
   return (
     <Screen bg="bg-itau-bg" statusTone="light" statusBg="bg-itau-orange" header={<OrangeHeader />} footer={<BottomTabBar />}>
@@ -61,6 +55,11 @@ export function Vantagens() {
             <span>Valem na fatura</span>
             <span>{brl(Math.round(t.points * POINT_BRL * 100))}</span>
           </div>
+          <div className="mt-3 flex items-center gap-2">
+            <StreakChip tone="light" />
+            <span className="text-[12px] text-[#666]">multiplica pontos da academIA.I</span>
+          </div>
+          <ExpiryNote className="mt-2" always />
           <Squish onClick={() => setExtrato(true)} className="mt-3 flex w-full items-center justify-between border-t border-[#EEE] pt-3 text-[14px] font-semibold text-itau-orange" scale={0.98}>
             Acessar extrato <ChevronRight size={16} />
           </Squish>
@@ -77,13 +76,13 @@ export function Vantagens() {
 
         <h2 className="mt-6 text-[16px] font-bold text-black">Usar pontos Itaú</h2>
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <Tile Icon={CreditCard} label="Desconto na fatura" onClick={soon} />
-          <Tile Icon={Plane} label="Passagens aéreas" onClick={soon} />
-          <Tile Icon={Store} label="Stix nas lojas" onClick={soon} />
+          <Tile Icon={CreditCard} label="Desconto na fatura" />
+          <Tile Icon={Plane} label="Passagens aéreas" />
+          <Tile Icon={Store} label="Stix nas lojas" />
           <Tile Icon={ShoppingBag} label="Itaú Shop" onClick={() => navigate("/itau-shop")} />
-          <Tile Icon={ArrowLeftRight} label="Transferir para aéreas" onClick={soon} />
-          <Tile Icon={Smartphone} label="iPhone pra sempre" onClick={soon} />
-          <Tile Icon={HandHeart} label="Doações" onClick={soon} />
+          <Tile Icon={ArrowLeftRight} label="Transferir para aéreas" />
+          <Tile Icon={Smartphone} label="iPhone pra sempre" />
+          <Tile Icon={HandHeart} label="Doações" />
         </div>
 
         <h2 className="mt-6 text-[16px] font-bold text-black">Ganhar pontos Itaú</h2>
@@ -98,7 +97,7 @@ export function Vantagens() {
         <div className="mt-2 grid grid-cols-3 gap-2">
           <Tile Icon={BadgePercent} label="Cashback em lojas" onClick={() => navigate("/itau-shop")} />
           <Tile Icon={ShoppingBag} label="Itaú Shop" onClick={() => navigate("/itau-shop")} />
-          <Tile Icon={Zap} label="Acelerador de pontos" onClick={soon} />
+          <Tile Icon={Zap} label="Acelerador de pontos" />
         </div>
         <Squish onClick={() => setHow(true)} className="mt-3 text-[14px] font-semibold text-itau-orange" scale={0.97}>
           Saiba como ganhar
@@ -129,9 +128,15 @@ export function Vantagens() {
         ) : (
           <div className="flex max-h-[50vh] flex-col divide-y divide-[#EEE] overflow-y-auto">
             {history.map((h) => (
-              <div key={h.k} className="flex justify-between py-3 text-[14px]">
-                <span className="text-[#333]">{h.label}</span>
-                <span className="font-semibold text-[#00857A]">+{h.pts} pts</span>
+              <div key={h.id} className={`flex justify-between gap-3 py-3 text-[14px] ${h.expiresDay <= t.day ? "opacity-50" : ""}`}>
+                <div>
+                  <div className="text-[#333]">{h.label}</div>
+                  <div className="text-[12px] text-[#888]">
+                    {fmtDay(h.day)}
+                    {h.mult > 1 ? ` · ${h.base} × ${fmtMult(h.mult)}` : ""} · {h.expiresDay <= t.day ? `venceu em ${fmtDay(h.expiresDay)}` : `vence em ${fmtDay(h.expiresDay)}`}
+                  </div>
+                </div>
+                <span className={`shrink-0 font-semibold ${h.expiresDay <= t.day ? "text-[#888] line-through" : "text-[#00857A]"}`}>+{h.pts} pts</span>
               </div>
             ))}
           </div>
@@ -141,7 +146,9 @@ export function Vantagens() {
       <BottomSheet open={how} onClose={() => setHow(false)} title="Como a academIA.I dá pontos">
         <div className="flex flex-col gap-3 text-[14px] leading-snug text-[#444]">
           <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Missões da semana: 30 Pontos Itaú cada, até 60 por semana.</div>
-          <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 7+ acertos em 10 = 20 pts por acerto. Vale só o melhor resultado.</div>
+          <div className="flex gap-3"><Gift size={18} color="#EC7000" className="shrink-0" /> Desafio de fim de unidade (opcional): 70%+ de acertos = 20 pts por acerto. Vale só o melhor resultado.</div>
+          <div className="flex gap-3"><Sparkles size={18} color="#EC7000" className="shrink-0" /> Sequência: cada semana com Pix pra outra pessoa ou compra no débito soma +0,05x nos pontos da academIA.I, até 1,2x em 4 semanas. Semana sem transação volta pra 1x.</div>
+          <div className="flex gap-3"><Gift size={18} color="#8A4B00" className="shrink-0" /> Pontos de missões e da academIA.I valem 6 meses e vencem sempre no dia 25 do mês.</div>
           <div className="flex gap-3"><Sparkles size={18} color="#00857A" className="shrink-0" /> Missão do mês: 1 pt a cada R$ 20 que ficam no cofrinho o mês inteiro (a partir de R$ 50, até 50 pts). Vale o menor saldo do mês, então depositar e tirar não rende pontos. O cofrinho rende 100% do CDI.</div>
           <div className="rounded-[12px] bg-[#F4F4F4] p-3 text-[13px]">
             Teto por pessoa: ~290 pts/mês nas missões (240 semanais + 50 do mês) ≈ R$ 5,80 de desconto na fatura. Desafio: até 200 pts por unidade, uma vez. Custo baixo e previsível pro banco. Níveis do Minhas Vantagens sobem por passos (uso de produtos); as atividades da academIA.I aparecem como passos só no protótipo.

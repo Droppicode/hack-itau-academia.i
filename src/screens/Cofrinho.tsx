@@ -11,7 +11,10 @@ import { brl, monthsTo } from "../data/money";
 import { MONTHLY_PTS } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 
-const AMOUNTS = [1000, 2000, 5000, 10000];
+export const parseCents = (raw: string) => {
+  const n = Number(raw.replace(/[^\d,.]/g, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+};
 
 export function Cofrinho() {
   const navigate = useNavigate();
@@ -20,8 +23,20 @@ export function Cofrinho() {
   const location = useLocation();
   const fromAcademia = (location.state as { fromAcademia?: boolean } | null)?.fromAcademia === true;
   const [sheet, setSheet] = useState<"guardar" | "resgatar" | null>(null);
-  const [amount, setAmount] = useState(2000);
   const g = t.goal;
+  const [raw, setRaw] = useState("");
+  const amount = parseCents(raw);
+  const limit = sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents;
+  const error = !raw.trim()
+    ? undefined
+    : !(amount > 0)
+      ? "Digite um valor maior que zero."
+      : amount > limit
+        ? sheet === "resgatar"
+          ? `Você tem ${brl(limit)} no cofrinho. Digite até esse valor ou use "Resgatar tudo".`
+          : `Seu saldo em conta é ${brl(limit)}. Digite até esse valor.`
+        : undefined;
+  const valid = !!raw.trim() && !error;
   const def = goalDef(g?.id);
   const Icon = GOAL_ICON[def.id] ?? Target;
   const warn = fromAcademia && !t.cofrinhoWarned && !!g;
@@ -30,11 +45,11 @@ export function Cofrinho() {
   const months = g ? monthsTo(left, g.monthlyCents) : 0;
 
   const open = (k: "guardar" | "resgatar") => {
-    setAmount(Math.min(2000, k === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents));
+    setRaw("");
     setSheet(k);
   };
   const confirm = () => {
-    if (!sheet) return;
+    if (!sheet || !valid) return;
     if (sheet === "guardar") {
       t.save(amount);
       toast(`${brl(amount)} guardados no cofrinho (simulado)`);
@@ -124,7 +139,7 @@ export function Cofrinho() {
           </Squish>
         )}
 
-        <Squish onClick={() => toast("Protótipo: só o cofrinho do objetivo está ativo")} className="mt-3 flex w-full items-center gap-3 rounded-[18px] bg-white p-4 text-left" scale={0.98}>
+        <Squish off className="mt-3 flex w-full items-center gap-3 rounded-[18px] bg-white p-4 text-left" scale={0.98}>
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F0F1F3]">
             <PiggyBank size={22} color="#444" />
           </span>
@@ -171,23 +186,30 @@ export function Cofrinho() {
       </div>
 
       <BottomSheet open={!!sheet} onClose={() => setSheet(null)} title={sheet === "guardar" ? "Quanto quer guardar?" : "Quanto quer resgatar?"}>
-        <div className="grid grid-cols-4 gap-2">
-          {AMOUNTS.map((a) => (
-            <Squish key={a} disabled={a > (sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents)} onClick={() => setAmount(a)} className={`rounded-[12px] py-3 text-center text-[15px] font-semibold disabled:opacity-35 ${amount === a ? "bg-itau-orange text-white" : "bg-[#F4F4F4] text-[#222]"}`} scale={0.94}>
-              {brl(a, false)}
-            </Squish>
-          ))}
-        </div>
+        <label className={`flex items-center gap-2 rounded-[14px] border-2 px-4 py-3 ${error ? "border-[#D0342C]" : "border-[#EEE] focus-within:border-itau-orange"}`}>
+          <span className="text-[22px] font-semibold text-[#888]">R$</span>
+          <input
+            aria-label={sheet === "guardar" ? "Valor para guardar" : "Valor para resgatar"}
+            inputMode="decimal"
+            autoFocus
+            placeholder="0,00"
+            value={raw}
+            onChange={(e) => setRaw(e.target.value.replace(/[^\d,.]/g, ""))}
+            onKeyDown={(e) => e.key === "Enter" && confirm()}
+            className="w-full bg-transparent text-[26px] font-bold text-[#222] outline-none placeholder:text-[#CCC]"
+          />
+        </label>
+        {error && <p role="alert" className="mt-2 text-[13px] font-semibold text-[#D0342C]">{error}</p>}
         <p className="mt-3 text-[13px] text-[#666]">
           {sheet === "guardar" ? `Sai da sua conta corrente. Saldo em conta: ${brl(t.balanceCents)}.` : "O valor volta na hora pra sua conta corrente."} (simulado)
         </p>
         {sheet === "resgatar" && (
-          <Squish onClick={() => setAmount(g?.savedCents ?? 0)} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
+          <Squish onClick={() => setRaw(((g?.savedCents ?? 0) / 100).toFixed(2).replace(".", ","))} className="mt-2 text-[14px] font-semibold text-itau-orange" scale={0.97}>
             Resgatar tudo ({brl(g?.savedCents ?? 0)})
           </Squish>
         )}
-        <Squish onClick={confirm} disabled={amount <= 0 || amount > (sheet === "resgatar" ? (g?.savedCents ?? 0) : t.balanceCents)} className="mt-4 disabled:opacity-40 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
-          {sheet === "guardar" ? `Guardar ${brl(amount)}` : `Resgatar ${brl(amount)}`}
+        <Squish onClick={confirm} disabled={!valid} className="mt-4 disabled:opacity-40 w-full rounded-[12px] bg-itau-orange py-[14px] text-center text-[16px] font-bold text-white" scale={0.97}>
+          {sheet === "guardar" ? (valid ? `Guardar ${brl(amount)}` : "Guardar") : valid ? `Resgatar ${brl(amount)}` : "Resgatar"}
         </Squish>
       </BottomSheet>
 

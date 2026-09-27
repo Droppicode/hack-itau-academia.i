@@ -8,7 +8,8 @@ import { Screen } from "../../components/Screen";
 import { Squish } from "../../components/Squish";
 import { useToast } from "../../components/Toast";
 import { brl } from "../../data/money";
-import { fmtDay, fmtMonth, LESSONS, MONTH_DAYS, MONTHLY_PTS, POINT_BRL, UNIT_POINTS_PER_RIGHT, UNITS, unitQuiz, unitQuizPoints } from "../../data/trilha";
+import { ExpiryNote, StreakChip } from "../../components/Streak";
+import { fmtDay, fmtMonth, fmtMult, MONTH_DAYS, MONTHLY_PTS, POINT_BRL, UNIT_POINTS_PER_RIGHT, unitDef, unitQuiz, unitQuizPoints, UNITS } from "../../data/trilha";
 import { deltaToHome } from "../../state/homeHistory";
 import { useTrilha, type MissionStatus, type MissionView } from "../../state/TrilhaContext";
 
@@ -40,7 +41,6 @@ export function Missoes() {
   };
 
   const Card = ({ m }: { m: MissionView }) => {
-    const lesson = LESSONS.find((l) => l.id === m.unlock);
     const action = actionFor(m);
     return (
       <motion.div layout className={`rounded-[16px] p-4 ${m.status === "bloqueada" ? "bg-white/60" : "bg-white"}`}>
@@ -52,12 +52,14 @@ export function Missoes() {
             <div className="flex items-center gap-2">
               <span className={`text-[15px] font-semibold ${m.status === "bloqueada" ? "text-[#888]" : "text-[#222]"}`}>{m.title}</span>
             </div>
-            <div className="text-[13px] leading-snug text-[#666]">{m.status === "bloqueada" ? `Libera ao concluir a lição ${m.unlock.slice(1)}: ${lesson?.title}` : m.text}</div>
+            <div className="text-[13px] leading-snug text-[#666]">{m.status === "bloqueada" ? `Libera ao concluir ${m.unlockAfter} ${m.unlockAfter === 1 ? "lição" : "lições"} da trilha` : m.text}</div>
             <div className="mt-2 flex items-center gap-2">
               <span className={`rounded-full px-2 py-[2px] text-[11px] font-semibold ${BADGE[m.status]}`}>{m.status}</span>
-              <span className="text-[12px] font-semibold text-[#1F2A63]">{m.kind === "mensal" ? `até ${m.points}` : `+${m.points}`} Pontos Itaú</span>
+              <span className="text-[12px] font-semibold text-[#1F2A63]">
+                {m.kind === "mensal" ? `até ${Math.round(m.points * t.multiplier)}` : `+${Math.round(m.points * t.multiplier)}`} Pontos Itaú
+                {t.multiplier > 1 && <span className="ml-1 text-[#EC7000]">({m.points} × {fmtMult(t.multiplier)})</span>}
+              </span>
             </div>
-            {m.reward && <div className="mt-1 text-[12px] font-semibold text-[#1B7F3B]">+ {m.reward} (simulado)</div>}
           </div>
         </div>
         {m.status !== "bloqueada" && m.kind === "semanal" && m.goal > 1 && <ProgressBar pct={(m.progress / m.goal) * 100} tone="green" className="mt-3" />}
@@ -65,12 +67,12 @@ export function Missoes() {
           <Squish
             onClick={() => {
               t.claim(m);
-              toast(`+${m.points} Pontos Itaú (simulado)`);
+              toast(`+${Math.round(m.points * t.multiplier)} Pontos Itaú (simulado)`);
             }}
             className="mt-3 w-full rounded-[12px] bg-[#00857A] py-[10px] text-center text-[15px] font-bold text-white"
             scale={0.97}
           >
-            {`Resgatar +${m.points} Pontos Itaú`}
+            {`Resgatar +${Math.round(m.points * t.multiplier)} Pontos Itaú`}
           </Squish>
         )}
         {(m.status === "disponível" || m.status === "em andamento") && action && (
@@ -105,6 +107,13 @@ export function Missoes() {
         <div className="flex items-center gap-2 text-[13px] text-[#666]">
           <CalendarDays size={15} /> Hoje {fmtDay(t.day)} · Semana {t.week} · {t.points} Pontos Itaú
         </div>
+        <div className="mt-3 flex items-center gap-3 rounded-[16px] bg-white p-3">
+          <StreakChip tone="light" />
+          <span className="flex-1 text-[13px] leading-snug text-[#555]">
+            {t.weekActive ? `Semana garantida. Pontos valendo ${fmtMult(t.multiplier)}.` : `Faça um Pix ou compra no débito até ${fmtDay(t.week * 7)} pra ${t.streak ? "manter" : "começar"} a sequência.`}
+          </span>
+        </div>
+        <ExpiryNote className="mt-2" always />
 
         {month && (
           <section className="mt-4">
@@ -151,27 +160,28 @@ export function Missoes() {
         <section className="mt-6">
           <h2 className="mb-2 text-[16px] font-bold text-black">Desafios de fim de unidade</h2>
           <div className="flex flex-col gap-2">
-            {UNITS.map((u) => {
-              const total = unitQuiz(u.n).length;
-              const best = t.unitBest[u.n];
-              const ready = t.unitDone(u.n);
+            {[...new Set([...t.trailUnits.map((u) => u.id), ...UNITS.filter((u) => t.unitDone(u.id)).map((u) => u.id)])].map((id) => {
+              const u = unitDef(id)!;
+              const total = unitQuiz(u.id).length;
+              const best = t.unitBest[u.id];
+              const ready = t.unitDone(u.id);
               return (
                 <Squish
-                  key={u.n}
-                  onClick={() => (ready ? navigate(`/academia/desafio/${u.n}`) : navigate("/academia/trilha", { replace: true, state: { tab: true } }))}
-                  className={`flex w-full items-center gap-3 rounded-[16px] p-4 text-left ${u.soon ? "bg-white/60" : "bg-white"}`}
+                  key={u.id}
+                  onClick={() => (ready ? navigate(`/academia/desafio/${u.id}`) : navigate("/academia/trilha", { replace: true, state: { tab: true } }))}
+                  className={`flex w-full items-center gap-3 rounded-[16px] p-4 text-left bg-white`}
                   scale={0.98}
                 >
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.unitPassed(u.n) ? "bg-[#00857A]" : ready ? "bg-[#FFF1E5]" : "bg-[#E6E6E6]"}`}>
-                    {t.unitPassed(u.n) ? <Check size={18} color="white" /> : ready ? <Trophy size={16} color="#FF6200" /> : <Lock size={16} color="#888" />}
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${t.unitPassed(u.id) ? "bg-[#00857A]" : ready ? "bg-[#FFF1E5]" : "bg-[#E6E6E6]"}`}>
+                    {t.unitPassed(u.id) ? <Check size={18} color="white" /> : ready ? <Trophy size={16} color="#FF6200" /> : <Lock size={16} color="#888" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className={`text-[15px] font-semibold ${ready ? "text-[#222]" : "text-[#888]"}`}>Unidade {u.n} · {u.name}</div>
+                    <div className={`text-[15px] font-semibold ${ready ? "text-[#222]" : "text-[#888]"}`}>{u.name}</div>
                     <div className="text-[13px] text-[#666]">
-                      {u.soon ? "Em breve" : ready ? (best !== undefined ? `Seu melhor: ${best}/${total} · ${unitQuizPoints(u.n, best)} pts` : "Liberado · opcional") : "Conclua todas as lições da unidade"}
+                      {ready ? (best !== undefined ? `Seu melhor: ${best}/${total} · ${unitQuizPoints(u.id, best)} pts` : "Liberado · opcional") : "Conclua todas as lições da unidade"}
                     </div>
                   </div>
-                  {!u.soon && <span className="text-[12px] font-semibold text-[#1F2A63]">até {total * UNIT_POINTS_PER_RIGHT} pts</span>}
+                  {<span className="text-[12px] font-semibold text-[#1F2A63]">até {total * UNIT_POINTS_PER_RIGHT} pts</span>}
                 </Squish>
               );
             })}
@@ -182,7 +192,7 @@ export function Missoes() {
           <div className="mb-1 flex items-center gap-2 text-[14px] font-semibold text-[#222]">
             <PiggyBank size={16} color="#FF6200" /> Quanto vale o que você ganhou
           </div>
-          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o teto das missões é ~290 pts por mês (~R$ 5,80) por pessoa.
+          {t.points} Pontos Itaú ≈ <b>{brl(Math.round(t.points * POINT_BRL * 100))}</b> em desconto na fatura (referência pública: 1.000 pts = R$ 20; varia por modalidade). Na academIA.I, o teto das missões é ~290 pts por mês (~R$ 5,80) por pessoa, até ~350 com o multiplicador de 1,2x. Pontos de missões e da academIA.I vencem em 6 meses, sempre no dia 25.
         </div>
 
         <Squish onClick={() => navigate("/pra-voce", { replace: true, state: { tab: true } })} className="mt-6 flex w-full items-center gap-3 rounded-[16px] bg-itau-navy p-4 text-white" scale={0.98}>

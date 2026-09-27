@@ -17,6 +17,7 @@ import { TrilhaProvider } from "./state/TrilhaContext";
 import { Aprofundar } from "./screens/academia/Aprofundar";
 import { Intro } from "./screens/academia/Intro";
 import { Missoes } from "./screens/academia/Missoes";
+import { NovaTrilha } from "./screens/academia/NovaTrilha";
 import { Trilha } from "./screens/academia/Trilha";
 import { Licao } from "./screens/academia/Licao";
 import { Vantagens } from "./screens/Vantagens";
@@ -65,6 +66,7 @@ function AnimatedRoutes() {
           <Route path="/academia/intro" element={<Intro />} />
           <Route path="/academia/trilha" element={<Trilha />} />
           <Route path="/academia/missoes" element={<Missoes />} />
+          <Route path="/academia/nova-trilha" element={<NovaTrilha />} />
           <Route path="/academia/licao/:id" element={<Licao />} />
           <Route path="/academia/licao/:id/aprofundar" element={<Aprofundar />} />
           <Route path="/academia/desafio/:unit" element={<Desafio />} />

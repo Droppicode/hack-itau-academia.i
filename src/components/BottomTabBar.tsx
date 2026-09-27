@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ExtratoIcon, TransferIcon } from "./Icons";
 import { Squish } from "./Squish";
 
+const PLACEHOLDER = ["/pagamentos", "/menu"];
+
 export const TABS = [
   { path: "/home", label: "Início", Icon: Home },
   { path: "/extrato", label: "Extrato", Icon: ExtratoIcon },
@@ -25,7 +27,7 @@ export function BottomTabBar() {
           <Squish
             key={path}
             onClick={() => !active && navigate(path, { replace: true, state: { tab: true } })}
-            className="flex w-[72px] flex-col items-center"
+            className={`flex w-[72px] flex-col items-center ${PLACEHOLDER.includes(path) && !active ? "opacity-40 grayscale" : ""}`}
             scale={0.9}
           >
             {active ? (

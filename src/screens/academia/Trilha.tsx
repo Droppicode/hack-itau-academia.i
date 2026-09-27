@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, Check, ChevronLeft, Clock, Flame, Info, Lock, Sparkles, Star, Target, Trophy } from "lucide-react";
+import { BookOpen, Check, ChevronLeft, Clock, Info, Lock, Sparkles, Star, Target, Trophy, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BottomSheet } from "../../components/BottomSheet";
@@ -7,7 +7,8 @@ import { AcademiaTabs, GOAL_ICON, Wordmark, goalDef } from "../../components/Iai
 import { Screen } from "../../components/Screen";
 import { IaFab } from "../../components/IaFab";
 import { Squish } from "../../components/Squish";
-import { LESSONS, UNIT_POINTS_PER_RIGHT, UNIT_QUIZ_PASS, UNITS, unitQuiz, type Lesson, type UnitN } from "../../data/trilha";
+import { ExpiryNote, StreakChip } from "../../components/Streak";
+import { fmtMult, lessonsOf, UNIT_POINTS_PER_RIGHT, unitDef, unitPass, unitQuiz, type Lesson, type UnitId } from "../../data/trilha";
 import { brl } from "../../data/money";
 import { deltaToHome } from "../../state/homeHistory";
 import { useTrilha } from "../../state/TrilhaContext";
@@ -92,10 +93,10 @@ export function Trilha() {
   const navigate = useNavigate();
   const t = useTrilha();
   const [open, setOpen] = useState<Lesson | null>(null);
-  const [challenge, setChallenge] = useState<UnitN | null>(null);
+  const [challenge, setChallenge] = useState<UnitId | null>(null);
   const def = goalDef(t.goal?.id);
   const GoalIcon = GOAL_ICON[def.id] ?? Target;
-  const challengeState = (u: UnitN, soon?: boolean): NodeState => (soon ? "soon" : t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
+  const challengeState = (u: UnitId): NodeState => (t.unitPassed(u) ? "done" : t.unitDone(u) ? "current" : "locked");
 
   const back = () => {
     const d = deltaToHome();
@@ -103,7 +104,7 @@ export function Trilha() {
     else navigate("/home", { replace: true, state: { tab: true } });
   };
 
-  const stateOf = (l: Lesson): NodeState => (l.soon ? "soon" : t.done(l.id) ? "done" : t.unlocked(l.id) ? "current" : "locked");
+  const stateOf = (l: Lesson): NodeState => (t.done(l.id) ? "done" : t.unlocked(l.id) ? "current" : "locked");
   const openState = open ? stateOf(open) : undefined;
 
   return (
@@ -118,6 +119,9 @@ export function Trilha() {
               <ChevronLeft size={28} strokeWidth={1.6} />
             </Squish>
             <Wordmark className="flex-1 text-[19px]" />
+            <Squish aria-label="Nova trilha" onClick={() => navigate("/academia/nova-trilha")} className="flex h-10 items-center gap-1 rounded-full bg-white/10 px-3 text-[13px] font-semibold" scale={0.9}>
+              <Wand2 size={16} /> Nova trilha
+            </Squish>
             <Squish aria-label="Sobre a academIA.I" onClick={() => navigate("/academia/intro")} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10" scale={0.88}>
               <Info size={19} />
             </Squish>
@@ -140,13 +144,12 @@ export function Trilha() {
             <span className="flex items-center gap-1 rounded-full bg-[#EC7000] px-3 py-[5px]">
               <Star size={14} fill="white" /> {t.points} Pontos Itaú
             </span>
+            <StreakChip />
             <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-[5px]">
-              <Flame size={14} /> {t.streak} {t.streak === 1 ? "semana" : "semanas"}
-            </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/10 px-3 py-[5px]">
-              <Check size={14} /> {t.completed.length} {t.completed.length === 1 ? "lição" : "lições"}
+              <Check size={14} /> {t.completed.length}
             </span>
           </div>
+          <ExpiryNote className="mt-2 !bg-white/10 !text-white" />
         </div>
       }
       footer={<AcademiaTabs />}
@@ -154,27 +157,43 @@ export function Trilha() {
       scrollClassName="[background-image:radial-gradient(#EADFD3_1px,transparent_1px)] [background-size:18px_18px]"
     >
       <div className="px-4 pb-8 pt-5">
-        {UNITS.map((u) => {
-          const lessons = LESSONS.filter((l) => l.unit === u.n);
+        <div className="mb-5 rounded-[22px] border border-[#EADFD3] bg-white p-4">
+          <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-[#EC7000]">
+            <Sparkles size={13} /> Trilha {t.trailNow.n} · {t.trailNow.source === "ia" ? "montada pela IA.I" : "montada pelas suas respostas"}
+          </div>
+          <div className="mt-1 text-[18px] font-bold text-[#14215A]">{t.trailNow.title}</div>
+          {t.trailNow.intro && <p className="mt-1 text-[14px] leading-snug text-[#6C6257]">{t.trailNow.intro}</p>}
+          <div className="mt-2 text-[12px] text-[#8A7B6C]">
+            Pontos de missões e desafios: {fmtMult(t.multiplier)} pela sua sequência. Dá pra mudar a trilha quando quiser.
+          </div>
+        </div>
+        {t.trailUnits.map((u, ui) => {
+          const lessons = lessonsOf(u.id);
+          const why = t.trailNow.units.find((x) => x.id === u.id)?.why;
           const doneN = lessons.filter((l) => t.done(l.id)).length;
           const cur = lessons.findIndex((l) => stateOf(l) === "current");
           const nodes = lessons.length + 1;
-          const progress = u.soon || doneN === 0 ? 0 : (cur === -1 ? lessons.length : cur) / Math.max(nodes - 1, 1);
-          const cState = challengeState(u.n, u.soon);
+          const progress = doneN === 0 ? 0 : (cur === -1 ? lessons.length : cur) / Math.max(nodes - 1, 1);
+          const cState = challengeState(u.id);
           return (
-            <section key={u.n} className={`mb-6 ${u.soon ? "opacity-70" : ""}`}>
+            <section key={u.id} className="mb-6">
               <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-[0_4px_16px_rgba(20,33,90,0.06)]">
                 <span className="pointer-events-none absolute -right-2 -top-6 select-none text-[96px] font-black leading-none" style={{ color: u.accent, opacity: 0.08 }}>
-                  {String(u.n).padStart(2, "0")}
+                  {String(ui + 1).padStart(2, "0")}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className="rounded-full px-[10px] py-[2px] text-[11px] font-bold uppercase tracking-wider text-white" style={{ background: u.accent }}>
-                    Unidade {u.n}
+                    Unidade {ui + 1}
                   </span>
-                  {u.soon && <span className="rounded-full bg-[#EFE7DE] px-[10px] py-[2px] text-[11px] font-bold uppercase tracking-wider text-[#8A7B6C]">Em breve</span>}
+                  <span className="rounded-full bg-[#EFE7DE] px-[10px] py-[2px] text-[11px] font-bold uppercase tracking-wider text-[#8A7B6C]">Nível {u.level}</span>
                 </div>
                 <div className="mt-2 text-[20px] font-bold text-[#14215A]">{u.name}</div>
                 <div className="text-[14px] text-[#6C6257]">{u.tagline}</div>
+                {why && (
+                  <div className="mt-2 flex items-start gap-1 text-[13px] leading-snug text-[#8A4B00]">
+                    <Sparkles size={13} className="mt-[2px] shrink-0" /> {why}
+                  </div>
+                )}
                 <div className="mt-3 flex items-center gap-3">
                   <div className="flex flex-1 gap-[3px]">
                     {lessons.map((l) => (
@@ -218,13 +237,13 @@ export function Trilha() {
                   const size = TILE + 8;
                   return (
                     <div className="absolute" style={{ top: lessons.length * ROW + ROW / 2 - size / 2, left: `calc(${x}% - ${size / 2}px)`, zIndex: 1 }}>
-                      <ChallengeTile state={cState} onClick={() => setChallenge(u.n)} />
-                      <Squish onClick={() => setChallenge(u.n)} className={`absolute top-1/2 w-[140px] -translate-y-1/2 text-left ${labelRight ? "left-[82px]" : "right-[82px] text-right"}`} scale={0.97}>
+                      <ChallengeTile state={cState} onClick={() => setChallenge(u.id)} />
+                      <Squish onClick={() => setChallenge(u.id)} className={`absolute top-1/2 w-[140px] -translate-y-1/2 text-left ${labelRight ? "left-[82px]" : "right-[82px] text-right"}`} scale={0.97}>
                         <div className="text-[11px] font-bold uppercase tracking-wider text-[#EC7000]">Fim da unidade · opcional</div>
                         <div className={`text-[14px] font-semibold leading-tight ${cState === "locked" || cState === "soon" ? "text-[#A89A8B]" : "text-[#14215A]"}`}>
                           Desafio: vale Pontos Itaú
                         </div>
-                        {t.unitBest[u.n] !== undefined && <div className="text-[11px] text-[#8A7B6C]">melhor: {t.unitBest[u.n]}/{unitQuiz(u.n).length}</div>}
+                        {t.unitBest[u.id] !== undefined && <div className="text-[11px] text-[#8A7B6C]">melhor: {t.unitBest[u.id]}/{unitQuiz(u.id).length}</div>}
                       </Squish>
                     </div>
                   );
@@ -233,19 +252,29 @@ export function Trilha() {
             </section>
           );
         })}
-        <div className="mx-auto flex w-fit items-center gap-2 rounded-full bg-white px-4 py-2 text-[13px] text-[#6C6257] shadow-sm">
-          <Sparkles size={14} color="#EC7000" /> Novas unidades chegando
-        </div>
+        <Squish
+          onClick={() => navigate("/academia/nova-trilha")}
+          className={`flex w-full items-center gap-3 rounded-[22px] p-4 text-left ${t.trailDone ? "bg-gradient-to-br from-[#14215A] to-[#2B3A87] text-white" : "border border-dashed border-[#D9CBBB] bg-white text-[#14215A]"}`}
+          scale={0.98}
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EC7000]">
+            <Wand2 size={20} color="white" />
+          </span>
+          <div className="flex-1">
+            <div className="text-[16px] font-bold">{t.trailDone ? "Trilha concluída! Bora pra próxima?" : "Quer aprender outra coisa?"}</div>
+            <div className={`text-[13px] leading-snug ${t.trailDone ? "text-white/80" : "text-[#6C6257]"}`}>
+              Conta pra IA.I o que você quer entender agora e ela monta sua próxima trilha.
+            </div>
+          </div>
+        </Squish>
       </div>
 
       <BottomSheet open={!!open} onClose={() => setOpen(null)} title={open?.title ?? ""}>
         {open && (
           <div>
             <p className="-mt-2 text-[15px] leading-snug text-[#4A4A4A]">{open.learn}</p>
-            {openState === "soon" ? (
-              <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Essa unidade ainda está sendo preparada. Termine a Unidade 1 enquanto isso.</div>
-            ) : openState === "locked" ? (
-              <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Conclua a lição anterior pra liberar esta.</div>
+            {openState === "locked" ? (
+              <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Conclua a lição anterior da trilha pra liberar esta.</div>
             ) : (
               <>
                 <div className="mt-3 flex gap-2 text-[13px] font-semibold text-[#14215A]">
@@ -265,18 +294,16 @@ export function Trilha() {
         )}
       </BottomSheet>
 
-      <BottomSheet open={challenge !== null} onClose={() => setChallenge(null)} title={challenge ? `Desafio da Unidade ${challenge}` : ""}>
+      <BottomSheet open={challenge !== null} onClose={() => setChallenge(null)} title={challenge ? `Desafio: ${unitDef(challenge)?.name ?? ""}` : ""}>
         {challenge !== null && (() => {
-          const cs = challengeState(challenge, UNITS.find((x) => x.n === challenge)?.soon);
+          const cs = challengeState(challenge);
           const total = unitQuiz(challenge).length;
           return (
             <div>
               <p className="-mt-2 text-[15px] leading-snug text-[#4A4A4A]">
-                Opcional. Um resumo pra aprofundar e um quiz de {total || 10} perguntas. Com {UNIT_QUIZ_PASS}+ acertos você ganha {UNIT_POINTS_PER_RIGHT} Pontos Itaú por acerto.
+                Opcional. Um resumo pra aprofundar e um quiz de {total} perguntas. Com {unitPass(challenge)}+ acertos você ganha {UNIT_POINTS_PER_RIGHT} Pontos Itaú por acerto, × {fmtMult(t.multiplier)} da sua sequência.
               </p>
-              {cs === "soon" ? (
-                <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Essa unidade ainda está sendo preparada.</div>
-              ) : cs === "locked" ? (
+              {cs === "locked" ? (
                 <div className="mt-4 rounded-[16px] bg-[#FBF6F0] p-4 text-[14px] text-[#6C6257]">Conclua todas as lições da unidade pra liberar o desafio.</div>
               ) : (
                 <div className="mt-5">

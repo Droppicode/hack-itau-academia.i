@@ -1,7 +1,7 @@
 import { FlaskConical } from "lucide-react";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PLAYABLE, type LessonId } from "../data/trilha";
+import { lessonsOf, unitQuiz, type LessonId } from "../data/trilha";
 import { useTrilha } from "../state/TrilhaContext";
 import { BottomSheet } from "./BottomSheet";
 import { goalDef } from "./Iai";
@@ -32,6 +32,7 @@ export function DemoPanel() {
       items: [
         { l: "Passar 1 semana", run: () => (t.advanceWeek(), toast("+7 dias")) },
         { l: "Passar 1 mês", run: () => (t.advanceMonth(), toast("+30 dias: salário na conta, rendimento e pontos do mês")) },
+        { l: "Passar 6 meses (ver pontos vencerem)", run: () => { for (let i = 0; i < 6; i++) t.advanceMonth(); toast("+6 meses: pontos antigos venceram"); } },
       ],
     },
     {
@@ -40,8 +41,14 @@ export function DemoPanel() {
         { l: "Pular intro (objetivo: celular)", run: () => (ensureGoal(), navigate("/academia/trilha")), off: !!t.goal },
         ...(currentLesson ? [{ l: "Pular esta aula", run: () => (ensureGoal(), t.completeLesson(currentLesson), navigate("/academia/trilha", { replace: true })) }] : []),
         { l: t.next ? `Pular aula: ${t.next.title}` : "Pular próxima aula", run: () => t.next && (ensureGoal(), t.completeLesson(t.next.id), toast(`Aula "${t.next.title}" concluída`)), off: !t.next },
-        { l: "Concluir Unidade 1", run: () => (ensureGoal(), PLAYABLE.forEach((l) => t.completeLesson(l.id)), toast("Unidade 1 concluída")), off: !t.next },
-        { l: "Gabaritar desafio da Unidade 1", run: () => (ensureGoal(), PLAYABLE.forEach((l) => t.completeLesson(l.id)), t.recordUnitQuiz(1, 10), toast("Desafio 10/10: +200 Pontos Itaú")), off: t.unitBest[1] === 10 },
+        ...(t.next
+          ? [
+              { l: `Concluir unidade atual`, run: () => { const u = t.next!.unit; ensureGoal(); lessonsOf(u).forEach((l) => t.completeLesson(l.id)); toast("Unidade concluída"); } },
+              { l: `Concluir e gabaritar desafio`, run: () => { const u = t.next!.unit; ensureGoal(); lessonsOf(u).forEach((l) => t.completeLesson(l.id)); const g = t.recordUnitQuiz(u, unitQuiz(u).length); toast(`Desafio gabaritado: +${g} Pontos Itaú`); } },
+            ]
+          : []),
+        { l: "Concluir a trilha toda", run: () => (ensureGoal(), t.trailLessons.forEach((l) => t.completeLesson(l.id)), toast("Trilha concluída")), off: !t.next },
+        { l: "Montar nova trilha", run: () => navigate("/academia/nova-trilha") },
       ],
     },
     {
@@ -49,8 +56,9 @@ export function DemoPanel() {
       items: [
         { l: "Guardar R$ 50 no cofrinho", run: () => (ensureGoal(), t.save(5000), toast("R$ 50 da conta pro cofrinho")), off: t.balanceCents < 5000 },
         { l: "Resgatar R$ 50 do cofrinho", run: () => (t.withdraw(5000), toast("R$ 50 de volta na conta")), off: (t.goal?.savedCents ?? 0) < 5000 },
-        { l: "Compra no débito (R$ 38,90)", run: () => (t.spend(3890, "Mercado Exemplo"), toast("Compra no débito no extrato")), off: t.balanceCents < 3890 },
-        { l: "Pix de R$ 200 pra outra conta sua", run: () => (t.registerPix(true, 20000, "Lucas Andrade Rocha"), navigate("/home")), off: t.balanceCents < 20000 },
+        { l: "Compra no débito (R$ 38,90) · conta pra sequência", run: () => (t.spend(3890, "Mercado Exemplo"), toast("Compra no débito: semana garantida na sequência")), off: t.balanceCents < 3890 },
+        { l: "Pix de R$ 25 pra um amigo · conta pra sequência", run: () => (t.registerPix(false, 2500, "Ana Souza (fictícia)"), toast("Pix enviado: semana garantida na sequência")), off: t.balanceCents < 2500 },
+        { l: "Pix de R$ 200 pra outra conta sua · não conta", run: () => (t.registerPix(true, 20000, "Lucas Andrade Rocha"), navigate("/home")), off: t.balanceCents < 20000 },
         { l: "Ver extrato", run: () => navigate("/extrato", { state: { tab: true } }) },
       ],
     },
