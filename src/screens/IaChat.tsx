@@ -4,7 +4,6 @@ import { ChevronRight, Mic, SendHorizontal, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Squish } from "../components/Squish";
-import { StatusBar } from "../components/StatusBar";
 import { brl } from "../data/money";
 import { findLesson, unitDef } from "../data/trilha";
 import { useIaContext } from "../state/iaContext";
@@ -125,7 +124,7 @@ export function IaChat() {
   return (
     <div className="absolute inset-0 flex flex-col bg-gradient-to-b from-white from-50% to-[#FDE3D3]">
       <div style={{ paddingTop: "env(safe-area-inset-top)" }}>
-        <StatusBar tone="dark" />
+        <div className="h-3 md:h-5" />
       </div>
       <div className="flex h-[52px] shrink-0 items-center justify-end px-3">
         <Squish aria-label="Fechar" onClick={() => goBack(navigate)} className="flex h-11 w-11 items-center justify-center" scale={0.88}>
