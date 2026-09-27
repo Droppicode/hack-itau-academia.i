@@ -150,6 +150,9 @@ PHASES.forEach(()=>chapters.appendChild(document.createElement('i')));
 const params=new URLSearchParams(location.search);
 video.src=params.get('src')||'academia_iai_apresentacao.mp4';
 if(params.get('offset')) offsetEl.value=params.get('offset');
+if(params.get('hide')) document.getElementById('ui').classList.add('hide');
+if(params.get('autoplay')) video.addEventListener('canplaythrough',()=>video.play(),{once:true});
+video.addEventListener('ended',()=>{document.body.dataset.ended='1';});
 document.getElementById('file').onchange=e=>{const f=e.target.files[0]; if(f){video.src=URL.createObjectURL(f);}};
 document.getElementById('play').onclick=()=>video.paused?video.play():video.pause();
 addEventListener('keydown',e=>{

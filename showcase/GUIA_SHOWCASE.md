@@ -4,6 +4,16 @@ Formato: 1920×1080, 30 fps, 2min25s. Celular em frame à esquerda (44% da largu
 
 `showcase.html` já implementa tudo isso: coloque `academia_iai_apresentacao.mp4` na mesma pasta, abra no Chrome em tela cheia (F11), aperte **H** para esconder os controles, **Espaço** para dar play e grave a tela (OBS / gravador do Windows / QuickTime). Para editar textos e tempos, mude só o array `CUES` no topo do `<script>`. `?offset=1.5` na URL desloca todos os textos se o corte do vídeo mudar.
 
+### Exportar como MP4
+
+```bash
+npm install                     # instala o playwright (devDependency)
+npx playwright install ffmpeg   # 1x: gravador de tela do playwright
+npm run showcase:export -- showcase/academia_iai_apresentacao.mp4 showcase/showcase.mp4 --offset=0
+```
+
+Abre o player em um Chrome headless 1920×1080, toca o vídeo inteiro em tempo real, grava a tela e converte para H.264 (`ffmpeg` precisa estar no PATH). Usa o Chrome instalado na máquina (necessário para decodificar H.264); se não for encontrado, aponte com `CHROME_PATH=/caminho/do/chrome`. Leva ~duração do vídeo + 1 min.
+
 ---
 
 ## 1. Capítulos e cor de fundo
