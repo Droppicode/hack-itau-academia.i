@@ -11,7 +11,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const offset = (args.find((a) => a.startsWith("--offset=")) || "--offset=0").split("=")[1];
 const positional = args.filter((a) => !a.startsWith("--"));
-const videoPath = path.resolve(positional[0] || path.join(here, "academia_iai_video_final_2min_v2.mp4"));
+const videoPath = path.resolve(positional[0] || path.join(here, "..", "public", "showcase", "academia_iai_video_final_2min_v2.mp4"));
 const outPath = path.resolve(positional[1] || path.join(here, "showcase.mp4"));
 const W = 1920, H = 1080;
 
@@ -21,9 +21,19 @@ if (!fs.existsSync(videoPath)) {
 }
 
 const tmpDir = fs.mkdtempSync(path.join(here, ".export-"));
-// Usa o Chrome instalado (decodifica H.264). CHROME_PATH sobrescreve o caminho.
+// Usa um Chrome/Chromium do sistema (precisa decodificar H.264). CHROME_PATH sobrescreve o caminho.
+const executablePath =
+  process.env.CHROME_PATH ||
+  [
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+  ].find((p) => fs.existsSync(p));
 const browser = await chromium.launch({
-  ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: "chrome" }),
+  ...(executablePath ? { executablePath } : { channel: "chrome" }),
   args: ["--autoplay-policy=no-user-gesture-required", "--allow-file-access-from-files"],
 });
 const ctx = await browser.newContext({
@@ -33,7 +43,7 @@ const ctx = await browser.newContext({
 });
 const page = await ctx.newPage();
 const t0 = Date.now();
-const url = `file://${path.join(here, "showcase.html")}?src=${encodeURIComponent(`file://${videoPath}`)}&hide=1&autoplay=1&offset=${offset}`;
+const url = `file://${path.join(here, "..", "public", "showcase", "index.html")}?src=${encodeURIComponent(`file://${videoPath}`)}&hide=1&autoplay=1&offset=${offset}`;
 await page.goto(url);
 await page.waitForFunction(() => document.querySelector("video").duration > 0);
 await page.waitForFunction(() => !document.querySelector("video").paused, null, { timeout: 60000 });

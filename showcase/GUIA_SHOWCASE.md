@@ -7,17 +7,17 @@ Duas camadas de texto, com ritmos diferentes:
 1. **Etapa** (rótulo de contexto, em cima): diz *o que está acontecendo* na tela — "Transferência", "Objetivo", "Trilha de Aprendizado"… Muda só **11 vezes** em 2 min (média 11 s cada) e fica fixo enquanto a ação dura. Vem com número (01–11) e pontinhos no topo-direito, para o espectador saber onde está na jornada.
 2. **Headline + subline** (embaixo): explica *por que importa*. Muda quando a ação muda de verdade (19 trocas, mín. 4 s, média ~6 s) — nunca a cada micro-passo do roteiro.
 
-`showcase.html` já implementa tudo isso: coloque o mp4 na mesma pasta (ou use o botão de arquivo), abra no Chrome em tela cheia (F11), aperte **H** para esconder os controles, **Espaço** para dar play e grave a tela. Para editar, mude só os arrays `STAGES` (etapas) e `CUES` (textos) no topo do `<script>`. `?offset=1.5` na URL desloca tudo se o corte do vídeo mudar.
+O player vive em `public/showcase/index.html` (com o mp4 ao lado) e é publicado junto com o protótipo em `https://hack-itau-academia-i.vercel.app/showcase/`. Localmente, abra no Chrome em tela cheia (F11), aperte **H** para esconder os controles, **Espaço** para dar play e grave a tela. Para editar, mude só os arrays `STAGES` (etapas) e `CUES` (textos) no topo do `<script>`. `?offset=1.5` na URL desloca tudo se o corte do vídeo mudar.
 
 ### Exportar como MP4
 
 ```bash
 npm install                     # instala o playwright (devDependency)
 npx playwright install ffmpeg   # 1x: gravador de tela do playwright
-npm run showcase:export -- showcase/academia_iai_video_final_2min_v2.mp4 showcase/showcase.mp4 --offset=0
+npm run showcase:export -- public/showcase/academia_iai_video_final_2min_v2.mp4 showcase/showcase.mp4 --offset=0
 ```
 
-Abre o player em um Chrome headless 1920×1080, toca o vídeo inteiro em tempo real, grava a tela e converte para H.264 (`ffmpeg` precisa estar no PATH). Usa o Chrome instalado na máquina (necessário para decodificar H.264); se não for encontrado, aponte com `CHROME_PATH=/caminho/do/chrome`. Leva ~duração do vídeo + 1 min.
+Abre o player em um Chrome headless 1920×1080, toca o vídeo inteiro em tempo real, grava a tela e converte para H.264 (`ffmpeg` precisa estar no PATH). Usa o Chrome ou Chromium do sistema (procura em `/usr/bin/chromium`, `/usr/bin/google-chrome` etc.; no Arch, `pacman -S chromium ffmpeg` basta); se não achar, aponte com `CHROME_PATH=/caminho/do/chromium`. Leva ~duração do vídeo + 1 min.
 
 ---
 
