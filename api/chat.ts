@@ -214,8 +214,26 @@ export async function chat(body: ChatBody, key: string | undefined, clientId = "
 type Req = { method?: string; body?: ChatBody; headers?: Record<string, string | string[] | undefined> };
 type Res = { status: (n: number) => { json: (b: unknown) => void } };
 
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+function sameSite(headers: Req["headers"]): boolean {
+  const origin = first(headers?.origin) ?? first(headers?.referer);
+  if (!origin) return false;
+  let host: string;
+  try {
+    host = new URL(origin).host;
+  } catch {
+    return false;
+  }
+  const allowed = [first(headers?.["x-forwarded-host"]), first(headers?.host), ...(process.env.ALLOWED_ORIGINS ?? "").split(",")]
+    .map((h) => h?.trim().replace(/^https?:\/\//, "").replace(/\/$/, ""))
+    .filter(Boolean);
+  return allowed.includes(host);
+}
+
 export default async function handler(req: Req, res: Res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
+  if (!sameSite(req.headers)) return res.status(403).json({ error: "forbidden_origin" });
   try {
     const fwd = req.headers?.["x-forwarded-for"];
     const ip = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(",")[0].trim() || "anon";
