@@ -2,7 +2,7 @@
 
 Protótipo interativo da **AcademIA.I**, uma área de educação financeira dentro do app Itaú que transforma o objetivo de um jovem em rotina de guardar dinheiro no Itaú. Case A, "Primeira vida financeira", do Hackathon Itaú 2026.
 
-**[Abrir o protótipo](https://hack-itau-academia-i.vercel.app)** · **[Ver o showcase em vídeo](https://hack-itau-academia-i.vercel.app/showcase/)**
+**[Abrir o protótipo](https://hack-itau-academia-i.vercel.app)**
 
 https://github.com/user-attachments/assets/b2b2ae44-1d98-4fe0-b36d-e8dcc8d543b9
 
