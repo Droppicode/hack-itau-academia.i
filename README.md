@@ -4,7 +4,7 @@ Protótipo interativo da **AcademIA.I**, uma área de educação financeira dent
 
 **[Abrir o protótipo](https://hack-itau-academia-i.vercel.app)** · **[Ver o showcase em vídeo](https://hack-itau-academia-i.vercel.app/showcase/)**
 
-![Jornada: convite pós-Pix, objetivo, trilha, lição, cofrinho e IA.I](docs/jornada.jpg)
+[![Assistir ao showcase da AcademIA.I](docs/showcase.jpg)](https://hack-itau-academia-i.vercel.app/showcase/)
 
 > Protótipo de hackathon. Salário, saldos, rendimentos, Pontos Itaú e integrações são **simulados**. Nenhum dado real é usado e nenhum dinheiro é movimentado.
 
@@ -16,7 +16,11 @@ O Lucas tem 19 anos. No dia 5 caem R$ 1.320 no Itaú e, minutos depois, quase tu
 - 49% da Geração Z trocaria de banco por ajuda para atingir metas (Tink/Visa, 2024)
 - 47% dos jovens de 18 a 24 anos não controlam as finanças (CNDL/SPC Brasil, 2018)
 
+Boa parte dos jovens que não controlam as finanças diz que é por não saber como fazer.
+
 Falta hábito, sobra vontade.
+
+É aí que entra a AcademIA.I.
 
 ## A solução
 
@@ -29,6 +33,8 @@ Logo depois do Pix que levaria o salário embora, o app convida o jovem a defini
 **Onde a IA entra e onde não entra.** A IA escreve, explica e escolhe a ordem do conteúdo. Prazos, saldos, rendimentos e pontos vêm de regras fixas no código. A IA.I nunca movimenta dinheiro nem recomenda crédito ou investimento: ela orienta e oferece o atalho, e quem age é o usuário.
 
 ## Jornada do protótipo
+
+![Jornada: convite pós-Pix, objetivo, trilha, lição, cofrinho e IA.I](docs/jornada.jpg)
 
 | Etapa | Rota |
 | --- | --- |
@@ -100,6 +106,6 @@ Em código: `import { sendInvite } from "./email/enviar.mjs"` e `await sendInvit
 
 ## Time
 
-Marcos Menezes, Matheus Cunha, Kayky Gibran e equipe, no Hackathon Itaú 2026 (26 e 27 de setembro, CEIC Jabaquara, São Paulo).
+Marcos Menezes, Matheus Cunha, Kayky Gibran e Nicolas Silveira, no Hackathon Itaú 2026 (26 e 27 de setembro, CEIC Jabaquara, São Paulo).
 
 O material original do case está em [`docs/case-a-primeira-vida-financeira.pdf`](docs/case-a-primeira-vida-financeira.pdf).
