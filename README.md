@@ -4,7 +4,8 @@ Protótipo interativo da **AcademIA.I**, uma área de educação financeira dent
 
 **[Abrir o protótipo](https://hack-itau-academia-i.vercel.app)**
 
-https://github.com/user-attachments/assets/b2b2ae44-1d98-4fe0-b36d-e8dcc8d543b9
+https://github.com/user-attachments/assets/936adeaa-cd86-4036-81c5-6224d4a3e35c
+
 
 > Protótipo de hackathon. Salário, saldos, rendimentos, Pontos Itaú e integrações são **simulados**. Nenhum dado real é usado e nenhum dinheiro é movimentado.
 
